@@ -11,7 +11,8 @@
 		LoadingState,
 		ModalDialog
 	} from '$lib/components/ui';
-	import { House, Heart, Sparkles } from '@lucide/svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faHouse, faHeart, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 
 	let sampleInput = $state('');
 	let sampleInputError = $state('This field is required');
@@ -121,11 +122,11 @@
 
 			<div class="flex items-center gap-3 border-t border-line/60 pt-3">
 				<Button variant="secondary" size="sm">
-					<House class="size-4" />
+					<FontAwesomeIcon icon={faHouse} class="size-4" />
 					<span>With Icon</span>
 				</Button>
 				<Button variant="ghost" size="sm" aria-label="Like entry">
-					<Heart class="size-4 text-peach" />
+					<FontAwesomeIcon icon={faHeart} class="size-4 text-peach" />
 					<span>Warm Nod</span>
 				</Button>
 			</div>
@@ -243,7 +244,7 @@
 			>
 				{#snippet action()}
 					<Button variant="primary" size="sm">
-						<Sparkles class="size-4" />
+						<FontAwesomeIcon icon={faWandMagicSparkles} class="size-4" />
 						<span>Write first entry</span>
 					</Button>
 				{/snippet}

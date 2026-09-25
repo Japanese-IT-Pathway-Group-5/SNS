@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { Dialog } from 'bits-ui';
-	import { X } from '@lucide/svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faXmark } from '@fortawesome/free-solid-svg-icons';
 	import { cn } from '$lib/utils';
 
 	interface Props {
@@ -62,7 +63,7 @@
 					class="rounded-lg p-1.5 text-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
 					aria-label="Close dialog"
 				>
-					<X class="size-4" aria-hidden="true" />
+					<FontAwesomeIcon icon={faXmark} class="size-4" />
 				</Dialog.Close>
 			</div>
 

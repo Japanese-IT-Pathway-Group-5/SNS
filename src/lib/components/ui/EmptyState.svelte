@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { cn } from '$lib/utils';
-	import { NotebookPen } from '@lucide/svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faBookOpen } from '@fortawesome/free-solid-svg-icons';
 
 	interface Props {
 		title: string;
@@ -24,7 +25,7 @@
 		{#if icon}
 			{@render icon()}
 		{:else}
-			<NotebookPen class="size-6 text-accent" aria-hidden="true" />
+			<FontAwesomeIcon icon={faBookOpen} class="size-6 text-accent" />
 		{/if}
 	</div>
 

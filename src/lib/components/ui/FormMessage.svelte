@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { cn } from '$lib/utils';
-	import { AlertCircle, CheckCircle2 } from '@lucide/svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faCircleExclamation, faCircleCheck } from '@fortawesome/free-solid-svg-icons';
 
 	interface Props {
 		type?: 'error' | 'success';
@@ -26,9 +27,9 @@
 		)}
 	>
 		{#if type === 'error'}
-			<AlertCircle class="size-4 shrink-0 text-danger" aria-hidden="true" />
+			<FontAwesomeIcon icon={faCircleExclamation} class="size-4 shrink-0 text-danger" />
 		{:else}
-			<CheckCircle2 class="size-4 shrink-0 text-accent" aria-hidden="true" />
+			<FontAwesomeIcon icon={faCircleCheck} class="size-4 shrink-0 text-accent" />
 		{/if}
 
 		<div>

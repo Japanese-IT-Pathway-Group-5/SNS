@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Button, Card, Badge } from '$lib/components/ui';
-	import { Sparkles, Palette, ArrowRight } from '@lucide/svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faWandMagicSparkles, faPalette, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 </script>
 
 <svelte:head>
@@ -10,7 +11,7 @@
 <main class="mx-auto max-w-xl space-y-8 px-4 py-16 text-center">
 	<div class="space-y-3">
 		<div class="flex items-center justify-center gap-2">
-			<Badge variant="lime">🌱 Group 5 Pilot</Badge>
+			<Badge variant="lime">🌱 Group 5</Badge>
 			<Badge variant="peach">Everyday Journal</Badge>
 		</div>
 		<h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">SNS</h1>
@@ -22,7 +23,7 @@
 	<Card variant="surface" class="space-y-4 text-left">
 		<div class="space-y-1">
 			<h2 class="flex items-center gap-2 text-base font-bold text-ink">
-				<Sparkles class="size-4 text-accent" />
+				<FontAwesomeIcon icon={faWandMagicSparkles} class="size-4 text-accent" />
 				Foundation Ready!
 			</h2>
 			<p class="text-sm text-muted">
@@ -32,9 +33,9 @@
 
 		<div class="flex flex-col items-stretch gap-2.5 pt-2 sm:flex-row sm:items-center">
 			<Button variant="primary" href="/dev/components">
-				<Palette class="size-4" />
+				<FontAwesomeIcon icon={faPalette} class="size-4" />
 				<span>Explore Component Showcase</span>
-				<ArrowRight class="size-4" />
+				<FontAwesomeIcon icon={faArrowRight} class="size-4" />
 			</Button>
 		</div>
 	</Card>

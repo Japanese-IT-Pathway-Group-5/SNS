@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { cn } from '$lib/utils';
-	import { LoaderCircle } from '@lucide/svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
 	interface Props {
 		status?: string;
@@ -20,7 +21,7 @@
 	{#if children}
 		{@render children()}
 	{:else}
-		<LoaderCircle class="size-6 animate-spin text-accent" aria-hidden="true" />
+		<FontAwesomeIcon icon={faSpinner} class="size-6 animate-spin text-accent" />
 	{/if}
 
 	<span class="text-sm font-medium text-ink">
