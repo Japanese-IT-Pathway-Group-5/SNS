@@ -1,3 +1,5 @@
+import type { Session, SessionUser } from '$lib/types';
+
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
 declare global {
@@ -9,8 +11,12 @@ declare global {
 			cf?: IncomingRequestCfProperties;
 		}
 
+		interface Locals {
+			user: SessionUser | null;
+			session: Session | null;
+		}
+
 		// interface Error {}
-		// interface Locals {}
 		// interface PageData {}
 		// interface PageState {}
 	}
