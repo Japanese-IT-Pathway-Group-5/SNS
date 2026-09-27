@@ -1,9 +1,7 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 language: 'en-US'
 tone_instructions: >
-  Be concise, actionable, and focus on code correctness, security, and architectural alignment.
-  Respect Svelte 5 runes, strict TypeScript, Cloudflare Workers D1/R2 constraints, and project rules in AGENTS.md.
-  Check that server authorization verifies membership and ownership in domain operations, not just layouts.
+  Be concise and actionable. Respect Svelte 5 runes, strict TypeScript, Cloudflare Workers D1/R2 constraints, and AGENTS.md rules.
 
 reviews:
   profile: 'chill'
