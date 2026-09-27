@@ -12,7 +12,12 @@
 		ModalDialog
 	} from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faHouse, faHeart, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faHouse,
+		faHeart,
+		faWandMagicSparkles,
+		faSeedling
+	} from '@fortawesome/free-solid-svg-icons';
 
 	let sampleInput = $state('');
 	let sampleInputError = $state('This field is required');
@@ -182,7 +187,10 @@
 			<div class="flex flex-wrap items-center gap-2 border-t border-line/60 pt-3">
 				<Badge variant="accent">Pilot Member</Badge>
 				<Badge variant="peach">Warm reaction</Badge>
-				<Badge variant="lime">🌱 Sprout</Badge>
+				<Badge variant="lime" class="gap-1">
+					<FontAwesomeIcon icon={faSeedling} class="size-3" />
+					Sprout
+				</Badge>
 				<Badge variant="muted">Archive</Badge>
 				<Badge variant="danger">Moderated</Badge>
 			</div>
@@ -198,6 +206,10 @@
 			<FormMessage
 				type="error"
 				message="Could not save your entry. Your draft has been preserved on this device."
+			/>
+			<FormMessage
+				type="warning"
+				message="You are approaching the character limit for this journal entry."
 			/>
 			<FormMessage type="success" message="Entry posted and shared with pilot members." />
 		</div>

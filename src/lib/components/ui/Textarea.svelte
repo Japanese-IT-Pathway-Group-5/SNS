@@ -9,6 +9,7 @@
 		id?: string;
 		showCount?: boolean;
 		maxCount?: number;
+		autoResize?: boolean;
 	}
 
 	let {
@@ -21,6 +22,7 @@
 		rows = 4,
 		showCount = false,
 		maxCount,
+		autoResize = true,
 		class: className,
 		value = $bindable(''),
 		...restProps
@@ -32,6 +34,21 @@
 	// Unicode code points count helper
 	let charCount = $derived(value ? Array.from(String(value)).length : 0);
 	let isOverLimit = $derived(maxCount !== undefined && charCount > maxCount);
+
+	let textareaEl = $state<HTMLTextAreaElement | null>(null);
+
+	function adjustHeight() {
+		if (autoResize && textareaEl) {
+			textareaEl.style.height = 'auto';
+			textareaEl.style.height = `${textareaEl.scrollHeight}px`;
+		}
+	}
+
+	$effect(() => {
+		if (autoResize && textareaEl && value !== undefined) {
+			adjustHeight();
+		}
+	});
 </script>
 
 <div class="flex w-full flex-col gap-1.5">
@@ -61,11 +78,14 @@
 		{disabled}
 		{required}
 		{rows}
+		bind:this={textareaEl}
 		bind:value
+		oninput={adjustHeight}
+		maxlength={maxCount}
 		aria-invalid={error || isOverLimit ? 'true' : undefined}
 		aria-describedby={error ? errorId : description ? descriptionId : undefined}
 		class={cn(
-			'w-full resize-y rounded-lg border bg-surface px-3.5 py-2.5 text-base leading-relaxed text-ink transition-colors',
+			'w-full resize-none rounded-lg border bg-surface px-3.5 py-2.5 text-base leading-relaxed text-ink transition-colors',
 			'placeholder:text-muted focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:outline-none',
 			error || isOverLimit
 				? 'border-danger focus-visible:ring-danger'

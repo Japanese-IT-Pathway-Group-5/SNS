@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import { signInWithGoogle } from '$lib/auth-client';
-	import { Badge, Button, Card } from '$lib/components/ui';
+	import { Badge, Button, Card, FormMessage } from '$lib/components/ui';
 	import { sanitizeRedirectUrl } from '$lib/utils';
 
 	let isSigningIn = $state(false);
@@ -47,12 +47,7 @@
 		</div>
 
 		{#if errorMessage}
-			<div
-				role="alert"
-				class="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
-			>
-				{errorMessage}
-			</div>
+			<FormMessage type="error" message={errorMessage} />
 		{/if}
 
 		<div class="space-y-3">

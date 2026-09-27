@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { Button, Card, Badge } from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faWandMagicSparkles, faPalette, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+	import {
+		faWandMagicSparkles,
+		faPalette,
+		faArrowRight,
+		faSeedling
+	} from '@fortawesome/free-solid-svg-icons';
 </script>
 
 <svelte:head>
@@ -11,7 +16,10 @@
 <main class="mx-auto max-w-xl space-y-8 px-4 py-16 text-center">
 	<div class="space-y-3">
 		<div class="flex items-center justify-center gap-2">
-			<Badge variant="lime">🌱 Group 5</Badge>
+			<Badge variant="lime" class="gap-1.5">
+				<FontAwesomeIcon icon={faSeedling} class="size-3" />
+				Group 5
+			</Badge>
 			<Badge variant="peach">Everyday Journal</Badge>
 		</div>
 		<h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">SNS</h1>
