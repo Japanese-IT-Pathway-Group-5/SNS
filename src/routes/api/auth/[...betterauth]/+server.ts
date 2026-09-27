@@ -12,3 +12,4 @@ const handleAuth: RequestHandler = async ({ request, platform }) => {
 
 export const GET: RequestHandler = handleAuth;
 export const POST: RequestHandler = handleAuth;
+export const fallback: RequestHandler = handleAuth;

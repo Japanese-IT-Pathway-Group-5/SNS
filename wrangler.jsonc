@@ -19,6 +19,8 @@
 	],
 	"vars": {
 		"BETTER_AUTH_SECRET": "",
-		"BETTER_AUTH_URL": "http://localhost:5173"
+		"BETTER_AUTH_URL": "http://localhost:5173",
+		"GOOGLE_CLIENT_ID": "",
+		"GOOGLE_CLIENT_SECRET": ""
 	}
 }
