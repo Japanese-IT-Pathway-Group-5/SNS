@@ -21,54 +21,40 @@ describe('Server Hooks: Route Guards & Session Hydration', () => {
 		expect(isPublicRoute('/posts/123')).toBe(false);
 	});
 
-	it('redirects unauthenticated users from protected routes to /login', async () => {
-		expect.assertions(2);
+	const verifyRedirect = async (path: string, locals: App.Locals, expectedLocation: string) => {
 		const mockEvent = {
-			url: new URL('http://localhost:5173/journal'),
-			request: new Request('http://localhost:5173/journal'),
-			locals: { user: null, session: null },
+			url: new URL(`http://localhost:5173${path}`),
+			request: new Request(`http://localhost:5173${path}`),
+			locals,
 			platform: undefined
 		} as unknown as RequestEvent;
-		const mockResolve = vi.fn();
 
 		try {
-			await handle({ event: mockEvent, resolve: mockResolve });
+			await handle({ event: mockEvent, resolve: vi.fn() });
 		} catch (error: unknown) {
 			if (isRedirect(error)) {
 				expect(error.status).toBe(303);
-				expect(error.location).toBe('/login?redirectTo=%2Fjournal');
+				expect(error.location).toBe(expectedLocation);
 			}
 		}
+	};
+
+	it('redirects unauthenticated users from protected routes to /login', async () => {
+		expect.assertions(2);
+		await verifyRedirect('/journal', { user: null, session: null }, '/login?redirectTo=%2Fjournal');
 	});
 
 	it('redirects authenticated users away from /login to /', async () => {
 		expect.assertions(2);
-		const mockEvent = {
-			url: new URL('http://localhost:5173/login'),
-			request: new Request('http://localhost:5173/login'),
-			locals: {
-				user: {
-					id: 'u1',
-					name: 'Test User',
-					email: 'test@example.com',
-					emailVerified: true,
-					createdAt: new Date(),
-					updatedAt: new Date()
-				},
-				session: null
-			},
-			platform: undefined
-		} as unknown as RequestEvent;
-		const mockResolve = vi.fn();
-
-		try {
-			await handle({ event: mockEvent, resolve: mockResolve });
-		} catch (error: unknown) {
-			if (isRedirect(error)) {
-				expect(error.status).toBe(303);
-				expect(error.location).toBe('/');
-			}
-		}
+		const testUser = {
+			id: 'u1',
+			name: 'Test User',
+			email: 'test@example.com',
+			emailVerified: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+		await verifyRedirect('/login', { user: testUser, session: null }, '/');
 	});
 
 	it('allows public routes to resolve without authentication', async () => {
