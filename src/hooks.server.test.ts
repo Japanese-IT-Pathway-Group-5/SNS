@@ -14,11 +14,13 @@ describe('Server Hooks: Route Guards & Session Hydration', () => {
 	});
 
 	it('identifies protected routes correctly', () => {
-		expect.assertions(4);
+		expect.assertions(6);
 		expect(isPublicRoute('/')).toBe(false);
 		expect(isPublicRoute('/journal')).toBe(false);
 		expect(isPublicRoute('/settings')).toBe(false);
 		expect(isPublicRoute('/posts/123')).toBe(false);
+		expect(isPublicRoute('/posts/my-day.1')).toBe(false);
+		expect(isPublicRoute('/settings.json')).toBe(false);
 	});
 
 	const verifyRedirect = async (path: string, locals: App.Locals, expectedLocation: string) => {
@@ -55,6 +57,41 @@ describe('Server Hooks: Route Guards & Session Hydration', () => {
 			updatedAt: new Date()
 		};
 		await verifyRedirect('/login', { user: testUser, session: null }, '/');
+	});
+
+	it('prevents open redirect on /login with external or protocol-relative URLs', async () => {
+		expect.assertions(4);
+		const testUser = {
+			id: 'u1',
+			name: 'Test User',
+			email: 'test@example.com',
+			emailVerified: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+		await verifyRedirect(
+			'/login?redirectTo=https://evil.com',
+			{ user: testUser, session: null },
+			'/'
+		);
+		await verifyRedirect('/login?redirectTo=//evil.com', { user: testUser, session: null }, '/');
+	});
+
+	it('allows safe relative redirect on /login', async () => {
+		expect.assertions(2);
+		const testUser = {
+			id: 'u1',
+			name: 'Test User',
+			email: 'test@example.com',
+			emailVerified: true,
+			createdAt: new Date(),
+			updatedAt: new Date()
+		};
+		await verifyRedirect(
+			'/login?redirectTo=%2Fjournal',
+			{ user: testUser, session: null },
+			'/journal'
+		);
 	});
 
 	it('allows public routes to resolve without authentication', async () => {

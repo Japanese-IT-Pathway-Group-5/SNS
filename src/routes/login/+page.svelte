@@ -2,11 +2,12 @@
 	import { page } from '$app/state';
 	import { signInWithGoogle } from '$lib/auth-client';
 	import { Badge, Button, Card } from '$lib/components/ui';
+	import { sanitizeRedirectUrl } from '$lib/utils';
 
 	let isSigningIn = $state(false);
 	let errorMessage = $state<string | null>(null);
 
-	const redirectTo = $derived(page.url.searchParams.get('redirectTo') || '/');
+	const redirectTo = $derived(sanitizeRedirectUrl(page.url.searchParams.get('redirectTo'), '/'));
 
 	async function handleGoogleSignIn() {
 		isSigningIn = true;

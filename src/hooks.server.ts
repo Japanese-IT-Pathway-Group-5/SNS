@@ -1,13 +1,18 @@
 import { getAuth } from '$lib/server/auth';
+import { sanitizeRedirectUrl } from '$lib/utils';
 import { redirect, type Handle } from '@sveltejs/kit';
 
+const PUBLIC_PREFIXES = ['/login', '/api/auth', '/dev', '/demo'];
+const STATIC_PUBLIC_FILES = ['/favicon.svg', '/favicon.ico', '/robots.txt'];
+
 export const isPublicRoute = (pathname: string): boolean => {
-	const publicPrefixes = ['/login', '/api/auth', '/dev', '/demo'];
-	return (
-		publicPrefixes.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)) ||
-		pathname.startsWith('/_app') ||
-		pathname.includes('.')
-	);
+	if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
+		return true;
+	}
+	if (pathname.startsWith('/_app/')) {
+		return true;
+	}
+	return STATIC_PUBLIC_FILES.includes(pathname);
 };
 
 export const handle: Handle = async ({ event, resolve }) => {
@@ -44,7 +49,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 	}
 
 	if (event.url.pathname === '/login' && event.locals.user) {
-		const destination = event.url.searchParams.get('redirectTo') || '/';
+		const rawDestination = event.url.searchParams.get('redirectTo');
+		const destination = sanitizeRedirectUrl(rawDestination, '/');
 		redirect(303, destination);
 	}
 
