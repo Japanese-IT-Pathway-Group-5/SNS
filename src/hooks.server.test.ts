@@ -95,7 +95,7 @@ describe('Server Hooks: Route Guards & Session Hydration', () => {
 	});
 
 	it('allows public routes to resolve without authentication', async () => {
-		expect.assertions(2);
+		expect.assertions(5);
 		const mockEvent = {
 			url: new URL('http://localhost:5173/demo/playwright'),
 			request: new Request('http://localhost:5173/demo/playwright'),
@@ -107,6 +107,9 @@ describe('Server Hooks: Route Guards & Session Hydration', () => {
 
 		const response = await handle({ event: mockEvent, resolve: mockResolve });
 		expect(mockResolve).toHaveBeenCalled();
-		expect(response).toBe(mockResponse);
+		expect(response.status).toBe(mockResponse.status);
+		expect(response.headers.get('Content-Security-Policy')).toBeTruthy();
+		expect(response.headers.get('X-Frame-Options')).toBe('DENY');
+		expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');
 	});
 });

@@ -3,6 +3,8 @@
 // Runtime types generated with workerd@1.20260918.1 2026-09-22 nodejs_als
 interface __BaseEnv_Env {
 	DB: D1Database;
+	POST_RATE_LIMITER: RateLimit;
+	UPLOAD_RATE_LIMITER: RateLimit;
 	ASSETS: Fetcher;
 	GOOGLE_CLIENT_ID: "";
 	GOOGLE_CLIENT_SECRET: "";
