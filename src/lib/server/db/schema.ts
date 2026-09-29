@@ -1,5 +1,5 @@
 import { relations, sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 export const task = sqliteTable('task', {
 	id: text('id')
@@ -93,9 +93,127 @@ export const verification = sqliteTable(
 	(table) => [index('verification_identifier_idx').on(table.identifier)]
 );
 
+export const post = sqliteTable(
+	'post',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		authorId: text('author_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		// Client-generated ID so a retried submission does not create a duplicate post.
+		submissionId: text('submission_id').notNull(),
+		body: text('body').notNull().default(''),
+		// Server-controlled R2 object key; null for text-only posts.
+		imageKey: text('image_key'),
+		hiddenAt: integer('hidden_at', { mode: 'timestamp_ms' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		uniqueIndex('post_authorId_submissionId_unique').on(table.authorId, table.submissionId),
+		index('post_createdAt_id_idx').on(table.createdAt, table.id),
+		index('post_authorId_createdAt_id_idx').on(table.authorId, table.createdAt, table.id)
+	]
+);
+
+export const reply = sqliteTable(
+	'reply',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		postId: text('post_id')
+			.notNull()
+			.references(() => post.id, { onDelete: 'cascade' }),
+		authorId: text('author_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		body: text('body').notNull(),
+		hiddenAt: integer('hidden_at', { mode: 'timestamp_ms' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('reply_postId_createdAt_id_idx').on(table.postId, table.createdAt, table.id),
+		index('reply_authorId_idx').on(table.authorId)
+	]
+);
+
+// Audit log of moderator actions; exactly one of postId / replyId is set.
+export const moderationEvent = sqliteTable(
+	'moderation_event',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		moderatorId: text('moderator_id').references(() => user.id, { onDelete: 'set null' }),
+		postId: text('post_id').references(() => post.id, { onDelete: 'cascade' }),
+		replyId: text('reply_id').references(() => reply.id, { onDelete: 'cascade' }),
+		action: text('action', { enum: ['hide', 'unhide'] }).notNull(),
+		reason: text('reason').notNull(),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		index('moderationEvent_postId_idx').on(table.postId),
+		index('moderationEvent_replyId_idx').on(table.replyId)
+	]
+);
+
 export const userRelations = relations(user, ({ many }) => ({
 	sessions: many(session),
-	accounts: many(account)
+	accounts: many(account),
+	posts: many(post),
+	replies: many(reply)
+}));
+
+export const postRelations = relations(post, ({ one, many }) => ({
+	author: one(user, {
+		fields: [post.authorId],
+		references: [user.id]
+	}),
+	replies: many(reply),
+	moderationEvents: many(moderationEvent)
+}));
+
+export const replyRelations = relations(reply, ({ one, many }) => ({
+	post: one(post, {
+		fields: [reply.postId],
+		references: [post.id]
+	}),
+	author: one(user, {
+		fields: [reply.authorId],
+		references: [user.id]
+	}),
+	moderationEvents: many(moderationEvent)
+}));
+
+export const moderationEventRelations = relations(moderationEvent, ({ one }) => ({
+	moderator: one(user, {
+		fields: [moderationEvent.moderatorId],
+		references: [user.id]
+	}),
+	post: one(post, {
+		fields: [moderationEvent.postId],
+		references: [post.id]
+	}),
+	reply: one(reply, {
+		fields: [moderationEvent.replyId],
+		references: [reply.id]
+	})
 }));
 
 export const sessionRelations = relations(session, ({ one }) => ({
