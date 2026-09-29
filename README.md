@@ -96,15 +96,17 @@ Detailed technical and design specifications are maintained in the `docs` direct
 
 ## Available Scripts
 
-| Command            | Description                                                        |
-| ------------------ | ------------------------------------------------------------------ |
-| `pnpm dev`         | Starts the Vite local development server.                          |
-| `pnpm check`       | Runs SvelteKit and TypeScript type diagnostics.                    |
-| `pnpm lint`        | Runs Prettier formatting and ESLint rule checks.                   |
-| `pnpm format`      | Automatically formats codebase files using Prettier.               |
-| `pnpm test:unit`   | Executes unit and domain logic tests via Vitest.                   |
-| `pnpm test:e2e`    | Runs end-to-end browser integration tests with Playwright.         |
-| `pnpm build`       | Compiles the production build for Cloudflare Workers.              |
-| `pnpm gen`         | Regenerates Cloudflare Worker TypeScript definitions via Wrangler. |
-| `pnpm db:generate` | Generates SQL migration files from the Drizzle schema.             |
-| `pnpm db:push`     | Applies schema updates to the database.                            |
+| Command                 | Description                                                        |
+| ----------------------- | ------------------------------------------------------------------ |
+| `pnpm dev`              | Starts the Vite local development server.                          |
+| `pnpm check`            | Runs SvelteKit and TypeScript type diagnostics.                    |
+| `pnpm lint`             | Runs Prettier formatting and ESLint rule checks.                   |
+| `pnpm format`           | Automatically formats codebase files using Prettier.               |
+| `pnpm test:unit`        | Executes unit and domain logic tests via Vitest.                   |
+| `pnpm test:e2e`         | Runs end-to-end browser integration tests with Playwright.         |
+| `pnpm build`            | Compiles the production build for Cloudflare Workers.              |
+| `pnpm gen`              | Regenerates Cloudflare Worker TypeScript definitions via Wrangler. |
+| `pnpm db:generate`      | Generates SQL migration files from the Drizzle schema.             |
+| `pnpm db:push`          | Applies schema updates to the database.                            |
+| `pnpm db:migrate:local` | Applies the SQL migrations in `drizzle/` to the local D1 database. |
+| `pnpm db:seed:local`    | Loads sample users, posts and replies into the local D1 database.  |
