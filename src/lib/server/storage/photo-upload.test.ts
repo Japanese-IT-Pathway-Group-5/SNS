@@ -4,7 +4,8 @@ import { uploadPhoto } from './photo-upload';
 describe('uploadPhoto', () => {
 	it('generates a server-controlled image key and uploads the file', async () => {
 		const bucket = {
-			put: vi.fn().mockResolvedValue({})
+			put: vi.fn().mockResolvedValue({}),
+			delete: vi.fn().mockResolvedValue(undefined)
 		};
 
 		const file = new File(['fake image data'], 'profile.jpg', {
@@ -29,7 +30,8 @@ describe('uploadPhoto', () => {
 
 	it('propagates an R2 upload failure', async () => {
 		const bucket = {
-			put: vi.fn().mockRejectedValue(new Error('R2 unavailable'))
+			put: vi.fn().mockRejectedValue(new Error('R2 unavailable')),
+			delete: vi.fn().mockResolvedValue(undefined)
 		};
 
 		const file = new File(['fake image data'], 'profile.jpg', {
