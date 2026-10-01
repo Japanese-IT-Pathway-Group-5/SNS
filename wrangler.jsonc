@@ -18,6 +18,14 @@
 			"migrations_dir": "drizzle"
 		}
 	],
+
+	"r2_buckets": [
+		{
+			"binding": "MEDIA_BUCKET",
+			"bucket_name": "japanese-it-pathway-sns-media"
+		}
+	],
+
 	"vars": {
 		"BETTER_AUTH_SECRET": "",
 		"BETTER_AUTH_URL": "http://localhost:5173",
