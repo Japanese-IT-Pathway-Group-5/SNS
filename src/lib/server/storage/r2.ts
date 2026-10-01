@@ -4,6 +4,8 @@ export interface R2Storage {
 		value: ReadableStream | ArrayBuffer | ArrayBufferView | string | Blob,
 		options?: R2PutOptions
 	): Promise<R2Object>;
+
+	delete(key: string): Promise<void>;
 }
 
 export async function putObject(
@@ -17,4 +19,8 @@ export async function putObject(
 			contentType
 		}
 	});
+}
+
+export async function deleteObject(bucket: R2Storage, key: string): Promise<void> {
+	await bucket.delete(key);
 }
