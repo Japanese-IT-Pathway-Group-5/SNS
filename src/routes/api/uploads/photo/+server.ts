@@ -1,7 +1,12 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
+import { detectImageTypeFromFile } from '$lib/server/storage/image-signature';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
 import { type R2Storage } from '$lib/server/storage/r2';
+import { checkUploadContentLength, validatePhotoUpload } from '$lib/validation/photo-upload';
+
+const TOO_LARGE = 'Image is too large';
+
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const env = platform?.env as {
 		MEDIA_BUCKET?: R2Storage;
@@ -23,6 +28,21 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 });
 	}
 
+	// Reject by declared size before the body is buffered by formData().
+	const contentLength = checkUploadContentLength(request.headers.get('content-length'));
+
+	if (contentLength === 'missing') {
+		return json({ error: 'Content-Length header is required' }, { status: 411 });
+	}
+
+	if (contentLength === 'invalid') {
+		return json({ error: 'Invalid Content-Length header' }, { status: 400 });
+	}
+
+	if (contentLength === 'too_large') {
+		return json({ error: TOO_LARGE }, { status: 413 });
+	}
+
 	let formData: FormData;
 
 	try {
@@ -31,21 +51,26 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({ error: 'Invalid multipart form data' }, { status: 400 });
 	}
 
-	const file = formData.get('file');
+	const upload = validatePhotoUpload(formData);
 
-	if (!(file instanceof File)) {
-		return json({ error: 'An image file is required' }, { status: 400 });
+	if (!upload.success) {
+		return upload.error === 'too_large'
+			? json({ error: TOO_LARGE }, { status: 413 })
+			: json({ error: 'An image file is required' }, { status: 400 });
 	}
 
-	if (!file.type.startsWith('image/')) {
-		return json({ error: 'Only image files are allowed' }, { status: 400 });
+	// Trust the file's bytes, never its declared MIME type or filename.
+	const imageType = await detectImageTypeFromFile(upload.file);
+
+	if (!imageType) {
+		return json({ error: 'Only JPEG, PNG or WebP images are allowed' }, { status: 415 });
 	}
 
 	if (!env?.MEDIA_BUCKET) {
 		return json({ error: 'Image storage is not configured' }, { status: 503 });
 	}
 	try {
-		const imageKey = await uploadPhoto(env.MEDIA_BUCKET, file);
+		const imageKey = await uploadPhoto(env.MEDIA_BUCKET, upload.file, imageType);
 
 		return json({ imageKey }, { status: 201 });
 	} catch (error) {
