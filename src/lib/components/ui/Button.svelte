@@ -33,6 +33,7 @@
 		children,
 		onclick,
 		...restProps
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	}: Props & { onclick?: any } = $props();
 
 	const baseStyles =

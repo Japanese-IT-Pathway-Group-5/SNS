@@ -4,6 +4,7 @@
 
 	let {
 		file = $bindable(null),
+		// eslint-disable-next-line no-useless-assignment
 		error = $bindable(null),
 		maxSizeMB = 5
 	}: {
