@@ -5,7 +5,8 @@
 		faWandMagicSparkles,
 		faPalette,
 		faArrowRight,
-		faSeedling
+		faSeedling,
+		faGear
 	} from '@fortawesome/free-solid-svg-icons';
 </script>
 
@@ -44,6 +45,10 @@
 				<FontAwesomeIcon icon={faPalette} class="size-4" />
 				<span>Explore Component Showcase</span>
 				<FontAwesomeIcon icon={faArrowRight} class="size-4" />
+			</Button>
+			<Button variant="secondary" href="/settings">
+				<FontAwesomeIcon icon={faGear} class="size-4" />
+				<span>Settings</span>
 			</Button>
 		</div>
 	</Card>
