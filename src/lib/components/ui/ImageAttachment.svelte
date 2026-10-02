@@ -13,7 +13,7 @@
 		maxSizeMB?: number;
 	} = $props();
 
-	let fileInput: HTMLInputElement;
+	let fileInput = $state<HTMLInputElement | null>(null);
 	let previewUrl = $state<string | null>(null);
 	let isDragging = $state(false);
 

@@ -5,8 +5,9 @@ describe('uploadPhoto', () => {
 	it('generates a server-controlled image key and stores the detected content type', async () => {
 		const bucket = {
 			put: vi.fn().mockResolvedValue({}),
-			delete: vi.fn().mockResolvedValue(undefined)
-		};
+			delete: vi.fn().mockResolvedValue(undefined),
+			get: vi.fn() as unknown as R2Bucket
+		} as unknown as R2Bucket;
 
 		const file = new File(['fake image data'], 'profile.jpg', {
 			type: 'image/jpeg'
@@ -17,7 +18,7 @@ describe('uploadPhoto', () => {
 		expect(imageKey).toMatch(/^images\/[0-9a-f-]{36}$/);
 		expect(bucket.put).toHaveBeenCalledTimes(1);
 
-		const [key, body, options] = bucket.put.mock.calls[0];
+		const [key, body, options] = (bucket.put as import('vitest').Mock).mock.calls[0];
 
 		expect(key).toBe(imageKey);
 		expect(body).toBeInstanceOf(ReadableStream);
@@ -31,8 +32,9 @@ describe('uploadPhoto', () => {
 	it('propagates an R2 upload failure', async () => {
 		const bucket = {
 			put: vi.fn().mockRejectedValue(new Error('R2 unavailable')),
-			delete: vi.fn().mockResolvedValue(undefined)
-		};
+			delete: vi.fn().mockResolvedValue(undefined),
+			get: vi.fn() as unknown as R2Bucket
+		} as unknown as R2Bucket;
 
 		const file = new File(['fake image data'], 'profile.jpg', {
 			type: 'image/jpeg'

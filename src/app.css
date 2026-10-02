@@ -43,4 +43,13 @@
 		padding: 0;
 		-webkit-font-smoothing: antialiased;
 	}
+
+	.reduce-motion *,
+	.reduce-motion ::after,
+	.reduce-motion ::before {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }
