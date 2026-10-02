@@ -3,7 +3,7 @@ import type { R2Storage } from './r2';
 
 export interface PhotoCleanupContext {
 	bucket: R2Storage;
-	imageKey?: string;
+	objectKey?: string;
 	cleanup?: CleanupOptions;
 }
 
@@ -21,9 +21,9 @@ export async function withPhotoCleanup<T>(
 	try {
 		return await createPost();
 	} catch (error) {
-		if (context.imageKey) {
+		if (context.objectKey) {
 			try {
-				await cleanupUploadedPhoto(context.bucket, context.imageKey, context.cleanup);
+				await cleanupUploadedPhoto(context.bucket, context.objectKey, context.cleanup);
 			} catch (cleanupError) {
 				console.error('Failed to clean up orphaned uploaded photo:', cleanupError);
 			}

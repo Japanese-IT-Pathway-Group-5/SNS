@@ -1,7 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { getDb } from '$lib/server/db';
+import { media } from '$lib/server/db/schema';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
-import { type R2Storage } from '$lib/server/storage/r2';
+import { deleteObject, type R2Storage } from '$lib/server/storage/r2';
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const env = platform?.env as {
 		MEDIA_BUCKET?: R2Storage;
@@ -45,9 +47,9 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({ error: 'Image storage is not configured' }, { status: 503 });
 	}
 	try {
-		const imageKey = await uploadPhoto(env.MEDIA_BUCKET, file);
+		const mediaId = await uploadPhoto(env.MEDIA_BUCKET, file);
 
-		return json({ imageKey }, { status: 201 });
+		return json({ mediaId }, { status: 201 });
 	} catch (error) {
 		console.error('Failed to upload image to R2:', error);
 

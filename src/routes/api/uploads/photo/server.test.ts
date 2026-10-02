@@ -76,9 +76,14 @@ describe('POST /api/uploads/photo', () => {
 			allowed: true
 		});
 
-		mockedUploadPhoto.mockResolvedValue('images/test-image-key');
-	});
-
+        mockedUploadPhoto.mockResolvedValue({
+                objectKey: 'images/test-image-key',
+                contentType: 'image/jpeg',
+                byteSize: 123,
+                width: 1,
+                height: 1
+        });
+});
 	it('returns 401 when the user is not authenticated', async () => {
 		const request = createRequest('', 'multipart/form-data');
 
@@ -109,10 +114,9 @@ describe('POST /api/uploads/photo', () => {
 		const response = await POST(event);
 
 		expect(response.status).toBe(429);
-		expect(await response.json()).toEqual({
-			error: 'Too many upload requests'
-		});
-
+expect(await response.json()).toEqual({
+        error: 'Too many upload requests'
+});
 		expect(mockedUploadPhoto).not.toHaveBeenCalled();
 	});
 
@@ -213,7 +217,13 @@ describe('POST /api/uploads/photo', () => {
 
 		expect(response.status).toBe(201);
 		expect(await response.json()).toEqual({
-			imageKey: 'images/test-image-key'
+			mediaId: {
+                        objectKey: 'images/test-image-key',
+                        contentType: 'image/jpeg',
+                        byteSize: 123,
+                        width: 1,
+                        height: 1
+                }
 		});
 
 		expect(mockedUploadPhoto).toHaveBeenCalledTimes(1);
