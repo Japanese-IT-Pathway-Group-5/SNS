@@ -5,7 +5,6 @@
 		post
 	}: {
 		post: {
-			id: string;
 			body: string;
 			imageKey: string | null;
 			createdAt: Date | string;

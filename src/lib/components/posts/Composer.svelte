@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { Button, Textarea, ImageAttachment, FormMessage, Avatar } from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faPaperPlane, faLightbulb, faTrash } from '@fortawesome/free-solid-svg-icons';
+	import { faPaperPlane, faLightbulb } from '@fortawesome/free-solid-svg-icons';
 	import { onMount } from 'svelte';
 	import type { User } from 'better-auth';
 
@@ -73,11 +72,11 @@
 				});
 
 				if (!uploadRes.ok) {
-					const errorData = (await uploadRes.json()) as any;
+					const errorData = (await uploadRes.json()) as Record<string, string>;
 					throw new Error(errorData.error || 'Failed to upload photo');
 				}
 
-				const uploadData = (await uploadRes.json()) as any;
+				const uploadData = (await uploadRes.json()) as Record<string, string>;
 				imageKey = uploadData.imageKey;
 			}
 

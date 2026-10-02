@@ -1,13 +1,7 @@
 <script lang="ts">
-	import { Button, Card, Badge, EmptyState } from '$lib/components/ui';
+	import { Button, EmptyState } from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faWandMagicSparkles,
-		faPalette,
-		faArrowRight,
-		faSeedling,
-		faGear
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faArrowRight, faSeedling, faGear } from '@fortawesome/free-solid-svg-icons';
 	import { Composer, PostCard } from '$lib/components/posts';
 	import type { PageData } from './$types';
 
@@ -40,7 +34,7 @@
 
 		<div class="mt-8 space-y-8 divide-y divide-line/60">
 			{#if data.posts && data.posts.length > 0}
-				{#each data.posts as post}
+				{#each data.posts as post (post.id)}
 					<div class="pt-8 first:pt-0">
 						<PostCard {post} />
 					</div>

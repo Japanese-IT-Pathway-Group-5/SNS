@@ -6,8 +6,8 @@ describe('uploadPhoto', () => {
 		const bucket = {
 			put: vi.fn().mockResolvedValue({}),
 			delete: vi.fn().mockResolvedValue(undefined),
-			get: vi.fn() as any
-		} as any;
+			get: vi.fn() as unknown as R2Bucket
+		} as unknown as R2Bucket;
 
 		const file = new File(['fake image data'], 'profile.jpg', {
 			type: 'image/jpeg'
@@ -33,8 +33,8 @@ describe('uploadPhoto', () => {
 		const bucket = {
 			put: vi.fn().mockRejectedValue(new Error('R2 unavailable')),
 			delete: vi.fn().mockResolvedValue(undefined),
-			get: vi.fn() as any
-		} as any;
+			get: vi.fn() as unknown as R2Bucket
+		} as unknown as R2Bucket;
 
 		const file = new File(['fake image data'], 'profile.jpg', {
 			type: 'image/jpeg'
