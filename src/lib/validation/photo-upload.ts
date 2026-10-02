@@ -1,13 +1,7 @@
 import { z } from 'zod';
 
-/** Maximum photo size: 5 MiB, per docs/PROJECT_PLAN.md. */
 export const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 
-/**
- * Allowance for multipart framing (boundaries, part headers, filename) on top
- * of the file itself. Only used for the early Content-Length check; the exact
- * file size is checked again after parsing.
- */
 const MULTIPART_OVERHEAD_BYTES = 64 * 1024;
 
 export const MAX_PHOTO_REQUEST_BYTES = MAX_PHOTO_BYTES + MULTIPART_OVERHEAD_BYTES;
@@ -33,7 +27,6 @@ export function validatePhotoUpload(formData: FormData): PhotoUploadResult {
 
 export type ContentLengthCheck = 'ok' | 'missing' | 'invalid' | 'too_large';
 
-/** Checks the declared request size before the body is read. */
 export function checkUploadContentLength(header: string | null): ContentLengthCheck {
 	if (header === null) {
 		return 'missing';

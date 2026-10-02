@@ -1,7 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { IMAGE_HEADER_LENGTH, detectImageType, detectImageTypeFromFile } from './image-signature';
 
-/** Pads a byte prefix with zeros to the full header length. */
 function header(...prefix: number[]): Uint8Array<ArrayBuffer> {
 	const bytes = new Uint8Array(IMAGE_HEADER_LENGTH);
 	bytes.set(prefix);

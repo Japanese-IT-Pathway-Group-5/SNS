@@ -12,7 +12,6 @@ describe('uploadPhoto', () => {
 			type: 'image/jpeg'
 		});
 
-		// The declared type is ignored; the caller passes the type detected from the bytes.
 		const imageKey = await uploadPhoto(bucket, file, 'image/png');
 
 		expect(imageKey).toMatch(/^images\/[0-9a-f-]{36}$/);
