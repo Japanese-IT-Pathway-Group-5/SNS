@@ -34,10 +34,12 @@ export const load: PageServerLoad = async ({ locals, platform }) => {
 };
 
 export const actions: Actions = {
-	createPost: async ({ request, locals }) => {
+	createPost: async ({ request, locals, platform }) => {
 		if (!locals.user) {
 			throw error(401, 'Unauthorized');
 		}
+
+		const db = getDb(platform?.env?.DB as D1Database);
 
 		const formData = await request.formData();
 		const body = formData.get('body')?.toString() || '';

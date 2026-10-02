@@ -5,6 +5,7 @@
 	import { authClient } from '$lib/auth-client';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
+	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 

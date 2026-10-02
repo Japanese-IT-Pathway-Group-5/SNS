@@ -45,10 +45,8 @@
 						<PostCard {post} />
 					</div>
 				{/each}
-				
-				<div class="py-8 text-center text-sm font-medium text-muted">
-					You're caught up.
-				</div>
+
+				<div class="py-8 text-center text-sm font-medium text-muted">You're caught up.</div>
 			{:else}
 				<div class="pt-8">
 					<EmptyState
@@ -62,19 +60,22 @@
 {:else}
 	<main class="mx-auto max-w-xl space-y-10 px-4 py-16 text-center sm:py-24">
 		<div class="space-y-4">
-			<div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted/50 text-accent">
+			<div
+				class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted/50 text-accent"
+			>
 				<FontAwesomeIcon icon={faSeedling} class="size-8" />
 			</div>
 			<h1 class="text-3xl font-bold tracking-tight text-ink sm:text-5xl">Everyday Journal</h1>
 			<p class="mx-auto max-w-md text-base leading-relaxed text-muted sm:text-lg">
-				A cozy, private place to record your days. Your day doesn't have to be special to be worth sharing.
+				A cozy, private place to record your days. Your day doesn't have to be special to be worth
+				sharing.
 			</p>
 		</div>
 
 		<div class="mx-auto max-w-sm space-y-4">
 			<Button variant="primary" class="w-full" href="/login">
 				<span>Log In to Your Journal</span>
-				<FontAwesomeIcon icon={faArrowRight} class="size-4 ml-2" />
+				<FontAwesomeIcon icon={faArrowRight} class="ml-2 size-4" />
 			</Button>
 		</div>
 	</main>

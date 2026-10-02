@@ -15,10 +15,10 @@
 	let isSubmitting = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let hasDraft = $state(false);
-	
-	let placeholder = $state("Anything from today?");
 
-	const draftKey = `composer_draft_${user.id}`;
+	let placeholder = $state('Anything from today?');
+
+	const draftKey = $derived(`composer_draft_${user.id}`);
 
 	onMount(() => {
 		const draft = localStorage.getItem(draftKey);
@@ -47,7 +47,7 @@
 	}
 
 	function setIdea() {
-		placeholder = "Something you noticed";
+		placeholder = 'Something you noticed';
 	}
 
 	async function handleSubmit(e: Event) {
@@ -119,7 +119,11 @@
 			<div class="space-y-2">
 				<div class="flex items-center justify-between">
 					<label for="post-body" class="text-sm font-bold text-ink">Today's entry</label>
-					<button type="button" class="text-xs text-accent hover:underline flex items-center gap-1" onclick={setIdea}>
+					<button
+						type="button"
+						class="flex items-center gap-1 text-xs text-accent hover:underline"
+						onclick={setIdea}
+					>
 						<FontAwesomeIcon icon={faLightbulb} class="size-3" />
 						Need an idea?
 					</button>
@@ -139,12 +143,14 @@
 
 			{#if file}
 				<div class="space-y-1">
-					<label for="image-alt" class="text-xs font-medium text-ink">Image description (optional)</label>
-					<input 
-						type="text" 
-						id="image-alt" 
+					<label for="image-alt" class="text-xs font-medium text-ink"
+						>Image description (optional)</label
+					>
+					<input
+						type="text"
+						id="image-alt"
 						bind:value={imageAlt}
-						class="w-full rounded-lg border border-control-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none" 
+						class="w-full rounded-lg border border-control-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none"
 						placeholder="What's in this photo?"
 						disabled={isSubmitting}
 					/>
