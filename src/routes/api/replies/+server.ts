@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { parsePaginationParams, PaginationValidationError } from '$lib/server/http/pagination';
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
 import { listReplies } from '$lib/server/replies/list';
 
@@ -21,34 +22,16 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 		return json({ error: 'postId is required' }, { status: 400 });
 	}
 
-	const cursorCreatedAt = url.searchParams.get('cursorCreatedAt');
-	const cursorId = url.searchParams.get('cursorId');
+	let pagination;
 
-	let cursor:
-		| {
-				createdAt: number;
-				id: string;
-		  }
-		| undefined;
-
-	if (cursorCreatedAt !== null || cursorId !== null) {
-		const createdAt = Number(cursorCreatedAt);
-
-		if (!Number.isFinite(createdAt) || !cursorId?.trim()) {
-			return json({ error: 'Invalid cursor' }, { status: 400 });
+	try {
+		pagination = parsePaginationParams(url);
+	} catch (error) {
+		if (error instanceof PaginationValidationError) {
+			return json({ error: error.message }, { status: 400 });
 		}
 
-		cursor = {
-			createdAt,
-			id: cursorId.trim()
-		};
-	}
-
-	const limitParam = url.searchParams.get('limit');
-	const limit = limitParam === null ? undefined : Number(limitParam);
-
-	if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
-		return json({ error: 'Invalid limit' }, { status: 400 });
+		throw error;
 	}
 
 	try {
@@ -56,8 +39,7 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 			d1: env.DB,
 			userId: locals.user.id,
 			postId,
-			cursor,
-			limit
+			...pagination
 		});
 
 		return json(result);

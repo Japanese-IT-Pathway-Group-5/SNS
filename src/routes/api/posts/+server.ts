@@ -1,4 +1,5 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { parsePaginationParams, PaginationValidationError } from '$lib/server/http/pagination';
 import { createPost, PostValidationError } from '$lib/server/posts/create';
 import { listPosts } from '$lib/server/posts/list';
 import { rateLimitPost } from '$lib/server/security/rate-limit';
@@ -17,44 +18,23 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 		return json({ error: 'Database is not configured' }, { status: 503 });
 	}
 
-	const cursorCreatedAt = url.searchParams.get('cursorCreatedAt');
-	const cursorId = url.searchParams.get('cursorId');
+	let pagination;
 
-	let cursor:
-		| {
-				createdAt: number;
-				id: string;
-		  }
-		| undefined;
-
-	if (cursorCreatedAt !== null || cursorId !== null) {
-		const createdAt = Number(cursorCreatedAt);
-
-		if (!Number.isFinite(createdAt) || !cursorId?.trim()) {
-			return json({ error: 'Invalid cursor' }, { status: 400 });
+	try {
+		pagination = parsePaginationParams(url);
+	} catch (error) {
+		if (error instanceof PaginationValidationError) {
+			return json({ error: error.message }, { status: 400 });
 		}
 
-		cursor = {
-			createdAt,
-			id: cursorId.trim()
-		};
-	}
-
-	const limitParam = url.searchParams.get('limit');
-	const limit = limitParam === null ? undefined : Number(limitParam);
-
-	if (limit !== undefined && (!Number.isInteger(limit) || limit < 1)) {
-		return json({ error: 'Invalid limit' }, { status: 400 });
+		throw error;
 	}
 
 	try {
 		const result = await listPosts({
 			d1: env.DB,
 			userId: locals.user.id,
-			options: {
-				cursor,
-				limit
-			}
+			options: pagination
 		});
 
 		return json(result);
