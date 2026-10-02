@@ -2,82 +2,106 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
+import { detectImageTypeFromFile } from '$lib/server/storage/image-signature';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
 import { deleteObject, type R2Storage } from '$lib/server/storage/r2';
+import { checkUploadContentLength, validatePhotoUpload } from '$lib/validation/photo-upload';
+
+const TOO_LARGE = 'Image is too large';
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
-	const env = platform?.env as {
-		DB?: D1Database;
-		MEDIA_BUCKET?: R2Storage;
-	};
+        const env = platform?.env as {
+                DB?: D1Database;
+                MEDIA_BUCKET?: R2Storage;
+        };
 
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
+        if (!locals.user) {
+                return json({ error: 'Unauthorized' }, { status: 401 });
+        }
 
-	const rateLimitResult = await rateLimitUpload(platform?.env?.UPLOAD_RATE_LIMITER, locals.user.id);
+        const rateLimitResult = await rateLimitUpload(platform?.env?.UPLOAD_RATE_LIMITER, locals.user.id);
 
-	if (!rateLimitResult.allowed) {
-		return json({ error: 'Too many upload requests' }, { status: rateLimitResult.status });
-	}
+        if (!rateLimitResult.allowed) {
+                return json({ error: 'Too many upload requests' }, { status: rateLimitResult.status });
+        }
 
-	const contentType = request.headers.get('content-type') ?? '';
+        const contentType = request.headers.get('content-type') ?? '';
 
-	if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
-		return json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 });
-	}
+        if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
+                return json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 });
+        }
 
-	let formData: FormData;
+        // Reject by declared size before the body is buffered by formData().
+        const contentLength = checkUploadContentLength(request.headers.get('content-length'));
 
-	try {
-		formData = await request.formData();
-	} catch {
-		return json({ error: 'Invalid multipart form data' }, { status: 400 });
-	}
+        if (contentLength === 'missing') {
+                return json({ error: 'Content-Length header is required' }, { status: 411 });
+        }
 
-	const file = formData.get('file');
+        if (contentLength === 'invalid') {
+                return json({ error: 'Invalid Content-Length header' }, { status: 400 });
+        }
 
-	if (!(file instanceof File)) {
-		return json({ error: 'An image file is required' }, { status: 400 });
-	}
+        if (contentLength === 'too_large') {
+                return json({ error: TOO_LARGE }, { status: 413 });
+        }
 
-	if (!file.type.startsWith('image/')) {
-		return json({ error: 'Only image files are allowed' }, { status: 400 });
-	}
+        let formData: FormData;
 
-	if (!env.MEDIA_BUCKET || !env.DB) {
-		return json({ error: 'Image storage is not configured' }, { status: 503 });
-	}
+        try {
+                formData = await request.formData();
+        } catch {
+                return json({ error: 'Invalid multipart form data' }, { status: 400 });
+        }
 
-	let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
+        const upload = validatePhotoUpload(formData);
 
-	try {
-		uploaded = await uploadPhoto(env.MEDIA_BUCKET, file);
+        if (!upload.success) {
+                return upload.error === 'too_large'
+                        ? json({ error: TOO_LARGE }, { status: 413 })
+                        : json({ error: 'An image file is required' }, { status: 400 });
+        }
 
-		const db = getDb(env.DB);
-		const mediaId = crypto.randomUUID();
+        // Trust the file's bytes, never its declared MIME type or filename.
+        const imageType = await detectImageTypeFromFile(upload.file);
 
-		await db.insert(media).values({
-			id: mediaId,
-			ownerId: locals.user.id,
-			objectKey: uploaded.objectKey,
-			contentType: uploaded.contentType,
-			byteSize: uploaded.byteSize,
-			status: 'pending'
-		});
+        if (!imageType) {
+                return json({ error: 'Only JPEG, PNG or WebP images are allowed' }, { status: 415 });
+        }
 
-		return json({ mediaId }, { status: 201 });
-	} catch (error) {
-		if (uploaded) {
-			try {
-				await deleteObject(env.MEDIA_BUCKET, uploaded.objectKey);
-			} catch (cleanupError) {
-				console.error('Failed to clean up uploaded image:', cleanupError);
-			}
-		}
+        if (!env.MEDIA_BUCKET || !env.DB) {
+                return json({ error: 'Image storage is not configured' }, { status: 503 });
+        }
 
-		console.error('Failed to store image:', error);
+        let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
 
-		return json({ error: 'Failed to store image' }, { status: 500 });
-	}
+        try {
+                uploaded = await uploadPhoto(env.MEDIA_BUCKET, upload.file, imageType);
+
+                const db = getDb(env.DB);
+                const mediaId = crypto.randomUUID();
+
+                await db.insert(media).values({
+                        id: mediaId,
+                        ownerId: locals.user.id,
+                        objectKey: uploaded.objectKey,
+                        contentType: uploaded.contentType,
+                        byteSize: uploaded.byteSize,
+                        status: 'pending'
+                });
+
+                return json({ mediaId }, { status: 201 });
+        } catch (error) {
+                if (uploaded) {
+                        try {
+                                await deleteObject(env.MEDIA_BUCKET, uploaded.objectKey);
+                        } catch (cleanupError) {
+                                console.error('Failed to clean up uploaded image:', cleanupError);
+                        }
+                }
+
+                console.error('Failed to store image:', error);
+
+                return json({ error: 'Failed to store image' }, { status: 500 });
+        }
 };
