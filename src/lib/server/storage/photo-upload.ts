@@ -8,7 +8,8 @@ export async function uploadPhoto(
 ): Promise<string> {
 	const imageKey = `images/${crypto.randomUUID()}`;
 
-	await putObject(bucket, imageKey, file.stream(), contentType);
+	const buffer = await file.arrayBuffer();
+	await putObject(bucket, imageKey, buffer, contentType);
 
 	return imageKey;
 }

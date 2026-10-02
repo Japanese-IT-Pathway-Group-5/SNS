@@ -13,7 +13,7 @@ export interface R2Storage {
 export async function putObject(
 	bucket: R2Storage,
 	key: string,
-	value: ReadableStream,
+	value: ReadableStream | ArrayBuffer,
 	contentType: string
 ): Promise<void> {
 	await bucket.put(key, value, {

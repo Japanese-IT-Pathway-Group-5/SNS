@@ -1,10 +1,13 @@
 <script lang="ts">
 	import { Avatar } from '$lib/components/ui';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faComment } from '@fortawesome/free-regular-svg-icons';
 
 	let {
 		post
 	}: {
 		post: {
+			id: string;
 			body: string;
 			imageKey: string | null;
 			createdAt: Date | string;
@@ -34,9 +37,13 @@
 		<div class="flex items-center gap-2">
 			<p class="truncate font-bold text-ink">{post.author.name}</p>
 			<span class="text-muted/60">•</span>
-			<p class="shrink-0 text-sm text-muted" title={new Date(post.createdAt).toLocaleString()}>
+			<a
+				href={`/post/${post.id}`}
+				class="shrink-0 text-sm text-muted hover:underline"
+				title={new Date(post.createdAt).toLocaleString()}
+			>
 				{timestamp}
-			</p>
+			</a>
 		</div>
 
 		{#if post.body}
@@ -55,5 +62,15 @@
 				/>
 			</div>
 		{/if}
+
+		<div class="mt-2 flex items-center gap-4">
+			<a
+				href={`/post/${post.id}`}
+				class="flex items-center gap-1.5 text-sm text-muted hover:text-accent transition-colors"
+			>
+				<FontAwesomeIcon icon={faComment} class="size-4" />
+				<span>Reply</span>
+			</a>
+		</div>
 	</div>
 </div>

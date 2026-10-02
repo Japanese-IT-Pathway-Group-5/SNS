@@ -21,7 +21,7 @@ describe('uploadPhoto', () => {
 		const [key, body, options] = (bucket.put as import('vitest').Mock).mock.calls[0];
 
 		expect(key).toBe(imageKey);
-		expect(body).toBeInstanceOf(ReadableStream);
+		expect(body).toBeInstanceOf(ArrayBuffer);
 		expect(options).toEqual({
 			httpMetadata: {
 				contentType: 'image/png'

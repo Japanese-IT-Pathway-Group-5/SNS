@@ -64,7 +64,7 @@
 
 			if (file) {
 				const formData = new FormData();
-				formData.append('photo', file);
+				formData.append('file', file);
 
 				const uploadRes = await fetch('/api/uploads/photo', {
 					method: 'POST',
