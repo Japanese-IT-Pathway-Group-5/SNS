@@ -4,8 +4,10 @@ import { media } from '$lib/server/db/schema';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
 import { deleteObject, type R2Storage } from '$lib/server/storage/r2';
+
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const env = platform?.env as {
+		DB?: D1Database;
 		MEDIA_BUCKET?: R2Storage;
 	};
 
@@ -43,15 +45,38 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({ error: 'Only image files are allowed' }, { status: 400 });
 	}
 
-	if (!env?.MEDIA_BUCKET) {
+	if (!env.MEDIA_BUCKET || !env.DB) {
 		return json({ error: 'Image storage is not configured' }, { status: 503 });
 	}
+
+	let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
+
 	try {
-		const mediaId = await uploadPhoto(env.MEDIA_BUCKET, file);
+		uploaded = await uploadPhoto(env.MEDIA_BUCKET, file);
+
+		const db = getDb(env.DB);
+		const mediaId = crypto.randomUUID();
+
+		await db.insert(media).values({
+			id: mediaId,
+			ownerId: locals.user.id,
+			objectKey: uploaded.objectKey,
+			contentType: uploaded.contentType,
+			byteSize: uploaded.byteSize,
+			status: 'pending'
+		});
 
 		return json({ mediaId }, { status: 201 });
 	} catch (error) {
-		console.error('Failed to upload image to R2:', error);
+		if (uploaded) {
+			try {
+				await deleteObject(env.MEDIA_BUCKET, uploaded.objectKey);
+			} catch (cleanupError) {
+				console.error('Failed to clean up uploaded image:', cleanupError);
+			}
+		}
+
+		console.error('Failed to store image:', error);
 
 		return json({ error: 'Failed to store image' }, { status: 500 });
 	}

@@ -58,10 +58,7 @@ export async function moderatePost({
 
 	const hiddenAt = action === 'hide' ? new Date() : null;
 
-	await db
-		.update(post)
-		.set({ hiddenAt })
-		.where(eq(post.id, postId));
+	await db.update(post).set({ hiddenAt }).where(eq(post.id, postId));
 
 	await db.insert(moderationEvent).values({
 		action,

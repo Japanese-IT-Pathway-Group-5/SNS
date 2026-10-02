@@ -3,14 +3,23 @@ import { uploadPhoto } from './photo-upload';
 
 // Minimal valid JPEG containing a 1x1 image SOF marker.
 const JPEG_1X1 = Uint8Array.from([
-	0xff, 0xd8, // SOI
-	0xff, 0xc0, // SOF0
-	0x00, 0x0b, // segment length
-	0x08,       // precision
-	0x00, 0x01, // height = 1
-	0x00, 0x01, // width = 1
-	0x01, 0x01, 0x11, 0x00,
-	0xff, 0xd9  // EOI
+	0xff,
+	0xd8, // SOI
+	0xff,
+	0xc0, // SOF0
+	0x00,
+	0x0b, // segment length
+	0x08, // precision
+	0x00,
+	0x01, // height = 1
+	0x00,
+	0x01, // width = 1
+	0x01,
+	0x01,
+	0x11,
+	0x00,
+	0xff,
+	0xd9 // EOI
 ]);
 
 describe('uploadPhoto', () => {
@@ -38,8 +47,8 @@ describe('uploadPhoto', () => {
 		const [key, body, options] = bucket.put.mock.calls[0];
 
 		expect(key).toBe(media.objectKey);
-                expect(body).toBeInstanceOf(Uint8Array);
-                expect(body).toEqual(JPEG_1X1);
+		expect(body).toBeInstanceOf(Uint8Array);
+		expect(body).toEqual(JPEG_1X1);
 		expect(options).toEqual({
 			httpMetadata: {
 				contentType: 'image/jpeg'

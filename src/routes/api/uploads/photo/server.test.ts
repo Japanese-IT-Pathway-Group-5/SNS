@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST } from './+server';
+import { getDb } from '$lib/server/db';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
 
@@ -11,8 +12,13 @@ vi.mock('$lib/server/storage/photo-upload', () => ({
 	uploadPhoto: vi.fn()
 }));
 
+vi.mock('$lib/server/db', () => ({
+	getDb: vi.fn()
+}));
+
 const mockedRateLimitUpload = vi.mocked(rateLimitUpload);
 const mockedUploadPhoto = vi.mocked(uploadPhoto);
+const mockedGetDb = vi.mocked(getDb);
 
 function createRequest(body?: BodyInit, contentType?: string): Request {
 	return new Request('http://localhost/api/uploads/photo', {
@@ -49,6 +55,7 @@ function createAuthenticatedEvent(
 		platform: {
 			env: {
 				UPLOAD_RATE_LIMITER: {},
+				DB: {},
 				MEDIA_BUCKET: options.mediaBucket === undefined ? {} : options.mediaBucket
 			}
 		}
@@ -76,14 +83,21 @@ describe('POST /api/uploads/photo', () => {
 			allowed: true
 		});
 
-        mockedUploadPhoto.mockResolvedValue({
-                objectKey: 'images/test-image-key',
-                contentType: 'image/jpeg',
-                byteSize: 123,
-                width: 1,
-                height: 1
-        });
-});
+		mockedUploadPhoto.mockResolvedValue({
+			objectKey: 'images/test-image-key',
+			contentType: 'image/jpeg',
+			byteSize: 123,
+			width: 1,
+			height: 1
+		});
+
+		mockedGetDb.mockReturnValue({
+			insert: vi.fn().mockReturnValue({
+				values: vi.fn().mockResolvedValue(undefined)
+			})
+		} as never);
+	});
+
 	it('returns 401 when the user is not authenticated', async () => {
 		const request = createRequest('', 'multipart/form-data');
 
@@ -114,9 +128,9 @@ describe('POST /api/uploads/photo', () => {
 		const response = await POST(event);
 
 		expect(response.status).toBe(429);
-expect(await response.json()).toEqual({
-        error: 'Too many upload requests'
-});
+		expect(await response.json()).toEqual({
+			error: 'Too many upload requests'
+		});
 		expect(mockedUploadPhoto).not.toHaveBeenCalled();
 	});
 
@@ -205,7 +219,7 @@ expect(await response.json()).toEqual({
 		});
 	});
 
-	it('uploads an image and returns the image key', async () => {
+	it('uploads an image, stores media metadata, and returns the media id', async () => {
 		const file = new File(['fake image'], 'profile.jpg', {
 			type: 'image/jpeg'
 		});
@@ -216,17 +230,16 @@ expect(await response.json()).toEqual({
 		const response = await POST(event);
 
 		expect(response.status).toBe(201);
-		expect(await response.json()).toEqual({
-			mediaId: {
-                        objectKey: 'images/test-image-key',
-                        contentType: 'image/jpeg',
-                        byteSize: 123,
-                        width: 1,
-                        height: 1
-                }
+
+		const body = await response.json();
+
+		expect(body).toEqual({
+			mediaId: expect.any(String)
 		});
 
 		expect(mockedUploadPhoto).toHaveBeenCalledTimes(1);
 		expect(mockedUploadPhoto).toHaveBeenCalledWith({}, expect.any(File));
+
+		expect(mockedGetDb).toHaveBeenCalledWith({});
 	});
 });
