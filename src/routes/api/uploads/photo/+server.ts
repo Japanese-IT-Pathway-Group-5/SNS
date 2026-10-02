@@ -10,98 +10,98 @@ import { checkUploadContentLength, validatePhotoUpload } from '$lib/validation/p
 const TOO_LARGE = 'Image is too large';
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
-        const env = platform?.env as {
-                DB?: D1Database;
-                MEDIA_BUCKET?: R2Storage;
-        };
+	const env = platform?.env as {
+		DB?: D1Database;
+		MEDIA_BUCKET?: R2Storage;
+	};
 
-        if (!locals.user) {
-                return json({ error: 'Unauthorized' }, { status: 401 });
-        }
+	if (!locals.user) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
 
-        const rateLimitResult = await rateLimitUpload(platform?.env?.UPLOAD_RATE_LIMITER, locals.user.id);
+	const rateLimitResult = await rateLimitUpload(platform?.env?.UPLOAD_RATE_LIMITER, locals.user.id);
 
-        if (!rateLimitResult.allowed) {
-                return json({ error: 'Too many upload requests' }, { status: rateLimitResult.status });
-        }
+	if (!rateLimitResult.allowed) {
+		return json({ error: 'Too many upload requests' }, { status: rateLimitResult.status });
+	}
 
-        const contentType = request.headers.get('content-type') ?? '';
+	const contentType = request.headers.get('content-type') ?? '';
 
-        if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
-                return json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 });
-        }
+	if (!contentType.toLowerCase().startsWith('multipart/form-data')) {
+		return json({ error: 'Content-Type must be multipart/form-data' }, { status: 400 });
+	}
 
-        // Reject by declared size before the body is buffered by formData().
-        const contentLength = checkUploadContentLength(request.headers.get('content-length'));
+	// Reject by declared size before the body is buffered by formData().
+	const contentLength = checkUploadContentLength(request.headers.get('content-length'));
 
-        if (contentLength === 'missing') {
-                return json({ error: 'Content-Length header is required' }, { status: 411 });
-        }
+	if (contentLength === 'missing') {
+		return json({ error: 'Content-Length header is required' }, { status: 411 });
+	}
 
-        if (contentLength === 'invalid') {
-                return json({ error: 'Invalid Content-Length header' }, { status: 400 });
-        }
+	if (contentLength === 'invalid') {
+		return json({ error: 'Invalid Content-Length header' }, { status: 400 });
+	}
 
-        if (contentLength === 'too_large') {
-                return json({ error: TOO_LARGE }, { status: 413 });
-        }
+	if (contentLength === 'too_large') {
+		return json({ error: TOO_LARGE }, { status: 413 });
+	}
 
-        let formData: FormData;
+	let formData: FormData;
 
-        try {
-                formData = await request.formData();
-        } catch {
-                return json({ error: 'Invalid multipart form data' }, { status: 400 });
-        }
+	try {
+		formData = await request.formData();
+	} catch {
+		return json({ error: 'Invalid multipart form data' }, { status: 400 });
+	}
 
-        const upload = validatePhotoUpload(formData);
+	const upload = validatePhotoUpload(formData);
 
-        if (!upload.success) {
-                return upload.error === 'too_large'
-                        ? json({ error: TOO_LARGE }, { status: 413 })
-                        : json({ error: 'An image file is required' }, { status: 400 });
-        }
+	if (!upload.success) {
+		return upload.error === 'too_large'
+			? json({ error: TOO_LARGE }, { status: 413 })
+			: json({ error: 'An image file is required' }, { status: 400 });
+	}
 
-        // Trust the file's bytes, never its declared MIME type or filename.
-        const imageType = await detectImageTypeFromFile(upload.file);
+	// Trust the file's bytes, never its declared MIME type or filename.
+	const imageType = await detectImageTypeFromFile(upload.file);
 
-        if (!imageType) {
-                return json({ error: 'Only JPEG, PNG or WebP images are allowed' }, { status: 415 });
-        }
+	if (!imageType) {
+		return json({ error: 'Only JPEG, PNG or WebP images are allowed' }, { status: 415 });
+	}
 
-        if (!env.MEDIA_BUCKET || !env.DB) {
-                return json({ error: 'Image storage is not configured' }, { status: 503 });
-        }
+	if (!env.MEDIA_BUCKET || !env.DB) {
+		return json({ error: 'Image storage is not configured' }, { status: 503 });
+	}
 
-        let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
+	let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
 
-        try {
-                uploaded = await uploadPhoto(env.MEDIA_BUCKET, upload.file, imageType);
+	try {
+		uploaded = await uploadPhoto(env.MEDIA_BUCKET, upload.file, imageType);
 
-                const db = getDb(env.DB);
-                const mediaId = crypto.randomUUID();
+		const db = getDb(env.DB);
+		const mediaId = crypto.randomUUID();
 
-                await db.insert(media).values({
-                        id: mediaId,
-                        ownerId: locals.user.id,
-                        objectKey: uploaded.objectKey,
-                        contentType: uploaded.contentType,
-                        byteSize: uploaded.byteSize,
-                        status: 'pending'
-                });
+		await db.insert(media).values({
+			id: mediaId,
+			ownerId: locals.user.id,
+			objectKey: uploaded.objectKey,
+			contentType: uploaded.contentType,
+			byteSize: uploaded.byteSize,
+			status: 'pending'
+		});
 
-                return json({ mediaId }, { status: 201 });
-        } catch (error) {
-                if (uploaded) {
-                        try {
-                                await deleteObject(env.MEDIA_BUCKET, uploaded.objectKey);
-                        } catch (cleanupError) {
-                                console.error('Failed to clean up uploaded image:', cleanupError);
-                        }
-                }
+		return json({ mediaId }, { status: 201 });
+	} catch (error) {
+		if (uploaded) {
+			try {
+				await deleteObject(env.MEDIA_BUCKET, uploaded.objectKey);
+			} catch (cleanupError) {
+				console.error('Failed to clean up uploaded image:', cleanupError);
+			}
+		}
 
-                console.error('Failed to store image:', error);
+		console.error('Failed to store image:', error);
 
-                return json({ error: 'Failed to store image' }, { status: 500 });
-        }
+		return json({ error: 'Failed to store image' }, { status: 500 });
+	}
 };

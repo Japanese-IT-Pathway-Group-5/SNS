@@ -346,8 +346,8 @@ describe('POST /api/uploads/photo', () => {
 		});
 	});
 
-        it('uploads an image, stores media metadata, and returns the media id', async () => {
-                const file = imageFile(JPEG_HEADER, 'profile.jpg', 'image/jpeg');
+	it('uploads an image, stores media metadata, and returns the media id', async () => {
+		const file = imageFile(JPEG_HEADER, 'profile.jpg', 'image/jpeg');
 
 		const request = await createMultipartRequest(file);
 		const event = createAuthenticatedEvent(request);
@@ -363,13 +363,9 @@ describe('POST /api/uploads/photo', () => {
 		});
 
 		expect(mockedUploadPhoto).toHaveBeenCalledTimes(1);
-                expect(mockedUploadPhoto).toHaveBeenCalledWith(
-                        {},
-                        expect.any(File),
-                        'image/jpeg'
-                );
+		expect(mockedUploadPhoto).toHaveBeenCalledWith({}, expect.any(File), 'image/jpeg');
 
-                expect(mockedGetDb).toHaveBeenCalledWith({});
+		expect(mockedGetDb).toHaveBeenCalledWith({});
 	});
 
 	it.each([
