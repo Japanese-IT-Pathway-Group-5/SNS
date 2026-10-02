@@ -31,8 +31,10 @@
 		loading = false,
 		class: className,
 		children,
+		onclick,
 		...restProps
-	}: Props = $props();
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	}: Props & { onclick?: any } = $props();
 
 	const baseStyles =
 		'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 select-none active:scale-[0.98] no-underline';
@@ -54,6 +56,7 @@
 {#if 'href' in restProps && restProps.href}
 	<a
 		class={cn(baseStyles, variants[variant], sizes[size], className)}
+		{onclick}
 		{...restProps as HTMLAnchorAttributes}
 	>
 		{#if loading}
@@ -70,6 +73,7 @@
 		disabled={buttonProps.disabled || loading}
 		class={cn(baseStyles, variants[variant], sizes[size], className)}
 		aria-busy={loading}
+		{onclick}
 		{...buttonProps}
 	>
 		{#if loading}
