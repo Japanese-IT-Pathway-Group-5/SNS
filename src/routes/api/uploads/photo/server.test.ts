@@ -233,6 +233,18 @@ describe('POST /api/uploads/photo', () => {
 		expect(mockedUploadPhoto).not.toHaveBeenCalled();
 	});
 
+	it('returns 400 for a malformed multipart body', async () => {
+		const body = 'this is not real multipart data';
+		const request = createRequest(body, 'multipart/form-data; boundary=x');
+		request.headers.set('content-length', String(body.length));
+
+		const response = await POST(createAuthenticatedEvent(request));
+
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({ error: 'Invalid multipart form data' });
+		expect(mockedUploadPhoto).not.toHaveBeenCalled();
+	});
+
 	describe('file signature', () => {
 		const UNSUPPORTED = 'Only JPEG, PNG or WebP images are allowed';
 
