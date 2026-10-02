@@ -3,7 +3,8 @@
 	import { Button, Card, ModalDialog, Avatar } from '$lib/components/ui';
 	import { onMount } from 'svelte';
 	import { authClient } from '$lib/auth-client';
-	import type { PageData } from './$types';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 
 	let { data }: { data: PageData } = $props();
 
@@ -47,7 +48,12 @@
 </script>
 
 <div class="mx-auto max-w-2xl px-4 py-8 sm:py-12">
-	<h1 class="mb-8 text-3xl font-bold tracking-tight text-ink">Settings</h1>
+	<div class="mb-8 flex items-center gap-4">
+		<Button variant="ghost" size="sm" href="/" aria-label="Go back">
+			<FontAwesomeIcon icon={faArrowLeft} class="size-4" />
+		</Button>
+		<h1 class="text-3xl font-bold tracking-tight text-ink">Settings</h1>
+	</div>
 
 	<div class="space-y-8">
 		<!-- Account Card -->

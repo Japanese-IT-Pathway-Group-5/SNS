@@ -5,8 +5,9 @@ describe('withPhotoCleanup', () => {
 	it('keeps the image when post creation succeeds', async () => {
 		const bucket = {
 			put: vi.fn(),
-			delete: vi.fn()
-		};
+			delete: vi.fn(),
+			get: vi.fn() as any
+		} as any;
 
 		const createPost = vi.fn().mockResolvedValue({ id: 'post-1' });
 
@@ -26,8 +27,9 @@ describe('withPhotoCleanup', () => {
 	it('cleans up the image when post creation fails', async () => {
 		const bucket = {
 			put: vi.fn(),
-			delete: vi.fn().mockResolvedValue(undefined)
-		};
+			delete: vi.fn().mockResolvedValue(undefined),
+			get: vi.fn() as any
+		} as any;
 
 		const error = new Error('database insert failed');
 		const createPost = vi.fn().mockRejectedValue(error);
@@ -49,8 +51,9 @@ describe('withPhotoCleanup', () => {
 	it('does not attempt cleanup when no image was uploaded', async () => {
 		const bucket = {
 			put: vi.fn(),
-			delete: vi.fn()
-		};
+			delete: vi.fn(),
+			get: vi.fn() as any
+		} as any;
 
 		const createPost = vi.fn().mockRejectedValue(new Error('database insert failed'));
 
@@ -72,8 +75,9 @@ describe('withPhotoCleanup', () => {
 			delete: vi
 				.fn()
 				.mockRejectedValueOnce(new Error('temporary R2 failure'))
-				.mockResolvedValueOnce(undefined)
-		};
+				.mockResolvedValueOnce(undefined),
+			get: vi.fn() as any
+		} as any;
 
 		const createPost = vi.fn().mockRejectedValue(new Error('database insert failed'));
 
@@ -97,8 +101,9 @@ describe('withPhotoCleanup', () => {
 	it('preserves the post error if cleanup ultimately fails', async () => {
 		const bucket = {
 			put: vi.fn(),
-			delete: vi.fn().mockRejectedValue(new Error('R2 unavailable'))
-		};
+			delete: vi.fn().mockRejectedValue(new Error('R2 unavailable')),
+			get: vi.fn() as any
+		} as any;
 
 		const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
 
