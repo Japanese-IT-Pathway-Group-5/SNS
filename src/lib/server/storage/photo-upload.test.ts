@@ -18,7 +18,7 @@ describe('uploadPhoto', () => {
 		expect(imageKey).toMatch(/^images\/[0-9a-f-]{36}$/);
 		expect(bucket.put).toHaveBeenCalledTimes(1);
 
-		const [key, body, options] = bucket.put.mock.calls[0];
+		const [key, body, options] = (bucket.put as import('vitest').Mock).mock.calls[0];
 
 		expect(key).toBe(imageKey);
 		expect(body).toBeInstanceOf(ReadableStream);

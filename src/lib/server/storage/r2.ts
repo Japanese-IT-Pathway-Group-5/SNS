@@ -5,7 +5,7 @@ export interface R2Storage {
 		options?: R2PutOptions
 	): Promise<R2Object>;
 
-	get(key: string): Promise<unknown>;
+	get(key: string): Promise<R2ObjectBody | null>;
 
 	delete(key: string): Promise<void>;
 }
