@@ -2,8 +2,8 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faImage, faXmark, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
 
-	let { 
-		file = $bindable(null), 
+	let {
+		file = $bindable(null),
 		error = $bindable(null),
 		maxSizeMB = 5
 	}: {
@@ -26,7 +26,7 @@
 
 	function handleFile(newFile: File | null) {
 		error = null;
-		
+
 		if (!newFile) {
 			file = null;
 			return;
@@ -83,19 +83,23 @@
 <div class="relative w-full">
 	{#if previewUrl}
 		<!-- Image Preview -->
-		<div class="group relative mt-2 overflow-hidden rounded-xl border border-control-border bg-surface-muted shadow-sm transition-all">
-			<img 
-				src={previewUrl} 
-				alt="Selected attachment preview" 
+		<div
+			class="group relative mt-2 overflow-hidden rounded-xl border border-control-border bg-surface-muted shadow-sm transition-all"
+		>
+			<img
+				src={previewUrl}
+				alt="Selected attachment preview"
 				class="max-h-[400px] w-full object-contain"
 			/>
-			
+
 			<!-- Subtle gradient overlay to ensure the remove button is always visible -->
-			<div class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"></div>
-			
+			<div
+				class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
+			></div>
+
 			<button
 				type="button"
-				class="absolute right-3 top-3 flex size-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-danger active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+				class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-danger focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
 				aria-label="Remove image"
 				onclick={clearImage}
 			>
@@ -111,9 +115,11 @@
 			bind:this={fileInput}
 			onchange={onChange}
 		/>
-		
-		<div 
-			class="mt-2 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all hover:border-accent hover:bg-surface-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 {isDragging ? 'border-accent bg-accent-soft scale-[1.02]' : 'border-line bg-surface'}"
+
+		<div
+			class="mt-2 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all hover:border-accent hover:bg-surface-muted/50 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none {isDragging
+				? 'scale-[1.02] border-accent bg-accent-soft'
+				: 'border-line bg-surface'}"
 			ondragover={onDragOver}
 			ondragleave={onDragLeave}
 			ondrop={onDrop}
@@ -123,10 +129,14 @@
 			tabindex="0"
 			aria-label="Upload an image"
 		>
-			<div class="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform group-hover:scale-110 {isDragging ? 'scale-110' : ''}">
+			<div
+				class="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform group-hover:scale-110 {isDragging
+					? 'scale-110'
+					: ''}"
+			>
 				<FontAwesomeIcon icon={isDragging ? faCloudArrowUp : faImage} class="size-5" />
 			</div>
-			
+
 			<div class="mt-3 space-y-1 text-center">
 				<p class="text-sm font-medium text-ink">
 					{isDragging ? 'Drop photo here' : 'Click or drag to add a photo'}

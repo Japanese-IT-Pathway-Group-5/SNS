@@ -273,23 +273,23 @@
 		<h2 class="text-lg font-bold text-ink">
 			Image Attachment (<code class="font-mono text-sm">&lt;ImageAttachment /&gt;</code>)
 		</h2>
-		<div class="rounded-xl border border-line bg-surface p-5 max-w-sm">
-			<p class="mb-4 text-sm text-muted">Supports drag & drop, file type/size validation, and instant preview with removal.</p>
-			
+		<div class="max-w-sm rounded-xl border border-line bg-surface p-5">
+			<p class="mb-4 text-sm text-muted">
+				Supports drag & drop, file type/size validation, and instant preview with removal.
+			</p>
+
 			{#if sampleImageError}
 				<div class="mb-3">
 					<FormMessage type="error" message={sampleImageError} />
 				</div>
 			{/if}
-			
-			<ImageAttachment 
-				bind:file={sampleImageFile} 
-				bind:error={sampleImageError} 
-				maxSizeMB={5}
-			/>
-			
+
+			<ImageAttachment bind:file={sampleImageFile} bind:error={sampleImageError} maxSizeMB={5} />
+
 			<div class="mt-4 border-t border-line/60 pt-3">
-				<p class="text-xs font-mono text-muted">Selected File: {sampleImageFile ? sampleImageFile.name : 'None'}</p>
+				<p class="font-mono text-xs text-muted">
+					Selected File: {sampleImageFile ? sampleImageFile.name : 'None'}
+				</p>
 			</div>
 		</div>
 	</section>
