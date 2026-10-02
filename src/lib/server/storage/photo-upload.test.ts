@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { uploadPhoto } from './photo-upload';
 
 describe('uploadPhoto', () => {
-	it('generates a server-controlled image key and uploads the file', async () => {
+	it('generates a server-controlled image key and stores the detected content type', async () => {
 		const bucket = {
 			put: vi.fn().mockResolvedValue({}),
 			delete: vi.fn().mockResolvedValue(undefined)
@@ -12,7 +12,7 @@ describe('uploadPhoto', () => {
 			type: 'image/jpeg'
 		});
 
-		const imageKey = await uploadPhoto(bucket, file);
+		const imageKey = await uploadPhoto(bucket, file, 'image/png');
 
 		expect(imageKey).toMatch(/^images\/[0-9a-f-]{36}$/);
 		expect(bucket.put).toHaveBeenCalledTimes(1);
@@ -23,7 +23,7 @@ describe('uploadPhoto', () => {
 		expect(body).toBeInstanceOf(ReadableStream);
 		expect(options).toEqual({
 			httpMetadata: {
-				contentType: 'image/jpeg'
+				contentType: 'image/png'
 			}
 		});
 	});
@@ -38,6 +38,6 @@ describe('uploadPhoto', () => {
 			type: 'image/jpeg'
 		});
 
-		await expect(uploadPhoto(bucket, file)).rejects.toThrow('R2 unavailable');
+		await expect(uploadPhoto(bucket, file, 'image/jpeg')).rejects.toThrow('R2 unavailable');
 	});
 });
