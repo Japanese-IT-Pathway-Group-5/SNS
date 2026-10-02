@@ -9,7 +9,8 @@
 		FormMessage,
 		EmptyState,
 		LoadingState,
-		ModalDialog
+		ModalDialog,
+		ImageAttachment
 	} from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
@@ -24,6 +25,9 @@
 	let sampleTextarea = $state('Today was peaceful. Walked by the river and noticed a tiny sprout.');
 	let dialogOpen = $state(false);
 	let loadingButton = $state(false);
+
+	let sampleImageFile = $state<File | null>(null);
+	let sampleImageError = $state<string | null>(null);
 
 	function toggleLoading() {
 		loadingButton = true;
@@ -261,6 +265,32 @@
 					</Button>
 				{/snippet}
 			</EmptyState>
+		</div>
+	</section>
+
+	<!-- Image Attachment -->
+	<section class="space-y-4">
+		<h2 class="text-lg font-bold text-ink">
+			Image Attachment (<code class="font-mono text-sm">&lt;ImageAttachment /&gt;</code>)
+		</h2>
+		<div class="rounded-xl border border-line bg-surface p-5 max-w-sm">
+			<p class="mb-4 text-sm text-muted">Supports drag & drop, file type/size validation, and instant preview with removal.</p>
+			
+			{#if sampleImageError}
+				<div class="mb-3">
+					<FormMessage type="error" message={sampleImageError} />
+				</div>
+			{/if}
+			
+			<ImageAttachment 
+				bind:file={sampleImageFile} 
+				bind:error={sampleImageError} 
+				maxSizeMB={5}
+			/>
+			
+			<div class="mt-4 border-t border-line/60 pt-3">
+				<p class="text-xs font-mono text-muted">Selected File: {sampleImageFile ? sampleImageFile.name : 'None'}</p>
+			</div>
 		</div>
 	</section>
 </main>

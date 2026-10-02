@@ -14,10 +14,16 @@
 		errorMessage = null;
 
 		try {
-			await signInWithGoogle(redirectTo);
+			const { error } = await signInWithGoogle(redirectTo);
+			if (error) {
+				console.error('Sign in failed:', error);
+				errorMessage = error.message || 'Could not initiate Google sign in. Please try again.';
+				isSigningIn = false;
+			}
+			// If no error, the page will redirect to Google.
 		} catch (err) {
-			console.error('Sign in failed:', err);
-			errorMessage = 'Could not initiate Google sign in. Please try again.';
+			console.error('Sign in exception:', err);
+			errorMessage = 'An unexpected error occurred. Please try again.';
 			isSigningIn = false;
 		}
 	}
