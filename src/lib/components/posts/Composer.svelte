@@ -95,7 +95,10 @@
 			if (!postRes.ok) {
 				let errText = 'Failed to create post';
 				try {
-					const errJson = await postRes.json();
+					const errJson = (await postRes.json()) as {
+						data?: { message?: string };
+						message?: string;
+					};
 					if (errJson?.data?.message) errText = errJson.data.message;
 					else if (errJson?.message) errText = errJson.message;
 				} catch {
