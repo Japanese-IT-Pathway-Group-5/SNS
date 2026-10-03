@@ -1,9 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { selectMock, requireMembershipMock } = vi.hoisted(() => ({
-	selectMock: vi.fn(),
-	requireMembershipMock: vi.fn()
-}));
+const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
 
 vi.mock('$lib/server/db', () => ({
 	getDb: () => ({
@@ -27,10 +24,6 @@ vi.mock('$lib/server/db', () => ({
 	})
 }));
 
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: requireMembershipMock
-}));
-
 import { listReplies } from './list';
 
 describe('listReplies', () => {
@@ -38,30 +31,11 @@ describe('listReplies', () => {
 		vi.clearAllMocks();
 	});
 
-	it('requires membership', async () => {
-		requireMembershipMock.mockRejectedValueOnce(new Error('Membership required'));
-
-		await expect(
-			listReplies({
-				d1: {} as D1Database,
-				userId: 'user-1',
-				postId: 'post-1'
-			})
-		).rejects.toThrow('Membership required');
-	});
-
 	it('returns no replies for a hidden or missing post', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock.mockResolvedValueOnce([]);
 
 		const result = await listReplies({
 			d1: {} as D1Database,
-			userId: 'user-1',
 			postId: 'hidden-post'
 		});
 
@@ -72,12 +46,6 @@ describe('listReplies', () => {
 	});
 
 	it('returns visible replies with a stable cursor', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		const createdAt = new Date('2026-09-01T00:00:00.000Z');
 
 		selectMock
@@ -115,7 +83,6 @@ describe('listReplies', () => {
 
 		const result = await listReplies({
 			d1: {} as D1Database,
-			userId: 'user-1',
 			postId: 'post-1',
 			limit: 2
 		});
@@ -130,12 +97,6 @@ describe('listReplies', () => {
 	});
 
 	it('returns no cursor on the final page', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock
 			.mockResolvedValueOnce([
 				{
@@ -155,7 +116,6 @@ describe('listReplies', () => {
 
 		const result = await listReplies({
 			d1: {} as D1Database,
-			userId: 'user-1',
 			postId: 'post-1'
 		});
 

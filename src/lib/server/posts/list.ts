@@ -1,5 +1,4 @@
 import { and, desc, eq, isNull, lt, or } from 'drizzle-orm';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { post, user } from '$lib/server/db/schema';
 
@@ -17,15 +16,11 @@ export interface ListPostsOptions {
 
 export async function listPosts({
 	d1,
-	userId,
 	options = {}
 }: {
 	d1: D1Database;
-	userId: string;
 	options?: ListPostsOptions;
 }) {
-	await requireMembership(d1, userId);
-
 	const db = getDb(d1);
 	const limit = Math.min(Math.max(options.limit ?? POSTS_PAGE_SIZE, 1), POSTS_PAGE_SIZE);
 

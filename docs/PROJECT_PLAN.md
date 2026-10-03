@@ -7,7 +7,7 @@ Deadline: October 5, 2026. Repository: Japanese-IT-Pathway-Group-5/SNS.
 
 Build an everyday social journal: a personal blog where ordinary moments are worth sharing. The class is the delivery context, not the subject or long-term audience. Product promise: "Your day doesn't have to be special to be worth sharing." There are 13 days until the deadline; ship the core journey early and reserve the end for verification and the presentation.
 
-Planning default: a small invite-only pilot with one shared audience of approved members, initially classmates. Every post and reply is visible to that audience; show "Shared with pilot members" beside the composer. Do not imply private-diary privacy. Public discovery, followers, and per-post audience selection are later decisions. Team size, availability, budget, branding, and grading rubric remain to be confirmed.
+Audience: public browsing with account-based participation. Anyone can read posts, replies, and attached photos; a Google or email/password account is required to post, reply, and manage account settings. Show "Posts are visible to everyone" beside the composer. Do not imply private-diary privacy. Follows and per-post audience selection are later decisions. Team size, availability, budget, branding, and grading rubric remain to be confirmed.
 
 Keep writing fast: a home-page composer, text first, one optional photo, no required title/tags/category, and an optional "Need an idea?" prompt. Encourage posting without streaks, guilt reminders, popularity totals, trending, reposts, or infinite scroll. Use a chronological feed with explicit pagination and a clear end. Posting should remain useful even without replies because entries accumulate in a personal archive.
 
@@ -15,8 +15,8 @@ The shared foundation is defined in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), [ENGIN
 
 Required for the first release:
 
-- Google sign-in and sign-out, persistent sessions, and clear unauthorized states.
-- Class membership enforcement if class-only access is chosen. Google authentication alone does not establish class membership.
+- Google and email/password sign-up, sign-in and sign-out, persistent sessions, and clear unauthorized states.
+- Public post, reply, and photo reads. An account is required for posting, replying, and account settings; moderator actions remain role-restricted.
 - Chronological, paginated feed, post detail with flat text replies, and an author journal/archive grouped by date. No calendar grid is required for the MVP.
 - Create a text post with an optional JPEG, PNG, or WebP image. Proposed limits: 2,000 characters and 5 MiB per image, enforced on the server.
 - Edit own post text and delete own posts. Image replacement can follow later.
@@ -83,7 +83,7 @@ docs/                       architecture, setup and operations
 .github/                    workflows and issue/PR templates
 ```
 
-Start with Better Auth's generated tables, plus `memberships`, `posts`, `replies`, `media`, and `moderation_events`. Reference the authenticated user ID for ownership, use foreign keys and indexes for the feed, and store object keys in media rows rather than image bytes. Keep membership and moderator roles server-controlled. Do not expose emails in profile responses. Replies reference posts and inherit their visibility.
+Start with Better Auth's generated tables, plus `memberships` (moderator grants), `posts`, `replies`, `media`, and `moderation_events`. Reference the authenticated user ID for ownership, use foreign keys and indexes for the feed, and store object keys in media rows rather than image bytes. Keep moderator roles server-controlled. Do not expose emails in public profile responses. Replies reference posts and inherit their public visibility.
 
 Use one migration process: generate/review SQL, check it in, and apply through a documented D1 deployment step. Avoid two independent tools mutating the live schema. Test the actual D1 behavior required by the auth adapter, particularly any transaction assumptions.
 
@@ -92,14 +92,14 @@ Use one migration process: generate/review SQL, check it in, and apply through a
 Security is application behavior as well as tooling. Minimum release conditions:
 
 - Every protected read/write validates the session on the server. Every edit/delete verifies ownership or moderator permission. Ignore client-supplied author IDs and roles.
-- For class-only access, validate verified Google identity against a server-managed member list. Deny unknown users. Apply the same access rules to image delivery.
+- Public reads include posts, replies, and images attached to visible posts. Writes require a verified session and use the authenticated user ID; moderator actions require the server-managed moderator role.
 - Configure exact OAuth callback URLs for local, staging, and production environments; use a stable staging hostname. Keep secrets server-side. Better Auth documents the callback setup [here](https://better-auth.com/docs/authentication/google).
 - Preserve framework/auth origin and CSRF defenses; protect custom upload endpoints too. Use secure cookies in production and verify logout/expired sessions deny subsequent access. Avoid introducing stale session caches initially.
 - Render posts as escaped plain text. Validate all inputs server-side and use parameterized database access. Add a tested Content Security Policy and appropriate response headers.
 - Rate-limit login attempts, post creation, and uploads. Cloudflare's rate-limit binding is a useful abuse control, but its counters are approximate and local to a Cloudflare location; exact storage quotas require authoritative database checks. [Rate-limit behavior](https://developers.cloudflare.com/workers/runtime-apis/bindings/rate-limit/)
 - Keep credentials, sessions, tokens, and private post contents out of logs and CI artifacts. Set retention and access rules for logs and uploaded content.
 
-For the MVP, send the small image through an authenticated server endpoint into private R2. Check actual bytes received, allowed format/signature, and image dimensions; do not trust filename or browser MIME type. Generate object keys, prohibit SVG/HTML and arbitrary files, serve validated content with the correct type and `nosniff`, and require membership when serving private images. Where supported within the runtime budget, decode/re-encode to strip metadata and reject malformed images; verify the processing approach early. [OWASP upload guidance](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html), [R2 Workers API](https://developers.cloudflare.com/r2/get-started/workers-api/)
+For the MVP, send the small image through an authenticated server endpoint into private R2. Check actual bytes received, allowed format/signature, and image dimensions; do not trust filename or browser MIME type. Generate object keys, prohibit SVG/HTML and arbitrary files, serve validated content with the correct type and `nosniff`, and allow public delivery only when attached to a visible post. Where supported within the runtime budget, decode/re-encode to strip metadata and reject malformed images; verify the processing approach early. [OWASP upload guidance](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html), [R2 Workers API](https://developers.cloudflare.com/r2/get-started/workers-api/)
 
 D1 and R2 do not share an application transaction. Track pending/ready media state: publish only after storage succeeds; remove the new object if the database write fails; make cleanup retryable. Deleting/hiding a post must immediately deny application access to its media, even if physical cleanup needs a retry. Test failed upload and failed cleanup paths.
 
@@ -184,7 +184,7 @@ Every issue is done when its acceptance criteria pass, another teammate reviews 
 
 - Team size, experience and available hours through October 5.
 - Confirm text plus one image meets the rubric; files/video are outside the accepted product scope.
-- Confirm invite-only pilot versus public launch; who maintains membership and moderation?
+- Public browsing is the selected audience model. Assign ongoing moderation ownership before launch.
 - GitHub public/private repository and organization subscription.
 - Hosting budget, domain, Google OAuth project owner, and Cloudflare owner.
 - Exact rubric and Japanese UI/presentation requirements.

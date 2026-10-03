@@ -1,5 +1,4 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { media, post } from '$lib/server/db/schema';
 import { getObject, type R2Storage } from '$lib/server/storage/r2';
@@ -8,17 +7,13 @@ export class MediaNotFoundError extends Error {}
 
 export async function getMedia({
 	d1,
-	userId,
 	mediaId,
 	bucket
 }: {
 	d1: D1Database;
-	userId: string;
 	mediaId: string;
 	bucket: R2Storage;
 }) {
-	await requireMembership(d1, userId);
-
 	const db = getDb(d1);
 
 	const rows = await db

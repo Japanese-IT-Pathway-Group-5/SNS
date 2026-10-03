@@ -1,21 +1,10 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { post, user } from '$lib/server/db/schema';
 
 export class PostNotFoundError extends Error {}
 
-export async function getPost({
-	d1,
-	userId,
-	postId
-}: {
-	d1: D1Database;
-	userId: string;
-	postId: string;
-}) {
-	await requireMembership(d1, userId);
-
+export async function getPost({ d1, postId }: { d1: D1Database; postId: string }) {
 	const db = getDb(d1);
 
 	const rows = await db
@@ -23,6 +12,7 @@ export async function getPost({
 			id: post.id,
 			authorId: post.authorId,
 			authorName: user.name,
+			authorImage: user.image,
 			submissionId: post.submissionId,
 			body: post.body,
 			mediaId: post.mediaId,

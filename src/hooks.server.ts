@@ -3,10 +3,20 @@ import { addSecurityHeaders } from '$lib/server/security/headers';
 import { sanitizeRedirectUrl } from '$lib/utils';
 import { redirect, type Handle } from '@sveltejs/kit';
 
-const PUBLIC_PREFIXES = ['/login', '/api/auth', '/dev', '/demo'];
+const PUBLIC_PREFIXES = [
+	'/login',
+	'/api/auth',
+	'/api/posts',
+	'/api/replies',
+	'/api/media',
+	'/post',
+	'/dev',
+	'/demo'
+];
 const STATIC_PUBLIC_FILES = ['/favicon.svg', '/favicon.ico', '/robots.txt'];
 
 export const isPublicRoute = (pathname: string): boolean => {
+	if (pathname === '/') return true;
 	if (PUBLIC_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) {
 		return true;
 	}

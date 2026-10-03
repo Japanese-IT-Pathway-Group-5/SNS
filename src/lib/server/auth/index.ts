@@ -16,6 +16,17 @@ export function createAuth(d1: D1Database, env?: AuthEnv | Env) {
 	const googleClientId = env?.GOOGLE_CLIENT_ID ?? '';
 	const googleClientSecret = env?.GOOGLE_CLIENT_SECRET ?? '';
 
+	const trustedOrigins = [
+		'http://localhost:5173',
+		'http://localhost:5174',
+		'http://localhost:4173',
+		'http://127.0.0.1:5173',
+		'http://127.0.0.1:5174'
+	];
+	if (env?.BETTER_AUTH_URL && !trustedOrigins.includes(env.BETTER_AUTH_URL)) {
+		trustedOrigins.push(env.BETTER_AUTH_URL);
+	}
+
 	return betterAuth({
 		database: drizzleAdapter(db, {
 			provider: 'sqlite',
@@ -23,6 +34,13 @@ export function createAuth(d1: D1Database, env?: AuthEnv | Env) {
 		}),
 		secret: env?.BETTER_AUTH_SECRET,
 		baseURL: env?.BETTER_AUTH_URL,
+		trustedOrigins,
+		emailAndPassword: {
+			enabled: true,
+			autoSignIn: true,
+			minPasswordLength: 8,
+			maxPasswordLength: 128
+		},
 		socialProviders: {
 			google: {
 				clientId: googleClientId,

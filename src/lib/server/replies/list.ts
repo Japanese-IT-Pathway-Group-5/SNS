@@ -1,5 +1,4 @@
 import { and, desc, eq, isNull, lt, or } from 'drizzle-orm';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { post, reply, user } from '$lib/server/db/schema';
 
@@ -12,19 +11,15 @@ export interface ReplyCursor {
 
 export async function listReplies({
 	d1,
-	userId,
 	postId,
 	cursor,
 	limit = REPLIES_PAGE_SIZE
 }: {
 	d1: D1Database;
-	userId: string;
 	postId: string;
 	cursor?: ReplyCursor;
 	limit?: number;
 }) {
-	await requireMembership(d1, userId);
-
 	const db = getDb(d1);
 	const pageSize = Math.min(Math.max(limit, 1), REPLIES_PAGE_SIZE);
 

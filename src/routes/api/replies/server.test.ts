@@ -80,14 +80,6 @@ describe('POST /api/replies', () => {
 		expect(response.status).toBe(400);
 	});
 
-	it('returns 403 when membership is required', async () => {
-		createReplyMock.mockRejectedValueOnce(new Error('Membership required'));
-
-		const response = await POST(makeEvent());
-
-		expect(response.status).toBe(403);
-	});
-
 	it('returns 404 when the parent post is hidden or missing', async () => {
 		createReplyMock.mockRejectedValueOnce(new ReplyNotFoundErrorMock('Post not found'));
 

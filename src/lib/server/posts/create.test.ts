@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { selectMock, insertMock, requireMembershipMock, withPhotoCleanupMock } = vi.hoisted(() => ({
+const { selectMock, insertMock, withPhotoCleanupMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
 	insertMock: vi.fn(),
-	requireMembershipMock: vi.fn(),
 	withPhotoCleanupMock: vi.fn()
 }));
 
@@ -22,10 +21,6 @@ vi.mock('$lib/server/db', () => ({
 	})
 }));
 
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: requireMembershipMock
-}));
-
 vi.mock('$lib/server/storage/with-photo-cleanup', () => ({
 	withPhotoCleanup: withPhotoCleanupMock
 }));
@@ -37,28 +32,7 @@ describe('createPost', () => {
 		vi.clearAllMocks();
 	});
 
-	it('requires membership', async () => {
-		requireMembershipMock.mockRejectedValueOnce(new Error('Membership required'));
-
-		await expect(
-			createPost({
-				d1: {} as D1Database,
-				userId: 'user-1',
-				input: {
-					submissionId: 'sub-1',
-					body: 'Hello'
-				}
-			})
-		).rejects.toThrow('Membership required');
-	});
-
 	it('rejects empty text-only posts', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		await expect(
 			createPost({
 				d1: {} as D1Database,
@@ -74,12 +48,6 @@ describe('createPost', () => {
 	});
 
 	it('does not accept a client-supplied author ID', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock.mockResolvedValueOnce([]);
 		insertMock.mockResolvedValueOnce(undefined);
 
@@ -101,12 +69,6 @@ describe('createPost', () => {
 	});
 
 	it('returns an existing post for the same user-scoped submission ID', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock.mockResolvedValueOnce([
 			{
 				id: 'post-1',

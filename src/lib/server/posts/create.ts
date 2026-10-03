@@ -1,5 +1,4 @@
 import { and, eq } from 'drizzle-orm';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { media, post } from '$lib/server/db/schema';
 import { postInputSchema, type PostInput } from '$lib/validation/posts';
@@ -19,8 +18,6 @@ export async function createPost({
 	input: PostInput;
 	mediaBucket?: R2Storage;
 }) {
-	await requireMembership(d1, userId);
-
 	const parsed = postInputSchema.safeParse(input);
 
 	if (!parsed.success) {

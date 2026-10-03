@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { selectMock, insertMock, requireMembershipMock } = vi.hoisted(() => ({
+const { selectMock, insertMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
-	insertMock: vi.fn(),
-	requireMembershipMock: vi.fn()
+	insertMock: vi.fn()
 }));
 
 vi.mock('$lib/server/db', () => ({
@@ -21,10 +20,6 @@ vi.mock('$lib/server/db', () => ({
 	})
 }));
 
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: requireMembershipMock
-}));
-
 import { createReply, ReplyNotFoundError } from './create';
 
 describe('createReply', () => {
@@ -32,26 +27,7 @@ describe('createReply', () => {
 		vi.clearAllMocks();
 	});
 
-	it('requires membership', async () => {
-		requireMembershipMock.mockRejectedValueOnce(new Error('Membership required'));
-
-		await expect(
-			createReply({
-				d1: {} as D1Database,
-				userId: 'user-1',
-				postId: 'post-1',
-				input: { body: 'Hello' }
-			})
-		).rejects.toThrow('Membership required');
-	});
-
 	it('rejects an empty reply', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		await expect(
 			createReply({
 				d1: {} as D1Database,
@@ -66,12 +42,6 @@ describe('createReply', () => {
 	});
 
 	it('rejects replies to hidden posts', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock.mockResolvedValueOnce([]);
 
 		await expect(
@@ -87,12 +57,6 @@ describe('createReply', () => {
 	});
 
 	it('creates a reply using the authenticated user', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock.mockResolvedValueOnce([
 			{
 				id: 'post-1',
