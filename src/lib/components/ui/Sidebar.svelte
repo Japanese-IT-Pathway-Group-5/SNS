@@ -4,6 +4,7 @@
 	import House from '@lucide/svelte/icons/house';
 	import Search from '@lucide/svelte/icons/search';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
+	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import Settings from '@lucide/svelte/icons/settings';
 	import LogIn from '@lucide/svelte/icons/log-in';
 	import type { User } from 'better-auth';
@@ -63,6 +64,18 @@
 				class="nav-label">Create a post</span
 			>
 		</button>
+		<a
+			href={user ? resolve('/journal') : resolve('/login?redirectTo=%2Fjournal')}
+			onclick={onNavigate}
+			aria-label="My journal"
+			aria-current={page.url.pathname === '/journal' ? 'page' : undefined}
+			class:active={page.url.pathname === '/journal'}
+			class="nav-item"
+		>
+			<NotebookPen class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" /><span
+				class="nav-label">My journal</span
+			>
+		</a>
 		<div class="my-3 h-px bg-line" aria-hidden="true"></div>
 		<a
 			href={user ? resolve('/settings') : resolve('/login?redirectTo=%2Fsettings')}
