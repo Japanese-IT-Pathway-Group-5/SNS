@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { selectMock, requireMembershipMock } = vi.hoisted(() => ({
-	selectMock: vi.fn(),
-	requireMembershipMock: vi.fn()
-}));
+const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
 
 vi.mock('$lib/server/db', () => ({
 	getDb: () => ({
@@ -21,10 +18,6 @@ vi.mock('$lib/server/db', () => ({
 	})
 }));
 
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: requireMembershipMock
-}));
-
 import { decodeCursor } from '$lib/server/http/pagination';
 import { listPosts } from './list';
 
@@ -33,24 +26,7 @@ describe('listPosts', () => {
 		vi.clearAllMocks();
 	});
 
-	it('requires membership', async () => {
-		requireMembershipMock.mockRejectedValueOnce(new Error('Membership required'));
-
-		await expect(
-			listPosts({
-				d1: {} as D1Database,
-				userId: 'user-1'
-			})
-		).rejects.toThrow('Membership required');
-	});
-
 	it('returns visible posts and a cursor when another page exists', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		const createdAt = new Date('2026-09-01T00:00:00.000Z');
 
 		selectMock.mockResolvedValueOnce([
@@ -85,7 +61,6 @@ describe('listPosts', () => {
 
 		const result = await listPosts({
 			d1: {} as D1Database,
-			userId: 'user-1',
 			options: {
 				limit: 2
 			}
@@ -102,12 +77,6 @@ describe('listPosts', () => {
 	});
 
 	it('returns no cursor on the final page', async () => {
-		requireMembershipMock.mockResolvedValueOnce({
-			id: 'membership-1',
-			userId: 'user-1',
-			role: 'member'
-		});
-
 		selectMock.mockResolvedValueOnce([
 			{
 				id: 'post-1',
@@ -121,8 +90,7 @@ describe('listPosts', () => {
 		]);
 
 		const result = await listPosts({
-			d1: {} as D1Database,
-			userId: 'user-1'
+			d1: {} as D1Database
 		});
 
 		expect(result.items).toHaveLength(1);

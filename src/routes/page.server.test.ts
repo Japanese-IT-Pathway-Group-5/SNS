@@ -1,17 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '$lib/server/http/pagination';
 
-const { listPostsMock, requireMembershipMock } = vi.hoisted(() => ({
-	listPostsMock: vi.fn(),
-	requireMembershipMock: vi.fn()
+const { listPostsMock } = vi.hoisted(() => ({
+	listPostsMock: vi.fn()
 }));
 
 vi.mock('$lib/server/posts/list', () => ({
 	listPosts: listPostsMock
-}));
-
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: requireMembershipMock
 }));
 
 import { load } from './+page.server';
@@ -34,7 +29,6 @@ function createEvent(search = '') {
 describe('home feed load', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		requireMembershipMock.mockResolvedValue({ role: 'member' });
 	});
 
 	it('loads the first page without a cursor and returns nextCursor', async () => {
@@ -43,10 +37,9 @@ describe('home feed load', () => {
 		const result = await load(createEvent());
 
 		expect(listPostsMock).toHaveBeenCalledWith(
-			expect.objectContaining({ userId: 'user-123', options: { cursor: undefined } })
+			expect.objectContaining({ options: { cursor: undefined } })
 		);
 		expect(result).toEqual({
-			isMember: true,
 			posts: [{ id: 'post-1' }],
 			nextCursor: 'next-token'
 		});

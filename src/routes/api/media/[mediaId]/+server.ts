@@ -2,11 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { getMedia, MediaNotFoundError } from '$lib/server/media/get';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-export const GET: RequestHandler = async ({ locals, params, platform }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
+export const GET: RequestHandler = async ({ params, platform }) => {
 	const env = platform?.env as {
 		DB?: D1Database;
 		MEDIA_BUCKET?: R2Storage;
@@ -25,7 +21,6 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
 	try {
 		const result = await getMedia({
 			d1: env.DB,
-			userId: locals.user.id,
 			mediaId,
 			bucket: env.MEDIA_BUCKET
 		});
@@ -35,17 +30,13 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
 			headers: {
 				'Content-Type': result.contentType,
 				'Content-Length': String(result.byteSize),
-				'Cache-Control': 'private, no-store',
+				'Cache-Control': 'public, no-store',
 				'X-Content-Type-Options': 'nosniff'
 			}
 		});
 	} catch (error) {
 		if (error instanceof MediaNotFoundError) {
 			return json({ error: 'Media not found' }, { status: 404 });
-		}
-
-		if (error instanceof Error && error.message === 'Membership required') {
-			return json({ error: 'Membership required' }, { status: 403 });
 		}
 
 		console.error('Failed to get media:', error);

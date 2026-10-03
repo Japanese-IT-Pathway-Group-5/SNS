@@ -4,7 +4,8 @@ import { isRedirect, type RequestEvent } from '@sveltejs/kit';
 
 describe('Server Hooks: Route Guards & Session Hydration', () => {
 	it('identifies public routes correctly', () => {
-		expect.assertions(6);
+		expect.assertions(7);
+		expect(isPublicRoute('/')).toBe(true);
 		expect(isPublicRoute('/login')).toBe(true);
 		expect(isPublicRoute('/api/auth/sign-in')).toBe(true);
 		expect(isPublicRoute('/dev/components')).toBe(true);
@@ -14,8 +15,7 @@ describe('Server Hooks: Route Guards & Session Hydration', () => {
 	});
 
 	it('identifies protected routes correctly', () => {
-		expect.assertions(6);
-		expect(isPublicRoute('/')).toBe(false);
+		expect.assertions(5);
 		expect(isPublicRoute('/journal')).toBe(false);
 		expect(isPublicRoute('/settings')).toBe(false);
 		expect(isPublicRoute('/posts/123')).toBe(false);

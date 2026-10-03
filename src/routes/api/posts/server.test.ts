@@ -166,20 +166,4 @@ describe('POST /api/posts', () => {
 			error: 'Post requires text or an image'
 		});
 	});
-
-	it('returns 403 when membership is required', async () => {
-		createPostMock.mockRejectedValue(new Error('Membership required'));
-
-		const response = await POST(
-			createEvent({
-				submissionId: 'sub-1',
-				body: 'Hello'
-			})
-		);
-
-		expect(response.status).toBe(403);
-		expect(await response.json()).toEqual({
-			error: 'Membership required'
-		});
-	});
 });

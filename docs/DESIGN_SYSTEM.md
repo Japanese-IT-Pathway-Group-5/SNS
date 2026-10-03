@@ -116,7 +116,7 @@ Keep primitive components in `src/lib/components/ui/`, layout in `layout/`, and 
 - Visible label: "Today's entry". Placeholder: "Anything from today?". No title/tag/category gate.
 - At least text or one valid image is required. Post limit 2,000 Unicode code points; reply limit 500. Count identically on client/server; preserve line breaks and do not submit on Enter. Handle IME composition correctly.
 - Optional "Need an idea?" reveals a static prompt such as "Something you noticed". No model call is needed.
-- Show "Shared with pilot members". There is no audience selector until multiple audiences actually exist.
+- Show "Posts are visible to everyone". There is no audience selector until multiple audiences actually exist.
 - Submit copy: "Post", then "Posting...". Disable duplicate submission. Do not announce success until the server confirms it. Preserve text on failure; explain when a file must be reselected.
 - Autosave text locally, scoped to user and schema version; disclose "Draft saved on this device" and provide Discard. Clear on logout/publication/discard. Never briefly show another account's draft. If browser storage is unavailable, posting still works.
 - Show upload preview and remove control. Offer an optional image description; use a meaningful generic fallback when absent rather than a filename. Reserve image space, avoid forced square cropping, and lazy-load below-fold images.

@@ -1,19 +1,14 @@
 import { error, fail } from '@sveltejs/kit';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { parsePaginationParams, PaginationValidationError } from '$lib/server/http/pagination';
 import { createPost, PostValidationError } from '$lib/server/posts/create';
 import { listPosts } from '$lib/server/posts/list';
 import type { PageServerLoad, Actions } from './$types';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-export const load: PageServerLoad = async ({ locals, platform, url }) => {
-	if (!locals.user) {
-		return { isMember: false, posts: [], nextCursor: null };
-	}
-
+export const load: PageServerLoad = async ({ platform, url }) => {
 	const d1 = platform?.env?.DB;
 	if (!d1) {
-		return { isMember: false, posts: [], nextCursor: null };
+		return { posts: [], nextCursor: null };
 	}
 
 	let pagination;
@@ -27,29 +22,18 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 	}
 
 	try {
-		await requireMembership(d1, locals.user.id);
 		const { items, nextCursor } = await listPosts({
 			d1,
-			userId: locals.user.id,
 			options: { cursor: pagination.cursor }
 		});
 
 		return {
-			isMember: true,
 			posts: items,
 			nextCursor
 		};
 	} catch (err) {
-		if (err instanceof Error && err.message === 'Membership required') {
-			return {
-				isMember: false,
-				posts: [],
-				nextCursor: null
-			};
-		}
 		console.error('Failed to load home feed:', err);
 		return {
-			isMember: false,
 			posts: [],
 			nextCursor: null
 		};
@@ -88,10 +72,6 @@ export const actions: Actions = {
 		} catch (err) {
 			if (err instanceof PostValidationError) {
 				return fail(400, { message: err.message });
-			}
-
-			if (err instanceof Error && err.message === 'Membership required') {
-				return fail(403, { message: 'Membership required to post' });
 			}
 
 			console.error('Failed to create post:', err);

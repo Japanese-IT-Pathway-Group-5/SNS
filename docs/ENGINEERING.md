@@ -9,7 +9,7 @@ Use one SvelteKit app, strict TypeScript, Svelte 5 runes for new components, and
 ```text
 page / component
   -> SvelteKit server load or form action
-    -> domain operation (membership + ownership + validation)
+    -> domain operation (authenticated identity + ownership + validation)
       -> Drizzle / D1 or storage helper / R2
 ```
 
@@ -29,7 +29,7 @@ Use `+page.server.ts` loads for protected reads and named form actions for page 
 - Post body: up to 2,000 Unicode code points. Reply: 1-500 code points after whitespace validation. An image-only post is valid. Plain text only; preserve line breaks; never render user input with raw HTML.
 - Paginate feeds/journals by stable `(createdAt, id)` cursors, initially 20 entries per page. Bound all reads and reply pagination. Use deterministic ordering with equal timestamps.
 - Server create operations use a user-scoped submission identifier to avoid duplicate posts on retries; enforce uniqueness in D1. Never trust client state as proof a write succeeded.
-- Update/delete queries constrain ownership and membership. Replies/media inherit parent visibility. Hidden posts disappear from all readers, detail routes, journals, replies and media delivery.
+- Update/delete queries constrain ownership; moderation requires the moderator role. Posts, replies, and media are publicly readable. Hidden posts disappear from all readers, detail routes, journals, replies and media delivery.
 - Media is validated and tracked through pending/ready/cleanup states as described in the plan. Keep R2 keys server-controlled. Do not cache protected responses in a shared public cache.
 - Empty, loading, failed, unauthorized and success states are part of each feature contract, not cleanup work for the last day.
 
@@ -44,7 +44,7 @@ Prettier owns formatting; ESLint with Svelte support owns linting; svelte-check 
 1. Scaffold SvelteKit/TypeScript and Cloudflare adapter; pin Node/pnpm; create `.env.example` with placeholders and local Wrangler bindings. Configure format/lint/check scripts.
 2. Implement mint/cream/teal semantic tokens, UI primitives and `/dev/components`; review composer/post-card references plus a shared pixel loading/still state. Pin Tailwind/Bits UI/Lucide versions together. Original artwork is a separately tracked asset task; a text loading fallback keeps feature work unblocked.
 3. Implement a representative validated form with accessible pending/error/success states and meaningful Vitest/Playwright checks. Use it as the copyable team reference.
-4. Establish D1 migrations, request-bound auth, member policy and Google login on stable staging. Verify actual Worker runtime compatibility.
+4. Establish D1 migrations, request-bound auth, public-read/account-write policy, and Google plus email/password login on stable staging. Verify actual Worker runtime compatibility.
 5. Configure CI, hooks, review ownership and deployment. Add deterministic local fixtures and a documented reset/seed process; never point tests at production.
 6. Distribute feature issues once shared contracts and reference components exist. Continue in small vertical slices rather than waiting for an entire backend or frontend.
 

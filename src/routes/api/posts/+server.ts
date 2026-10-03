@@ -5,11 +5,7 @@ import { listPosts } from '$lib/server/posts/list';
 import { rateLimitPost } from '$lib/server/security/rate-limit';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-export const GET: RequestHandler = async ({ locals, platform, url }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
+export const GET: RequestHandler = async ({ platform, url }) => {
 	const env = platform?.env as {
 		DB?: D1Database;
 	};
@@ -33,16 +29,11 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	try {
 		const result = await listPosts({
 			d1: env.DB,
-			userId: locals.user.id,
 			options: pagination
 		});
 
 		return json(result);
 	} catch (error) {
-		if (error instanceof Error && error.message === 'Membership required') {
-			return json({ error: 'Membership required' }, { status: 403 });
-		}
-
 		console.error('Failed to list posts:', error);
 
 		return json({ error: 'Failed to list posts' }, { status: 500 });
@@ -89,10 +80,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	} catch (error) {
 		if (error instanceof PostValidationError) {
 			return json({ error: error.message }, { status: 400 });
-		}
-
-		if (error instanceof Error && error.message === 'Membership required') {
-			return json({ error: 'Membership required' }, { status: 403 });
 		}
 
 		console.error('Failed to create post:', error);

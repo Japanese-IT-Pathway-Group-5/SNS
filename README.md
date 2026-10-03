@@ -2,7 +2,7 @@
 
 A web-based everyday social journal developed for the Japanese IT Pathway coursework (Group 5).
 
-The application provides a quiet, text-first environment for documenting everyday moments within an invite-only pilot community. It intentionally omits public popularity metrics, streaks, trending algorithms, and infinite scrolling in favor of chronological delivery and personal archiving.
+The application is a public, text-first social journal for documenting everyday moments. Anyone can browse posts and replies; a Google or email/password account is required to publish, comment, and manage an account. It intentionally omits popularity metrics, streaks, trending algorithms, and infinite scrolling in favor of chronological delivery and personal archiving.
 
 ---
 

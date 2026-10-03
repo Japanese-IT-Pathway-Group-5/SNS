@@ -3,11 +3,7 @@ import { parsePaginationParams, PaginationValidationError } from '$lib/server/ht
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
 import { listReplies } from '$lib/server/replies/list';
 
-export const GET: RequestHandler = async ({ locals, platform, url }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
+export const GET: RequestHandler = async ({ platform, url }) => {
 	const env = platform?.env as {
 		DB?: D1Database;
 	};
@@ -37,17 +33,12 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	try {
 		const result = await listReplies({
 			d1: env.DB,
-			userId: locals.user.id,
 			postId,
 			...pagination
 		});
 
 		return json(result);
 	} catch (error) {
-		if (error instanceof Error && error.message === 'Membership required') {
-			return json({ error: 'Membership required' }, { status: 403 });
-		}
-
 		console.error('Failed to list replies:', error);
 
 		return json({ error: 'Failed to list replies' }, { status: 500 });
@@ -97,10 +88,6 @@ export const POST: RequestHandler = async ({ request, locals, platform, url }) =
 
 		if (error instanceof ReplyNotFoundError) {
 			return json({ error: 'Post not found' }, { status: 404 });
-		}
-
-		if (error instanceof Error && error.message === 'Membership required') {
-			return json({ error: 'Membership required' }, { status: 403 });
 		}
 
 		console.error('Failed to create reply:', error);
