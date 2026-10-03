@@ -161,7 +161,7 @@
 		</section>
 
 		<section
-			class="auth-panel flex min-h-0 flex-col bg-canvas px-6 py-5 sm:px-12 sm:py-8 lg:items-center lg:justify-center lg:px-12 xl:px-20"
+			class="auth-panel flex min-h-0 flex-col bg-canvas px-6 py-5 sm:px-12 sm:py-8 lg:items-center lg:justify-center lg:px-8 xl:px-12"
 		>
 			<header
 				class="mobile-brand relative -mx-6 -mt-5 mb-6 w-[calc(100%+3rem)] shrink-0 overflow-hidden bg-accent px-6 py-4 text-on-accent sm:-mx-12 sm:-mt-8 sm:min-h-48 sm:w-[calc(100%+6rem)] sm:px-12 sm:py-10 lg:hidden"
@@ -191,8 +191,8 @@
 					>
 				</div>
 			</header>
-			<div class="auth-content mx-auto my-auto w-full max-w-md lg:my-0">
-				<div class="mb-6 sm:mb-8">
+			<div class="auth-content mx-auto my-auto w-full max-w-lg lg:my-0">
+				<div class="mb-5 sm:mb-6">
 					<h2 class="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
 						{isSigningUp ? 'Create your account.' : 'Pick up where life is.'}
 					</h2>
@@ -235,84 +235,86 @@
 							class="min-h-11 w-full rounded-lg border border-control-border bg-surface px-3.5 py-2.5 text-base text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent motion-reduce:transition-none"
 						/>
 					</div>
-					<div class="space-y-1.5">
-						<label for="auth-password" class="text-sm font-semibold text-ink">Password</label>
-						<div class="relative">
-							<input
-								id="auth-password"
-								placeholder={isSigningUp ? 'At least 8 characters' : 'Enter your password'}
-								bind:value={password}
-								type={showPassword ? 'text' : 'password'}
-								oninput={() => {
-									passwordsMismatch = false;
-								}}
-								autocomplete={isSigningUp ? 'new-password' : 'current-password'}
-								minlength="8"
-								maxlength="128"
-								required
-								class="min-h-11 w-full rounded-lg border border-control-border bg-surface py-2.5 pr-16 pl-3.5 text-base text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent motion-reduce:transition-none"
-							/>
-							<button
-								type="button"
-								aria-label={showPassword ? 'Hide password' : 'Show password'}
-								aria-controls="auth-password"
-								aria-pressed={showPassword}
-								onclick={() => {
-									showPassword = !showPassword;
-								}}
-								class="absolute inset-y-0 right-1 flex min-w-11 items-center justify-center rounded-md text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-							>
-								{@render passwordEye(showPassword)}
-							</button>
-						</div>
-					</div>
-					{#if isSigningUp}
+					<div class={isSigningUp ? 'grid gap-4 sm:grid-cols-2' : ''}>
 						<div class="space-y-1.5">
-							<label for="auth-confirm-password" class="text-sm font-semibold text-ink"
-								>Confirm password</label
-							>
+							<label for="auth-password" class="text-sm font-semibold text-ink">Password</label>
 							<div class="relative">
 								<input
-									id="auth-confirm-password"
-									bind:this={confirmPasswordInput}
-									bind:value={confirmPassword}
-									type={showConfirmPassword ? 'text' : 'password'}
-									autocomplete="new-password"
-									placeholder="Re-enter your password"
-									minlength="8"
-									maxlength="128"
-									required
-									aria-invalid={passwordsMismatch}
-									aria-describedby={passwordsMismatch ? 'password-match-error' : undefined}
+									id="auth-password"
+									placeholder={isSigningUp ? 'At least 8 characters' : 'Enter your password'}
+									bind:value={password}
+									type={showPassword ? 'text' : 'password'}
 									oninput={() => {
 										passwordsMismatch = false;
 									}}
+									autocomplete={isSigningUp ? 'new-password' : 'current-password'}
+									minlength="8"
+									maxlength="128"
+									required
 									class="min-h-11 w-full rounded-lg border border-control-border bg-surface py-2.5 pr-16 pl-3.5 text-base text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent motion-reduce:transition-none"
 								/>
 								<button
 									type="button"
-									aria-label={showConfirmPassword
-										? 'Hide confirm password'
-										: 'Show confirm password'}
-									aria-controls="auth-confirm-password"
-									aria-pressed={showConfirmPassword}
+									aria-label={showPassword ? 'Hide password' : 'Show password'}
+									aria-controls="auth-password"
+									aria-pressed={showPassword}
 									onclick={() => {
-										showConfirmPassword = !showConfirmPassword;
+										showPassword = !showPassword;
 									}}
 									class="absolute inset-y-0 right-1 flex min-w-11 items-center justify-center rounded-md text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 								>
-									{@render passwordEye(showConfirmPassword)}
+									{@render passwordEye(showPassword)}
 								</button>
 							</div>
-							{#if passwordsMismatch}<p
-									id="password-match-error"
-									role="alert"
-									class="text-sm text-danger"
-								>
-									Passwords don't match. Please try again.
-								</p>{/if}
 						</div>
-					{/if}
+						{#if isSigningUp}
+							<div class="space-y-1.5">
+								<label for="auth-confirm-password" class="text-sm font-semibold text-ink"
+									>Confirm password</label
+								>
+								<div class="relative">
+									<input
+										id="auth-confirm-password"
+										bind:this={confirmPasswordInput}
+										bind:value={confirmPassword}
+										type={showConfirmPassword ? 'text' : 'password'}
+										autocomplete="new-password"
+										placeholder="Re-enter your password"
+										minlength="8"
+										maxlength="128"
+										required
+										aria-invalid={passwordsMismatch}
+										aria-describedby={passwordsMismatch ? 'password-match-error' : undefined}
+										oninput={() => {
+											passwordsMismatch = false;
+										}}
+										class="min-h-11 w-full rounded-lg border border-control-border bg-surface py-2.5 pr-16 pl-3.5 text-base text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent motion-reduce:transition-none"
+									/>
+									<button
+										type="button"
+										aria-label={showConfirmPassword
+											? 'Hide confirm password'
+											: 'Show confirm password'}
+										aria-controls="auth-confirm-password"
+										aria-pressed={showConfirmPassword}
+										onclick={() => {
+											showConfirmPassword = !showConfirmPassword;
+										}}
+										class="absolute inset-y-0 right-1 flex min-w-11 items-center justify-center rounded-md text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+									>
+										{@render passwordEye(showConfirmPassword)}
+									</button>
+								</div>
+								{#if passwordsMismatch}<p
+										id="password-match-error"
+										role="alert"
+										class="text-sm text-danger"
+									>
+										Passwords don't match. Please try again.
+									</p>{/if}
+							</div>
+						{/if}
+					</div>
 					<button
 						type="submit"
 						disabled={isSubmittingEmail}
@@ -385,11 +387,11 @@
 					{/if}
 				</button>
 
-				<p class="mt-5 text-center text-xs leading-5 text-muted sm:mt-8">
+				<p class="mt-5 text-center text-xs leading-5 text-muted sm:mt-5">
 					By continuing, you agree to use this space with care and respect for everyone’s everyday
 					moments.
 				</p>
-				<div class="mt-3 hidden text-center sm:mt-7 lg:block">
+				<div class="mt-3 hidden text-center lg:block">
 					<a
 						href={resolve('/')}
 						class="inline-flex min-h-11 items-center rounded-sm text-sm text-muted underline underline-offset-4 transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
