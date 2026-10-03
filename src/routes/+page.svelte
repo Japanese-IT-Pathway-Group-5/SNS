@@ -1,50 +1,104 @@
 <script lang="ts">
-	import { Button, Card, Badge } from '$lib/components/ui';
+	import { Button, EmptyState } from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faWandMagicSparkles,
-		faPalette,
-		faArrowRight,
-		faSeedling
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faArrowRight, faSeedling, faGear } from '@fortawesome/free-solid-svg-icons';
+	import { Composer, PostCard } from '$lib/components/posts';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 </script>
 
 <svelte:head>
 	<title>SNS — Everyday Journal</title>
 </svelte:head>
 
-<main class="mx-auto max-w-xl space-y-8 px-4 py-16 text-center">
-	<div class="space-y-3">
-		<div class="flex items-center justify-center gap-2">
-			<Badge variant="lime" class="gap-1.5">
-				<FontAwesomeIcon icon={faSeedling} class="size-3" />
-				Group 5
-			</Badge>
-			<Badge variant="peach">Everyday Journal</Badge>
+{#if data.user}
+	{#if !data.isMember}
+		<div class="mx-auto max-w-xl space-y-8 px-4 py-16 text-center sm:py-24">
+			<div class="space-y-4">
+				<div
+					class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted/50 text-accent"
+				>
+					<FontAwesomeIcon icon={faSeedling} class="size-8" />
+				</div>
+				<h1 class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">Invite-Only Pilot</h1>
+				<p class="mx-auto max-w-md text-base leading-relaxed text-muted">
+					Welcome, {data.user.name || 'friend'}! This journal is currently in an invite-only pilot.
+					Your account is signed in, but an invitation is required to post or read entries.
+				</p>
+			</div>
+			<div class="flex items-center justify-center gap-3">
+				<Button variant="ghost" href="/settings">Settings</Button>
+			</div>
 		</div>
-		<h1 class="text-3xl font-bold tracking-tight text-ink sm:text-4xl">SNS</h1>
-		<p class="mx-auto max-w-md text-base leading-relaxed text-muted">
-			"Your day doesn't have to be special to be worth sharing."
-		</p>
-	</div>
+	{:else}
+		<div class="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
+			<header class="mb-8 flex items-center justify-between border-b border-line pb-6">
+				<div class="flex items-center gap-6">
+					<h1 class="text-xl font-bold tracking-tight text-ink sm:text-2xl">SNS</h1>
+					<nav class="hidden space-x-6 sm:flex">
+						<span class="text-sm font-medium text-ink">Home</span>
+						<span class="text-sm font-medium text-muted hover:text-ink">My journal</span>
+					</nav>
+				</div>
+				<div class="flex items-center gap-3">
+					<Button variant="ghost" size="sm" href="/settings" aria-label="Settings">
+						<FontAwesomeIcon icon={faGear} class="size-4 text-muted hover:text-ink" />
+						<span class="hidden sm:inline">Settings</span>
+					</Button>
+				</div>
+			</header>
 
-	<Card variant="surface" class="space-y-4 text-left">
-		<div class="space-y-1">
-			<h2 class="flex items-center gap-2 text-base font-bold text-ink">
-				<FontAwesomeIcon icon={faWandMagicSparkles} class="size-4 text-accent" />
-				Foundation Ready!
-			</h2>
-			<p class="text-sm text-muted">
-				The SvelteKit 5 + Cloudflare Workers scaffold and shared design system are live.
+			<Composer user={data.user} />
+
+			<div class="mt-8 space-y-8 divide-y divide-line/60">
+				{#if data.posts && data.posts.length > 0}
+					{#each data.posts as post (post.id)}
+						<div class="pt-8 first:pt-0">
+							<PostCard
+								id={post.id}
+								authorName={post.authorName}
+								authorAvatar={post.authorImage ?? null}
+								createdAt={post.createdAt}
+								content={post.body}
+								imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
+								replyCount={0}
+							/>
+						</div>
+					{/each}
+
+					<div class="py-8 text-center text-sm font-medium text-muted">You're caught up.</div>
+				{:else}
+					<div class="pt-8">
+						<EmptyState
+							title="No journal entries yet"
+							description="Your day doesn't have to be special. Write down a small thought or what you had for lunch."
+						/>
+					</div>
+				{/if}
+			</div>
+		</div>
+	{/if}
+{:else}
+	<main class="mx-auto max-w-xl space-y-10 px-4 py-16 text-center sm:py-24">
+		<div class="space-y-4">
+			<div
+				class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-surface-muted/50 text-accent"
+			>
+				<FontAwesomeIcon icon={faSeedling} class="size-8" />
+			</div>
+			<h1 class="text-3xl font-bold tracking-tight text-ink sm:text-5xl">Everyday Journal</h1>
+			<p class="mx-auto max-w-md text-base leading-relaxed text-muted sm:text-lg">
+				A cozy, private place to record your days. Your day doesn't have to be special to be worth
+				sharing.
 			</p>
 		</div>
 
-		<div class="flex flex-col items-stretch gap-2.5 pt-2 sm:flex-row sm:items-center">
-			<Button variant="primary" href="/dev/components">
-				<FontAwesomeIcon icon={faPalette} class="size-4" />
-				<span>Explore Component Showcase</span>
-				<FontAwesomeIcon icon={faArrowRight} class="size-4" />
+		<div class="mx-auto max-w-sm space-y-4">
+			<Button variant="primary" class="w-full" href="/login">
+				<span>Log In to Your Journal</span>
+				<FontAwesomeIcon icon={faArrowRight} class="ml-2 size-4" />
 			</Button>
 		</div>
-	</Card>
-</main>
+	</main>
+{/if}

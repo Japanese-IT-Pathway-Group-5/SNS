@@ -41,6 +41,7 @@ export async function listPosts({
 			id: post.id,
 			authorId: post.authorId,
 			authorName: user.name,
+			authorImage: user.image,
 			submissionId: post.submissionId,
 			body: post.body,
 			mediaId: post.mediaId,
