@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { POST } from './+server';
+import { getDb } from '$lib/server/db';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
 import { MAX_PHOTO_BYTES, MAX_PHOTO_REQUEST_BYTES } from '$lib/validation/photo-upload';
@@ -12,8 +13,13 @@ vi.mock('$lib/server/storage/photo-upload', () => ({
 	uploadPhoto: vi.fn()
 }));
 
+vi.mock('$lib/server/db', () => ({
+	getDb: vi.fn()
+}));
+
 const mockedRateLimitUpload = vi.mocked(rateLimitUpload);
 const mockedUploadPhoto = vi.mocked(uploadPhoto);
+const mockedGetDb = vi.mocked(getDb);
 
 const JPEG_HEADER = [0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01];
 const PNG_HEADER = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d];
@@ -62,6 +68,7 @@ function createAuthenticatedEvent(
 		platform: {
 			env: {
 				UPLOAD_RATE_LIMITER: {},
+				DB: {},
 				MEDIA_BUCKET: options.mediaBucket === undefined ? {} : options.mediaBucket
 			}
 		}
@@ -100,7 +107,19 @@ describe('POST /api/uploads/photo', () => {
 			allowed: true
 		});
 
-		mockedUploadPhoto.mockResolvedValue('images/test-image-key');
+		mockedUploadPhoto.mockResolvedValue({
+			objectKey: 'images/test-image-key',
+			contentType: 'image/jpeg',
+			byteSize: 123,
+			width: 1,
+			height: 1
+		});
+
+		mockedGetDb.mockReturnValue({
+			insert: vi.fn().mockReturnValue({
+				values: vi.fn().mockResolvedValue(undefined)
+			})
+		} as never);
 	});
 
 	it('returns 401 when the user is not authenticated', async () => {
@@ -136,7 +155,6 @@ describe('POST /api/uploads/photo', () => {
 		expect(await response.json()).toEqual({
 			error: 'Too many upload requests'
 		});
-
 		expect(mockedUploadPhoto).not.toHaveBeenCalled();
 	});
 
@@ -328,7 +346,7 @@ describe('POST /api/uploads/photo', () => {
 		});
 	});
 
-	it('uploads an image and returns the image key', async () => {
+	it('uploads an image, stores media metadata, and returns the media id', async () => {
 		const file = imageFile(JPEG_HEADER, 'profile.jpg', 'image/jpeg');
 
 		const request = await createMultipartRequest(file);
@@ -337,12 +355,17 @@ describe('POST /api/uploads/photo', () => {
 		const response = await POST(event);
 
 		expect(response.status).toBe(201);
-		expect(await response.json()).toEqual({
-			imageKey: 'images/test-image-key'
+
+		const body = await response.json();
+
+		expect(body).toEqual({
+			mediaId: expect.any(String)
 		});
 
 		expect(mockedUploadPhoto).toHaveBeenCalledTimes(1);
 		expect(mockedUploadPhoto).toHaveBeenCalledWith({}, expect.any(File), 'image/jpeg');
+
+		expect(mockedGetDb).toHaveBeenCalledWith({});
 	});
 
 	it.each([

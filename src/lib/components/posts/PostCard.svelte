@@ -1,59 +1,83 @@
 <script lang="ts">
-	import { Avatar } from '$lib/components/ui';
+	import Card from '$lib/components/ui/Card.svelte';
+	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faMessage } from '@fortawesome/free-regular-svg-icons';
+
+	interface Props {
+		id: string;
+		authorName: string;
+		authorAvatar?: string | null;
+		createdAt: Date | string | number;
+		content: string;
+		imageUrl?: string | null;
+		replyCount?: number;
+	}
 
 	let {
-		post
-	}: {
-		post: {
-			body: string;
-			imageKey: string | null;
-			createdAt: Date | string;
-			author: {
-				name: string;
-				image: string | null;
-			};
-		};
-	} = $props();
+		id,
+		authorName,
+		authorAvatar,
+		createdAt,
+		content,
+		imageUrl,
+		replyCount = 0
+	}: Props = $props();
 
-	// Format timestamp
-	let timestamp = $derived(
-		new Date(post.createdAt).toLocaleDateString(undefined, {
-			month: 'short',
-			day: 'numeric',
-			hour: 'numeric',
-			minute: '2-digit'
-		})
-	);
+	function getRelativeTime(dateInput: Date | string | number) {
+		const date = new Date(dateInput);
+		const now = new Date();
+		const diffMs = now.getTime() - date.getTime();
+		const diffMins = Math.floor(diffMs / 60000);
+
+		if (diffMins < 1) return 'just now';
+		if (diffMins < 60) return `${diffMins}m`;
+		const diffHours = Math.floor(diffMins / 60);
+		if (diffHours < 24) return `${diffHours}h`;
+		const diffDays = Math.floor(diffHours / 24);
+		if (diffDays < 7) return `${diffDays}d`;
+		return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+	}
+
+	let timeAgo = $derived(getRelativeTime(createdAt));
 </script>
 
-<div class="flex items-start gap-4 sm:gap-5">
-	<div class="shrink-0 pt-1">
-		<Avatar name={post.author.name} src={post.author.image} size="md" />
-	</div>
-	<div class="min-w-0 flex-1 space-y-2">
-		<div class="flex items-center gap-2">
-			<p class="truncate font-bold text-ink">{post.author.name}</p>
-			<span class="text-muted/60">•</span>
-			<p class="shrink-0 text-sm text-muted" title={new Date(post.createdAt).toLocaleString()}>
-				{timestamp}
-			</p>
+<Card class="flex flex-col gap-3 transition-colors hover:border-control-border">
+	<!-- Header: Author & Time -->
+	<div class="flex items-center justify-between">
+		<div class="flex items-center gap-3">
+			<Avatar src={authorAvatar} name={authorName} size="md" />
+			<span class="font-medium text-ink">{authorName}</span>
 		</div>
-
-		{#if post.body}
-			<p class="text-sm leading-relaxed break-words whitespace-pre-wrap text-ink">
-				{post.body}
-			</p>
-		{/if}
-
-		{#if post.imageKey}
-			<div class="mt-3 overflow-hidden rounded-xl border border-line bg-surface-muted/30">
-				<img
-					src={`/api/media/${post.imageKey}`}
-					alt="Post attachment"
-					class="max-h-[400px] w-full object-contain object-left"
-					loading="lazy"
-				/>
-			</div>
-		{/if}
+		<span class="text-sm text-muted">{timeAgo}</span>
 	</div>
-</div>
+
+	<!-- Content -->
+	<div class="text-base leading-relaxed whitespace-pre-wrap text-ink">{content}</div>
+
+	<!-- Optional Image -->
+	{#if imageUrl}
+		<div class="mt-1 overflow-hidden rounded-xl border border-line bg-surface-muted">
+			<img
+				src={imageUrl}
+				alt="Post attachment"
+				class="max-h-[500px] w-full object-cover"
+				loading="lazy"
+			/>
+		</div>
+	{/if}
+
+	<!-- Actions -->
+	<div class="mt-1 flex items-center border-t border-line/50 pt-2">
+		<Button
+			variant="ghost"
+			size="sm"
+			href={`/post/${id}`}
+			class="group text-muted hover:bg-surface-muted hover:text-accent"
+		>
+			<FontAwesomeIcon icon={faMessage} class="size-4 transition-transform group-active:scale-95" />
+			<span class="font-medium">{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+		</Button>
+	</div>
+</Card>

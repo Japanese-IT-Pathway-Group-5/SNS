@@ -14,7 +14,7 @@ const defaultSleep = (delayMs: number): Promise<void> =>
 
 export async function cleanupUploadedPhoto(
 	bucket: R2Storage,
-	imageKey: string,
+	objectKey: string,
 	options: CleanupOptions = {}
 ): Promise<void> {
 	const maxAttempts = Math.max(1, options.maxAttempts ?? DEFAULT_MAX_ATTEMPTS);
@@ -25,7 +25,7 @@ export async function cleanupUploadedPhoto(
 
 	for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
 		try {
-			await deleteObject(bucket, imageKey);
+			await deleteObject(bucket, objectKey);
 			return;
 		} catch (error) {
 			lastError = error;

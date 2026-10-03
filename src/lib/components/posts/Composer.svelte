@@ -60,7 +60,7 @@
 		errorMessage = null;
 
 		try {
-			let imageKey = null;
+			let mediaId: string | null = null;
 
 			if (file) {
 				const formData = new FormData();
@@ -76,15 +76,15 @@
 					throw new Error(errorData.error || 'Failed to upload photo');
 				}
 
-				const uploadData = (await uploadRes.json()) as Record<string, string>;
-				imageKey = uploadData.imageKey;
+				const uploadData = (await uploadRes.json()) as { mediaId?: string };
+				mediaId = uploadData.mediaId ?? null;
 			}
 
 			const postFormData = new FormData();
 			postFormData.append('body', body);
-			if (imageKey) {
-				postFormData.append('imageKey', imageKey);
-				postFormData.append('imageAlt', imageAlt);
+			postFormData.append('submissionId', crypto.randomUUID());
+			if (mediaId) {
+				postFormData.append('mediaId', mediaId);
 			}
 
 			const postRes = await fetch('?/createPost', {
@@ -93,7 +93,15 @@
 			});
 
 			if (!postRes.ok) {
-				throw new Error('Failed to create post');
+				let errText = 'Failed to create post';
+				try {
+					const errJson = await postRes.json();
+					if (errJson?.data?.message) errText = errJson.data.message;
+					else if (errJson?.message) errText = errJson.message;
+				} catch {
+					// fallback to default
+				}
+				throw new Error(errText);
 			}
 
 			// Clear everything on success

@@ -5,9 +5,9 @@ describe('cleanupUploadedPhoto', () => {
 	it('deletes the uploaded photo', async () => {
 		const bucket = {
 			put: vi.fn(),
-			delete: vi.fn().mockResolvedValue(undefined),
-			get: vi.fn() as unknown as R2Bucket
-		} as unknown as R2Bucket;
+			get: vi.fn(),
+			delete: vi.fn().mockResolvedValue(undefined)
+		};
 
 		await cleanupUploadedPhoto(bucket, 'images/test-image');
 
@@ -18,12 +18,12 @@ describe('cleanupUploadedPhoto', () => {
 	it('retries when deletion fails', async () => {
 		const bucket = {
 			put: vi.fn(),
+			get: vi.fn(),
 			delete: vi
 				.fn()
 				.mockRejectedValueOnce(new Error('temporary R2 failure'))
-				.mockResolvedValueOnce(undefined),
-			get: vi.fn() as unknown as R2Bucket
-		} as unknown as R2Bucket;
+				.mockResolvedValueOnce(undefined)
+		};
 
 		const sleep = vi.fn().mockResolvedValue(undefined);
 
@@ -43,9 +43,9 @@ describe('cleanupUploadedPhoto', () => {
 
 		const bucket = {
 			put: vi.fn(),
-			delete: vi.fn().mockRejectedValue(error),
-			get: vi.fn() as unknown as R2Bucket
-		} as unknown as R2Bucket;
+			get: vi.fn(),
+			delete: vi.fn().mockRejectedValue(error)
+		};
 
 		const sleep = vi.fn().mockResolvedValue(undefined);
 

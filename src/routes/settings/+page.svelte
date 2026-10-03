@@ -30,6 +30,9 @@
 	async function handleLogout() {
 		isLoggingOut = true;
 		try {
+			if (data.user?.id) {
+				localStorage.removeItem(`composer_draft_${data.user.id}`);
+			}
 			await authClient.signOut();
 			window.location.href = '/login';
 		} catch (error) {
