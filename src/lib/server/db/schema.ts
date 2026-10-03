@@ -24,6 +24,28 @@ export const user = sqliteTable('user', {
 		.notNull()
 });
 
+export const membership = sqliteTable(
+	'membership',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		role: text('role', { enum: ['member', 'moderator'] })
+			.notNull()
+			.default('member'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [uniqueIndex('membership_userId_unique').on(table.userId)]
+);
+
 export const session = sqliteTable(
 	'session',
 	{
@@ -93,6 +115,34 @@ export const verification = sqliteTable(
 	(table) => [index('verification_identifier_idx').on(table.identifier)]
 );
 
+export const media = sqliteTable(
+	'media',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		ownerId: text('owner_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		objectKey: text('object_key').notNull().unique(),
+		contentType: text('content_type').notNull(),
+		byteSize: integer('byte_size').notNull(),
+		status: text('status', { enum: ['pending', 'ready', 'cleanup'] })
+			.notNull()
+			.default('pending'),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull(),
+		updatedAt: integer('updated_at', { mode: 'timestamp_ms' })
+			.$onUpdate(() => new Date())
+			.notNull()
+	},
+	(table) => [
+		index('media_ownerId_status_idx').on(table.ownerId, table.status),
+		index('media_objectKey_idx').on(table.objectKey)
+	]
+);
+
 export const post = sqliteTable(
 	'post',
 	{
@@ -105,8 +155,8 @@ export const post = sqliteTable(
 		// Client-generated ID so a retried submission does not create a duplicate post.
 		submissionId: text('submission_id').notNull(),
 		body: text('body').notNull().default(''),
-		// Server-controlled R2 object key; null for text-only posts.
-		imageKey: text('image_key'),
+		// References server-owned media metadata; null for text-only posts.
+		mediaId: text('media_id').references(() => media.id, { onDelete: 'set null' }),
 		hiddenAt: integer('hidden_at', { mode: 'timestamp_ms' }),
 		createdAt: integer('created_at', { mode: 'timestamp_ms' })
 			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
@@ -119,7 +169,8 @@ export const post = sqliteTable(
 	(table) => [
 		uniqueIndex('post_authorId_submissionId_unique').on(table.authorId, table.submissionId),
 		index('post_createdAt_id_idx').on(table.createdAt, table.id),
-		index('post_authorId_createdAt_id_idx').on(table.authorId, table.createdAt, table.id)
+		index('post_authorId_createdAt_id_idx').on(table.authorId, table.createdAt, table.id),
+		index('post_mediaId_idx').on(table.mediaId)
 	]
 );
 
@@ -173,11 +224,29 @@ export const moderationEvent = sqliteTable(
 	]
 );
 
-export const userRelations = relations(user, ({ many }) => ({
+export const userRelations = relations(user, ({ many, one }) => ({
 	sessions: many(session),
 	accounts: many(account),
 	posts: many(post),
-	replies: many(reply)
+	replies: many(reply),
+	media: many(media),
+	membership: one(membership, {
+		fields: [user.id],
+		references: [membership.userId]
+	})
+}));
+export const mediaRelations = relations(media, ({ one }) => ({
+	owner: one(user, {
+		fields: [media.ownerId],
+		references: [user.id]
+	})
+}));
+
+export const membershipRelations = relations(membership, ({ one }) => ({
+	user: one(user, {
+		fields: [membership.userId],
+		references: [user.id]
+	})
 }));
 
 export const postRelations = relations(post, ({ one, many }) => ({
@@ -186,6 +255,10 @@ export const postRelations = relations(post, ({ one, many }) => ({
 		references: [user.id]
 	}),
 	replies: many(reply),
+	media: one(media, {
+		fields: [post.mediaId],
+		references: [media.id]
+	}),
 	moderationEvents: many(moderationEvent)
 }));
 

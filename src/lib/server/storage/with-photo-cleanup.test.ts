@@ -5,6 +5,7 @@ describe('withPhotoCleanup', () => {
 	it('keeps the image when post creation succeeds', async () => {
 		const bucket = {
 			put: vi.fn(),
+			get: vi.fn(),
 			delete: vi.fn()
 		};
 
@@ -13,7 +14,7 @@ describe('withPhotoCleanup', () => {
 		const result = await withPhotoCleanup(
 			{
 				bucket,
-				imageKey: 'images/test-image'
+				objectKey: 'images/test-image'
 			},
 			createPost
 		);
@@ -26,6 +27,7 @@ describe('withPhotoCleanup', () => {
 	it('cleans up the image when post creation fails', async () => {
 		const bucket = {
 			put: vi.fn(),
+			get: vi.fn(),
 			delete: vi.fn().mockResolvedValue(undefined)
 		};
 
@@ -36,7 +38,7 @@ describe('withPhotoCleanup', () => {
 			withPhotoCleanup(
 				{
 					bucket,
-					imageKey: 'images/test-image'
+					objectKey: 'images/test-image'
 				},
 				createPost
 			)
@@ -49,6 +51,7 @@ describe('withPhotoCleanup', () => {
 	it('does not attempt cleanup when no image was uploaded', async () => {
 		const bucket = {
 			put: vi.fn(),
+			get: vi.fn(),
 			delete: vi.fn()
 		};
 
@@ -69,6 +72,7 @@ describe('withPhotoCleanup', () => {
 	it('retries cleanup before returning the original post error', async () => {
 		const bucket = {
 			put: vi.fn(),
+			get: vi.fn(),
 			delete: vi
 				.fn()
 				.mockRejectedValueOnce(new Error('temporary R2 failure'))
@@ -81,7 +85,7 @@ describe('withPhotoCleanup', () => {
 			withPhotoCleanup(
 				{
 					bucket,
-					imageKey: 'images/test-image',
+					objectKey: 'images/test-image',
 					cleanup: {
 						maxAttempts: 3,
 						retryDelayMs: 0
@@ -97,6 +101,7 @@ describe('withPhotoCleanup', () => {
 	it('preserves the post error if cleanup ultimately fails', async () => {
 		const bucket = {
 			put: vi.fn(),
+			get: vi.fn(),
 			delete: vi.fn().mockRejectedValue(new Error('R2 unavailable'))
 		};
 
@@ -109,7 +114,7 @@ describe('withPhotoCleanup', () => {
 			withPhotoCleanup(
 				{
 					bucket,
-					imageKey: 'images/test-image',
+					objectKey: 'images/test-image',
 					cleanup: {
 						maxAttempts: 2,
 						retryDelayMs: 0

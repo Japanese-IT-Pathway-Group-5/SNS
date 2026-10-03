@@ -1,14 +1,17 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
+import { getDb } from '$lib/server/db';
+import { media } from '$lib/server/db/schema';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
 import { detectImageTypeFromFile } from '$lib/server/storage/image-signature';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
-import { type R2Storage } from '$lib/server/storage/r2';
+import { deleteObject, type R2Storage } from '$lib/server/storage/r2';
 import { checkUploadContentLength, validatePhotoUpload } from '$lib/validation/photo-upload';
 
 const TOO_LARGE = 'Image is too large';
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const env = platform?.env as {
+		DB?: D1Database;
 		MEDIA_BUCKET?: R2Storage;
 	};
 
@@ -66,15 +69,38 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		return json({ error: 'Only JPEG, PNG or WebP images are allowed' }, { status: 415 });
 	}
 
-	if (!env?.MEDIA_BUCKET) {
+	if (!env.MEDIA_BUCKET || !env.DB) {
 		return json({ error: 'Image storage is not configured' }, { status: 503 });
 	}
-	try {
-		const imageKey = await uploadPhoto(env.MEDIA_BUCKET, upload.file, imageType);
 
-		return json({ imageKey }, { status: 201 });
+	let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
+
+	try {
+		uploaded = await uploadPhoto(env.MEDIA_BUCKET, upload.file, imageType);
+
+		const db = getDb(env.DB);
+		const mediaId = crypto.randomUUID();
+
+		await db.insert(media).values({
+			id: mediaId,
+			ownerId: locals.user.id,
+			objectKey: uploaded.objectKey,
+			contentType: uploaded.contentType,
+			byteSize: uploaded.byteSize,
+			status: 'pending'
+		});
+
+		return json({ mediaId }, { status: 201 });
 	} catch (error) {
-		console.error('Failed to upload image to R2:', error);
+		if (uploaded) {
+			try {
+				await deleteObject(env.MEDIA_BUCKET, uploaded.objectKey);
+			} catch (cleanupError) {
+				console.error('Failed to clean up uploaded image:', cleanupError);
+			}
+		}
+
+		console.error('Failed to store image:', error);
 
 		return json({ error: 'Failed to store image' }, { status: 500 });
 	}

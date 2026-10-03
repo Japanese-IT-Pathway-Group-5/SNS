@@ -5,13 +5,17 @@ export interface R2Storage {
 		options?: R2PutOptions
 	): Promise<R2Object>;
 
+	get(key: string): Promise<R2ObjectBody | null>;
+
 	delete(key: string): Promise<void>;
 }
+
+export type R2PutValue = ReadableStream | ArrayBuffer | ArrayBufferView | string | Blob;
 
 export async function putObject(
 	bucket: R2Storage,
 	key: string,
-	value: ReadableStream,
+	value: R2PutValue,
 	contentType: string
 ): Promise<void> {
 	await bucket.put(key, value, {
@@ -19,6 +23,10 @@ export async function putObject(
 			contentType
 		}
 	});
+}
+
+export async function getObject(bucket: R2Storage, key: string): Promise<R2ObjectBody | null> {
+	return bucket.get(key);
 }
 
 export async function deleteObject(bucket: R2Storage, key: string): Promise<void> {
