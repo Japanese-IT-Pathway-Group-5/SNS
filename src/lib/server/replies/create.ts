@@ -1,5 +1,4 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { post, reply } from '$lib/server/db/schema';
 import { replyInputSchema, type ReplyInput } from '$lib/validation/posts';
@@ -18,8 +17,6 @@ export async function createReply({
 	postId: string;
 	input: ReplyInput;
 }) {
-	await requireMembership(d1, userId);
-
 	const parsed = replyInputSchema.safeParse(input);
 
 	if (!parsed.success) {

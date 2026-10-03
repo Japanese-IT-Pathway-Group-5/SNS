@@ -1,11 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getPost, PostNotFoundError } from '$lib/server/posts/get';
 
-export const GET: RequestHandler = async ({ locals, params, platform }) => {
-	if (!locals.user) {
-		return json({ error: 'Unauthorized' }, { status: 401 });
-	}
-
+export const GET: RequestHandler = async ({ params, platform }) => {
 	const env = platform?.env as {
 		DB?: D1Database;
 	};
@@ -23,7 +19,6 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
 	try {
 		const result = await getPost({
 			d1: env.DB,
-			userId: locals.user.id,
 			postId
 		});
 
@@ -31,10 +26,6 @@ export const GET: RequestHandler = async ({ locals, params, platform }) => {
 	} catch (error) {
 		if (error instanceof PostNotFoundError) {
 			return json({ error: 'Post not found' }, { status: 404 });
-		}
-
-		if (error instanceof Error && error.message === 'Membership required') {
-			return json({ error: 'Membership required' }, { status: 403 });
 		}
 
 		console.error('Failed to get post:', error);

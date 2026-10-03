@@ -1,43 +1,21 @@
 import { error, fail } from '@sveltejs/kit';
-import { requireMembership } from '$lib/server/auth/authorization';
 import { createPost, PostValidationError } from '$lib/server/posts/create';
 import { listPosts } from '$lib/server/posts/list';
 import type { PageServerLoad, Actions } from './$types';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-export const load: PageServerLoad = async ({ locals, platform }) => {
-	if (!locals.user) {
-		return { isMember: false, posts: [] };
-	}
-
+export const load: PageServerLoad = async ({ platform }) => {
 	const d1 = platform?.env?.DB;
 	if (!d1) {
-		return { isMember: false, posts: [] };
+		return { posts: [] };
 	}
 
 	try {
-		await requireMembership(d1, locals.user.id);
-		const { items } = await listPosts({
-			d1,
-			userId: locals.user.id
-		});
-
-		return {
-			isMember: true,
-			posts: items
-		};
+		const { items } = await listPosts({ d1 });
+		return { posts: items };
 	} catch (err) {
-		if (err instanceof Error && err.message === 'Membership required') {
-			return {
-				isMember: false,
-				posts: []
-			};
-		}
 		console.error('Failed to load home feed:', err);
-		return {
-			isMember: false,
-			posts: []
-		};
+		return { posts: [] };
 	}
 };
 
@@ -73,10 +51,6 @@ export const actions: Actions = {
 		} catch (err) {
 			if (err instanceof PostValidationError) {
 				return fail(400, { message: err.message });
-			}
-
-			if (err instanceof Error && err.message === 'Membership required') {
-				return fail(403, { message: 'Membership required to post' });
 			}
 
 			console.error('Failed to create post:', err);

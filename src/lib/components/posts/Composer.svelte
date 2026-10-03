@@ -182,7 +182,7 @@
 			{/if}
 
 			<div class="mt-2 flex items-center justify-between border-t border-line/60 pt-3">
-				<p class="text-xs text-muted">Shared with pilot members</p>
+				<p class="text-xs text-muted">Posts are visible to everyone</p>
 				<Button
 					variant="primary"
 					type="submit"

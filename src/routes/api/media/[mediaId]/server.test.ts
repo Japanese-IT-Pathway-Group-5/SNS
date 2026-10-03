@@ -33,16 +33,6 @@ const makeEvent = (options: {
 	}) as Parameters<typeof GET>[0];
 
 describe('GET /api/media/[mediaId]', () => {
-	it('returns 401 for unauthenticated users', async () => {
-		const response = await GET(
-			makeEvent({
-				user: null
-			})
-		);
-
-		expect(response.status).toBe(401);
-	});
-
 	it('returns 503 when storage is unavailable', async () => {
 		const response = await GET({
 			locals: {
@@ -85,18 +75,6 @@ describe('GET /api/media/[mediaId]', () => {
 		expect(response.status).toBe(404);
 	});
 
-	it('returns 403 when membership is required', async () => {
-		getMediaMock.mockRejectedValueOnce(new Error('Membership required'));
-
-		const response = await GET(
-			makeEvent({
-				mediaId: 'media-1'
-			})
-		);
-
-		expect(response.status).toBe(403);
-	});
-
 	it('returns the image with the stored content type and size', async () => {
 		const body = new ReadableStream({
 			start(controller) {
@@ -115,6 +93,7 @@ describe('GET /api/media/[mediaId]', () => {
 
 		const response = await GET(
 			makeEvent({
+				user: null,
 				mediaId: 'media-1'
 			})
 		);
@@ -122,7 +101,7 @@ describe('GET /api/media/[mediaId]', () => {
 		expect(response.status).toBe(200);
 		expect(response.headers.get('content-type')).toBe('image/jpeg');
 		expect(response.headers.get('content-length')).toBe('3');
-		expect(response.headers.get('cache-control')).toBe('private, no-store');
+		expect(response.headers.get('cache-control')).toBe('public, no-store');
 		expect(response.headers.get('x-content-type-options')).toBe('nosniff');
 		await expect(response.arrayBuffer()).resolves.toEqual(new Uint8Array([1, 2, 3]).buffer);
 	});

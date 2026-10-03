@@ -153,7 +153,7 @@
 			<Input
 				label="Display Name"
 				placeholder="e.g. Kenji"
-				description="Visible to fellow pilot members."
+				description="Visible to everyone."
 				bind:value={sampleInput}
 				required
 			/>
@@ -216,7 +216,7 @@
 				type="warning"
 				message="You are approaching the character limit for this journal entry."
 			/>
-			<FormMessage type="success" message="Entry posted and shared with pilot members." />
+			<FormMessage type="success" message="Entry posted and visible to everyone." />
 		</div>
 	</section>
 
@@ -252,7 +252,7 @@
 		</h2>
 		<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 			<Card variant="surface">
-				<LoadingState status="Connecting to pilot members..." />
+				<LoadingState status="Getting your journal ready..." />
 			</Card>
 
 			<EmptyState
