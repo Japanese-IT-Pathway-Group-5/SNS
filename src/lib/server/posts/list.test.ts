@@ -25,6 +25,7 @@ vi.mock('$lib/server/auth/authorization', () => ({
 	requireMembership: requireMembershipMock
 }));
 
+import { decodeCursor } from '$lib/server/http/pagination';
 import { listPosts } from './list';
 
 describe('listPosts', () => {
@@ -93,7 +94,8 @@ describe('listPosts', () => {
 		expect(result.items).toHaveLength(2);
 		expect(result.items[0]?.id).toBe('post-1');
 		expect(result.items[1]?.id).toBe('post-2');
-		expect(result.nextCursor).toEqual({
+		expect(typeof result.nextCursor).toBe('string');
+		expect(decodeCursor(result.nextCursor!)).toEqual({
 			createdAt: createdAt.getTime(),
 			id: 'post-2'
 		});

@@ -2,13 +2,11 @@ import { and, desc, eq, isNull, lt, or } from 'drizzle-orm';
 import { requireMembership } from '$lib/server/auth/authorization';
 import { getDb } from '$lib/server/db';
 import { post, user } from '$lib/server/db/schema';
+import { encodeCursor, type PaginationCursor } from '$lib/server/http/pagination';
 
 export const POSTS_PAGE_SIZE = 20;
 
-export interface PostCursor {
-	createdAt: number;
-	id: string;
-}
+export type PostCursor = PaginationCursor;
 
 export interface ListPostsOptions {
 	cursor?: PostCursor;
@@ -60,12 +58,8 @@ export async function listPosts({
 
 	return {
 		items,
+		// Opaque token for `?cursor=`; null on the last page.
 		nextCursor:
-			hasMore && last
-				? {
-						createdAt: last.createdAt.getTime(),
-						id: last.id
-					}
-				: null
+			hasMore && last ? encodeCursor({ createdAt: last.createdAt.getTime(), id: last.id }) : null
 	};
 }
