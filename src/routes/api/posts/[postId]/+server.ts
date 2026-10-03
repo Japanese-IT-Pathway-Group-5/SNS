@@ -4,7 +4,17 @@ import { updatePost, PostForbiddenError, PostValidationError } from '$lib/server
 import { deletePost } from '$lib/server/posts/delete';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-function handlePostMutationError(error: unknown, failureMessage: string) {
+type PostContextResult =
+	| { ok: false; response: Response }
+	| {
+			ok: true;
+			user: NonNullable<App.Locals['user']>;
+			db: D1Database;
+			mediaBucket?: R2Storage;
+			postId: string;
+	  };
+
+function handlePostMutationError(error: unknown, failureMessage: string): Response {
 	if (error instanceof PostValidationError) {
 		return json({ error: error.message }, { status: 400 });
 	}
@@ -25,9 +35,9 @@ function resolvePostContext(
 	locals: App.Locals,
 	platform: Readonly<App.Platform> | undefined,
 	postIdParam: string | undefined
-) {
+): PostContextResult {
 	if (!locals.user) {
-		return { error: json({ error: 'Unauthorized' }, { status: 401 }) };
+		return { ok: false, response: json({ error: 'Unauthorized' }, { status: 401 }) };
 	}
 
 	const env = platform?.env as {
@@ -36,15 +46,21 @@ function resolvePostContext(
 	};
 
 	if (!env?.DB) {
-		return { error: json({ error: 'Database is not configured' }, { status: 503 }) };
+		return { ok: false, response: json({ error: 'Database is not configured' }, { status: 503 }) };
 	}
 
 	const postId = postIdParam?.trim();
 	if (!postId) {
-		return { error: json({ error: 'postId is required' }, { status: 400 }) };
+		return { ok: false, response: json({ error: 'postId is required' }, { status: 400 }) };
 	}
 
-	return { user: locals.user, db: env.DB, mediaBucket: env.MEDIA_BUCKET, postId };
+	return {
+		ok: true,
+		user: locals.user,
+		db: env.DB,
+		mediaBucket: env.MEDIA_BUCKET,
+		postId
+	};
 }
 
 export const GET: RequestHandler = async ({ params, platform }) => {
@@ -82,7 +98,7 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 
 export const PATCH: RequestHandler = async ({ request, params, locals, platform }) => {
 	const context = resolvePostContext(locals, platform, params.postId);
-	if ('error' in context) return context.error;
+	if (!context.ok) return context.response;
 
 	let input: unknown;
 
@@ -108,7 +124,7 @@ export const PATCH: RequestHandler = async ({ request, params, locals, platform 
 
 export const DELETE: RequestHandler = async ({ params, locals, platform }) => {
 	const context = resolvePostContext(locals, platform, params.postId);
-	if ('error' in context) return context.error;
+	if (!context.ok) return context.response;
 
 	try {
 		const result = await deletePost({
