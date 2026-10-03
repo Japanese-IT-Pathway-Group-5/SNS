@@ -1,4 +1,4 @@
-﻿import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
 
@@ -18,6 +18,7 @@ vi.mock('$lib/server/db', () => ({
 	})
 }));
 
+import { decodeCursor } from '$lib/server/http/pagination';
 import { listPosts } from './list';
 
 describe('listPosts', () => {
@@ -68,7 +69,8 @@ describe('listPosts', () => {
 		expect(result.items).toHaveLength(2);
 		expect(result.items[0]?.id).toBe('post-1');
 		expect(result.items[1]?.id).toBe('post-2');
-		expect(result.nextCursor).toEqual({
+		expect(typeof result.nextCursor).toBe('string');
+		expect(decodeCursor(result.nextCursor!)).toEqual({
 			createdAt: createdAt.getTime(),
 			id: 'post-2'
 		});

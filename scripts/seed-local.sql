@@ -6,6 +6,7 @@
 DELETE FROM moderation_event WHERE id LIKE 'seed-%';
 DELETE FROM reply WHERE id LIKE 'seed-%';
 DELETE FROM post WHERE id LIKE 'seed-%';
+DELETE FROM membership WHERE id LIKE 'seed-%';
 DELETE FROM user WHERE id LIKE 'seed-%';
 
 INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUES
@@ -13,9 +14,14 @@ INSERT INTO user (id, name, email, email_verified, created_at, updated_at) VALUE
 	('seed-user-ben', 'Ben (seed)', 'ben@example.com', 1, 1788220800000, 1788220800000),
 	('seed-user-mod', 'Moderator (seed)', 'moderator@example.com', 1, 1788220800000, 1788220800000);
 
+INSERT INTO membership (id, user_id, role, created_at, updated_at) VALUES
+	('seed-membership-aiko', 'seed-user-aiko', 'member', 1788220800000, 1788220800000),
+	('seed-membership-ben', 'seed-user-ben', 'member', 1788220800000, 1788220800000),
+	('seed-membership-mod', 'seed-user-mod', 'moderator', 1788220800000, 1788220800000);
+
 -- Hand-written posts, newest first. seed-post-05 and seed-post-06 share a
 -- timestamp so feed ordering must fall back to id as the tie-breaker.
-INSERT INTO post (id, author_id, submission_id, body, image_key, hidden_at, created_at, updated_at) VALUES
+INSERT INTO post (id, author_id, submission_id, body, media_id, hidden_at, created_at, updated_at) VALUES
 	('seed-post-01', 'seed-user-aiko', 'seed-sub-01', 'Made miso soup for breakfast. Too much tofu, no regrets.', NULL, NULL, 1788400000000, 1788400000000),
 	('seed-post-02', 'seed-user-ben', 'seed-sub-02', 'Rain all day.
 Finished the book I started last month.', NULL, NULL, 1788390000000, 1788390000000),
@@ -27,7 +33,7 @@ Finished the book I started last month.', NULL, NULL, 1788390000000, 17883900000
 
 -- 20 older filler posts so the feed has more than one 20-post page.
 WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i < 20)
-INSERT INTO post (id, author_id, submission_id, body, image_key, hidden_at, created_at, updated_at)
+INSERT INTO post (id, author_id, submission_id, body, media_id, hidden_at, created_at, updated_at)
 SELECT
 	printf('seed-post-filler-%02d', i),
 	CASE WHEN i % 2 = 0 THEN 'seed-user-aiko' ELSE 'seed-user-ben' END,
