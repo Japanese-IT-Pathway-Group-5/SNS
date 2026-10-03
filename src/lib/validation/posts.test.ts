@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_POST_LENGTH, MAX_REPLY_LENGTH, postInputSchema, replyInputSchema } from './posts';
+import {
+	MAX_POST_LENGTH,
+	MAX_REPLY_LENGTH,
+	postInputSchema,
+	replyInputSchema,
+	updatePostInputSchema
+} from './posts';
 
 describe('post validation', () => {
 	it('accepts a post at the Unicode code-point limit', () => {
@@ -42,6 +48,18 @@ describe('post validation', () => {
 				mediaId: '../secret'
 			}).success
 		).toBe(false);
+	});
+
+	it('accepts a post update at the Unicode code-point limit', () => {
+		const body = '😀'.repeat(MAX_POST_LENGTH);
+
+		expect(updatePostInputSchema.safeParse({ body }).success).toBe(true);
+	});
+
+	it('rejects a post update above the Unicode code-point limit', () => {
+		const body = '😀'.repeat(MAX_POST_LENGTH + 1);
+
+		expect(updatePostInputSchema.safeParse({ body }).success).toBe(false);
 	});
 
 	it('accepts a reply at the Unicode code-point limit', () => {

@@ -17,6 +17,12 @@ export const postInputSchema = z.object({
 		.nullable()
 });
 
+export const updatePostInputSchema = z.object({
+	body: z.string().refine((value) => unicodeCodePointLength(value.trim()) <= MAX_POST_LENGTH, {
+		message: `Post must be ${MAX_POST_LENGTH} characters or fewer`
+	})
+});
+
 export const replyInputSchema = z.object({
 	body: z
 		.string()
@@ -28,4 +34,5 @@ export const replyInputSchema = z.object({
 });
 
 export type PostInput = z.infer<typeof postInputSchema>;
+export type UpdatePostInput = z.infer<typeof updatePostInputSchema>;
 export type ReplyInput = z.infer<typeof replyInputSchema>;
