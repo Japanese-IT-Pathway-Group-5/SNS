@@ -1,16 +1,19 @@
 <script lang="ts">
-	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faImage, faXmark, faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
+	import Image from '@lucide/svelte/icons/image';
+	import X from '@lucide/svelte/icons/x';
+	import Upload from '@lucide/svelte/icons/upload';
 
 	let {
 		file = $bindable(null),
 		// eslint-disable-next-line no-useless-assignment
 		error = $bindable(null),
-		maxSizeMB = 5
+		maxSizeMB = 5,
+		disabled = false
 	}: {
 		file?: File | null;
 		error?: string | null;
 		maxSizeMB?: number;
+		disabled?: boolean;
 	} = $props();
 
 	let fileInput = $state<HTMLInputElement | null>(null);
@@ -26,6 +29,7 @@
 	});
 
 	function handleFile(newFile: File | null) {
+		if (disabled) return;
 		error = null;
 
 		if (!newFile) {
@@ -52,6 +56,7 @@
 
 	function onDragOver(e: DragEvent) {
 		e.preventDefault();
+		if (disabled) return;
 		isDragging = true;
 	}
 
@@ -84,27 +89,21 @@
 <div class="relative w-full">
 	{#if previewUrl}
 		<!-- Image Preview -->
-		<div
-			class="group relative mt-2 overflow-hidden rounded-xl border border-control-border bg-surface-muted shadow-sm transition-all"
-		>
+		<div class="relative overflow-hidden rounded-lg border border-control-border bg-surface-muted">
 			<img
 				src={previewUrl}
 				alt="Selected attachment preview"
 				class="max-h-[400px] w-full object-contain"
 			/>
 
-			<!-- Subtle gradient overlay to ensure the remove button is always visible -->
-			<div
-				class="pointer-events-none absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/40 to-transparent opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100"
-			></div>
-
 			<button
 				type="button"
-				class="absolute top-3 right-3 flex size-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-105 hover:bg-danger focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none active:scale-95"
+				{disabled}
+				class="absolute top-3 right-3 flex size-11 items-center justify-center rounded-lg border border-control-border bg-surface text-ink hover:outline-2 hover:outline-offset-2 hover:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
 				aria-label="Remove image"
 				onclick={clearImage}
 			>
-				<FontAwesomeIcon icon={faXmark} class="size-4" />
+				<X class="size-5" strokeWidth={1.75} aria-hidden="true" />
 			</button>
 		</div>
 	{:else}
@@ -113,37 +112,41 @@
 			type="file"
 			accept="image/jpeg, image/png, image/webp"
 			class="hidden"
+			{disabled}
 			bind:this={fileInput}
 			onchange={onChange}
 		/>
 
-		<div
-			class="mt-2 flex min-h-[140px] cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed transition-all hover:border-accent hover:bg-surface-muted/50 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none {isDragging
-				? 'scale-[1.02] border-accent bg-accent-soft'
-				: 'border-line bg-surface'}"
+		<button
+			type="button"
+			{disabled}
+			class="flex min-h-24 w-full items-center gap-4 rounded-lg border border-control-border px-4 py-4 text-left transition-colors duration-150 focus-visible:bg-accent-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent enabled:hover:outline-2 enabled:hover:outline-offset-2 enabled:hover:outline-accent disabled:cursor-wait disabled:opacity-60 motion-reduce:transition-none {isDragging
+				? 'border-accent bg-accent-soft'
+				: 'bg-surface'}"
 			ondragover={onDragOver}
 			ondragleave={onDragLeave}
 			ondrop={onDrop}
 			onclick={() => fileInput?.click()}
-			onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && fileInput?.click()}
-			role="button"
-			tabindex="0"
-			aria-label="Upload an image"
+			aria-label="Add a photo (optional)"
 		>
 			<div
-				class="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-accent transition-transform group-hover:scale-110 {isDragging
-					? 'scale-110'
-					: ''}"
+				class="flex size-11 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent"
 			>
-				<FontAwesomeIcon icon={isDragging ? faCloudArrowUp : faImage} class="size-5" />
+				{#if isDragging}<Upload class="size-5" strokeWidth={1.75} aria-hidden="true" />{:else}<Image
+						class="size-5"
+						strokeWidth={1.75}
+						aria-hidden="true"
+					/>{/if}
 			</div>
 
-			<div class="mt-3 space-y-1 text-center">
-				<p class="text-sm font-medium text-ink">
-					{isDragging ? 'Drop photo here' : 'Click or drag to add a photo'}
+			<div class="min-w-0 space-y-1">
+				<p class="text-sm font-semibold text-ink">
+					{isDragging ? 'Drop your photo here' : 'Add a photo (optional)'}
 				</p>
-				<p class="text-xs text-muted">JPEG, PNG, or WebP up to {maxSizeMB}MB</p>
+				<p class="text-xs leading-5 text-muted">
+					Choose or drag a JPEG, PNG, or WebP up to {maxSizeMB} MB.
+				</p>
 			</div>
-		</div>
+		</button>
 	{/if}
 </div>

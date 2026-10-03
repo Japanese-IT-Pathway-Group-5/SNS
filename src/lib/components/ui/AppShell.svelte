@@ -167,8 +167,19 @@
 		bind:open={createOpen}
 		title="Share a moment"
 		description="A few words, one photo, or a little of both."
-		class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-xl overflow-y-auto p-4 sm:p-6"
+		class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-2xl gap-0 overflow-y-auto bg-canvas p-0"
+		headerClass="overflow-hidden rounded-t-xl bg-accent p-5 text-on-accent sm:p-6"
 	>
+		{#snippet headerArtwork()}
+			<div
+				aria-hidden="true"
+				class="pointer-events-none absolute inset-0 grid grid-cols-4 opacity-[0.14]"
+			>
+				{#each ['/art/reading.svg', '/art/swinging.svg', '/art/dancing.svg', '/art/sitting-reading.svg'] as art (art)}
+					<img src={art} alt="" class="h-full min-h-0 w-full object-contain" />
+				{/each}
+			</div>
+		{/snippet}
 		<Composer {user} />
 	</ModalDialog>
 {/if}

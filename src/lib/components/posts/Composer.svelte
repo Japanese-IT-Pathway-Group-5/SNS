@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
 	import { Button, Textarea, ImageAttachment, FormMessage, Avatar } from '$lib/components/ui';
-	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faPaperPlane, faLightbulb } from '@fortawesome/free-solid-svg-icons';
+	import Send from '@lucide/svelte/icons/send';
+	import Lightbulb from '@lucide/svelte/icons/lightbulb';
+	import Globe from '@lucide/svelte/icons/globe';
 	import { onMount } from 'svelte';
 	import type { User } from 'better-auth';
 
@@ -121,83 +122,93 @@
 	}
 </script>
 
-<section aria-label="Share a moment" class="rounded-xl border border-line bg-surface p-4 sm:p-6">
-	<div class="flex items-start gap-3 sm:gap-4">
-		<div class="hidden shrink-0 sm:block">
-			<Avatar name={user.name} src={user.image} size="md" />
+<section aria-label="Share a moment" class="p-5 sm:p-6">
+	<div class="mb-5 flex items-center gap-3">
+		<Avatar name={user.name} src={user.image} size="md" />
+		<div class="min-w-0">
+			<p class="truncate text-base font-semibold text-ink">{user.name}</p>
+			<p class="text-sm text-muted">A little piece of your day.</p>
 		</div>
-		<form class="min-w-0 flex-1 space-y-4" onsubmit={handleSubmit}>
-			<div class="space-y-2">
-				<div class="flex flex-wrap items-center justify-between gap-2">
-					<label for="post-body" class="text-base font-semibold text-ink">A moment from today</label
-					>
-					<button
-						type="button"
-						class="flex min-h-11 items-center gap-1 rounded-sm text-xs text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-						onclick={setIdea}
-					>
-						<FontAwesomeIcon icon={faLightbulb} class="size-3" />
-						Need an idea?
-					</button>
-				</div>
-				<Textarea
-					id="post-body"
-					{placeholder}
-					bind:value={body}
-					showCount
-					maxCount={2000}
-					rows={3}
-					class="focus:bg-accent-soft"
+	</div>
+	<form class="min-w-0 space-y-5" onsubmit={handleSubmit}>
+		<div class="space-y-2">
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<label for="post-body" class="text-base font-semibold text-ink">A moment from today</label>
+				<button
+					type="button"
+					class="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-accent hover:outline-2 hover:outline-offset-2 hover:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+					onclick={setIdea}
+					disabled={isSubmitting}
+				>
+					<Lightbulb class="size-4" strokeWidth={1.75} aria-hidden="true" />
+					Need an idea?
+				</button>
+			</div>
+			<Textarea
+				id="post-body"
+				{placeholder}
+				bind:value={body}
+				showCount
+				maxCount={2000}
+				rows={5}
+				autoResize={false}
+				class="min-h-40 focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent focus:outline-solid focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid motion-reduce:transition-none"
+				disabled={isSubmitting}
+			/>
+		</div>
+
+		<ImageAttachment bind:file bind:error={fileError} maxSizeMB={5} disabled={isSubmitting} />
+		{#if fileError}<FormMessage type="error" message={fileError} />{/if}
+
+		{#if file}
+			<div class="space-y-1">
+				<label for="image-alt" class="text-sm font-semibold text-ink"
+					>Image description (optional)</label
+				>
+				<input
+					type="text"
+					id="image-alt"
+					bind:value={imageAlt}
+					class="w-full rounded-lg border border-control-border bg-surface px-3.5 py-2.5 text-base text-ink transition-colors duration-150 placeholder:text-muted focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent motion-reduce:transition-none"
+					placeholder="What's in this photo?"
 					disabled={isSubmitting}
 				/>
 			</div>
+		{/if}
 
-			<ImageAttachment bind:file bind:error={fileError} maxSizeMB={5} />
+		{#if errorMessage}
+			<FormMessage type="error" message={errorMessage} />
+		{/if}
 
-			{#if file}
-				<div class="space-y-1">
-					<label for="image-alt" class="text-xs font-medium text-ink"
-						>Image description (optional)</label
-					>
-					<input
-						type="text"
-						id="image-alt"
-						bind:value={imageAlt}
-						class="w-full rounded-lg border border-control-border bg-white px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-accent focus:ring-1 focus:ring-accent focus:outline-none"
-						placeholder="What's in this photo?"
-						disabled={isSubmitting}
-					/>
-				</div>
-			{/if}
-
-			{#if errorMessage}
-				<FormMessage type="error" message={errorMessage} />
-			{/if}
-
-			{#if hasDraft && !isSubmitting}
-				<div class="flex items-center gap-2 text-xs text-muted">
-					<span>Draft saved on this device</span>
-					<span>•</span>
-					<button type="button" class="text-danger hover:underline" onclick={discardDraft}>
-						Discard
-					</button>
-				</div>
-			{/if}
-
-			<div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-				<p class="max-w-40 text-xs leading-5 text-muted sm:max-w-none">
-					Posts are visible to everyone.
-				</p>
-				<Button
-					variant="primary"
-					type="submit"
-					loading={isSubmitting}
-					disabled={isSubmitting || (!body.trim() && !file)}
+		{#if hasDraft && !isSubmitting}
+			<div class="flex items-center gap-2 text-xs text-muted">
+				<span>Draft saved on this device</span>
+				<span>•</span>
+				<button
+					type="button"
+					class="min-h-11 rounded-sm px-2 text-danger hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+					onclick={discardDraft}
 				>
-					<FontAwesomeIcon icon={faPaperPlane} class="mr-2 size-4" />
-					{isSubmitting ? 'Sharing...' : 'Share moment'}
-				</Button>
+					Discard
+				</button>
 			</div>
-		</form>
-	</div>
+		{/if}
+
+		<div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+			<p class="flex items-center gap-2 text-sm leading-5 text-muted">
+				<Globe class="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+				Posts are visible to everyone.
+			</p>
+			<Button
+				variant="primary"
+				type="submit"
+				loading={isSubmitting}
+				class="min-h-12 w-full font-semibold shadow-none sm:w-auto"
+				disabled={isSubmitting || (!body.trim() && !file)}
+			>
+				{#if !isSubmitting}<Send class="size-4" strokeWidth={1.75} aria-hidden="true" />{/if}
+				{isSubmitting ? 'Sharing...' : 'Share moment'}
+			</Button>
+		</div>
+	</form>
 </section>

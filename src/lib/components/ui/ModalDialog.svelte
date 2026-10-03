@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import { Dialog } from 'bits-ui';
-	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faXmark } from '@fortawesome/free-solid-svg-icons';
+	import X from '@lucide/svelte/icons/x';
 	import { cn } from '$lib/utils';
 
 	interface Props {
@@ -12,6 +11,8 @@
 		children?: Snippet;
 		actions?: Snippet;
 		trigger?: Snippet;
+		headerArtwork?: Snippet;
+		headerClass?: string;
 		class?: string;
 	}
 
@@ -22,6 +23,8 @@
 		children,
 		actions,
 		trigger,
+		headerArtwork,
+		headerClass,
 		class: className
 	}: Props = $props();
 </script>
@@ -45,25 +48,32 @@
 				className
 			)}
 		>
-			<div class="flex items-start justify-between gap-3">
-				<div class="flex flex-col gap-1">
+			<div class={cn('relative flex items-start justify-between gap-3', headerClass)}>
+				{#if headerArtwork}{@render headerArtwork()}{/if}
+				<div class="relative z-10 flex min-w-0 flex-col gap-2">
 					{#if title}
-						<Dialog.Title class="text-lg leading-tight font-bold text-ink">
+						<Dialog.Title
+							class={headerClass
+								? 'text-2xl leading-tight font-semibold tracking-tight'
+								: 'text-lg leading-tight font-bold text-ink'}
+						>
 							{title}
 						</Dialog.Title>
 					{/if}
 					{#if description}
-						<Dialog.Description class="text-sm text-muted">
+						<Dialog.Description
+							class={headerClass ? 'text-sm leading-6 opacity-85' : 'text-sm text-muted'}
+						>
 							{description}
 						</Dialog.Description>
 					{/if}
 				</div>
 
 				<Dialog.Close
-					class="rounded-lg p-1.5 text-muted transition-colors hover:bg-surface-muted hover:text-ink focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none"
+					class="relative z-10 flex size-11 shrink-0 items-center justify-center rounded-lg text-current transition-colors hover:outline-2 hover:outline-offset-2 hover:outline-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
 					aria-label="Close dialog"
 				>
-					<FontAwesomeIcon icon={faXmark} class="size-4" />
+					<X class="size-5" strokeWidth={1.75} aria-hidden="true" />
 				</Dialog.Close>
 			</div>
 
