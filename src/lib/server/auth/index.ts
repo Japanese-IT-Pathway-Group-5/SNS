@@ -10,11 +10,12 @@ export interface AuthEnv {
 	GOOGLE_CLIENT_SECRET?: string;
 }
 
-export function createAuth(d1: D1Database, env?: AuthEnv | Env) {
+export function createAuth(d1: D1Database, env?: Partial<Env> | AuthEnv) {
 	const db = getDb(d1);
+	const authEnv = env as (AuthEnv & Partial<Env>) | undefined;
 
-	const googleClientId = env?.GOOGLE_CLIENT_ID ?? '';
-	const googleClientSecret = env?.GOOGLE_CLIENT_SECRET ?? '';
+	const googleClientId = authEnv?.GOOGLE_CLIENT_ID ?? '';
+	const googleClientSecret = authEnv?.GOOGLE_CLIENT_SECRET ?? '';
 
 	const trustedOrigins = [
 		'http://localhost:5173',
@@ -23,8 +24,8 @@ export function createAuth(d1: D1Database, env?: AuthEnv | Env) {
 		'http://127.0.0.1:5173',
 		'http://127.0.0.1:5174'
 	];
-	if (env?.BETTER_AUTH_URL && !trustedOrigins.includes(env.BETTER_AUTH_URL)) {
-		trustedOrigins.push(env.BETTER_AUTH_URL);
+	if (authEnv?.BETTER_AUTH_URL && !trustedOrigins.includes(authEnv.BETTER_AUTH_URL)) {
+		trustedOrigins.push(authEnv.BETTER_AUTH_URL);
 	}
 
 	return betterAuth({
@@ -32,8 +33,8 @@ export function createAuth(d1: D1Database, env?: AuthEnv | Env) {
 			provider: 'sqlite',
 			schema
 		}),
-		secret: env?.BETTER_AUTH_SECRET,
-		baseURL: env?.BETTER_AUTH_URL,
+		secret: authEnv?.BETTER_AUTH_SECRET,
+		baseURL: authEnv?.BETTER_AUTH_URL,
 		trustedOrigins,
 		emailAndPassword: {
 			enabled: true,

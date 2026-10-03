@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
 	async function finishTransition(event: AnimationEvent) {
 		if (event.target !== event.currentTarget || event.animationName !== 'screen-reveal') return;
-		await goto(resolve(data.redirectTo as `/${string}`), { replaceState: true, noScroll: true });
+		// eslint-disable-next-line svelte/no-navigation-without-resolve
+		await goto(data.redirectTo, { replaceState: true, noScroll: true });
 	}
 </script>
 
