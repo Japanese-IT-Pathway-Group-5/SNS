@@ -20,6 +20,12 @@ export default defineConfig({
 			}
 		})
 	],
+	optimizeDeps: {
+		exclude: ['@lucide/svelte']
+	},
+	ssr: {
+		noExternal: ['@lucide/svelte']
+	},
 	test: {
 		expect: { requireAssertions: true },
 		projects: [

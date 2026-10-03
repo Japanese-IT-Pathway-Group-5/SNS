@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
@@ -12,18 +11,9 @@
 		createdAt: Date | string | number;
 		content: string;
 		imageUrl?: string | null;
-		replyCount?: number;
 	}
 
-	let {
-		id,
-		authorName,
-		authorAvatar,
-		createdAt,
-		content,
-		imageUrl,
-		replyCount = 0
-	}: Props = $props();
+	let { id, authorName, authorAvatar, createdAt, content, imageUrl }: Props = $props();
 
 	function getRelativeTime(dateInput: Date | string | number) {
 		const date = new Date(dateInput);
@@ -43,18 +33,22 @@
 	let timeAgo = $derived(getRelativeTime(createdAt));
 </script>
 
-<Card class="flex flex-col gap-3 transition-colors hover:border-control-border">
+<article class="flex min-w-0 flex-col gap-4 py-6 sm:py-7">
 	<!-- Header: Author & Time -->
-	<div class="flex items-center justify-between">
-		<div class="flex items-center gap-3">
+	<div class="flex items-start justify-between gap-4">
+		<div class="flex min-w-0 items-center gap-3">
 			<Avatar src={authorAvatar} name={authorName} size="md" />
-			<span class="font-medium text-ink">{authorName}</span>
+			<span class="min-w-0 font-semibold break-words text-ink">{authorName}</span>
 		</div>
-		<span class="text-sm text-muted">{timeAgo}</span>
+		<time
+			class="shrink-0 pt-2 text-xs text-muted"
+			datetime={new Date(createdAt).toISOString()}
+			title={new Date(createdAt).toLocaleString()}>{timeAgo}</time
+		>
 	</div>
 
 	<!-- Content -->
-	<div class="text-base leading-relaxed whitespace-pre-wrap text-ink">{content}</div>
+	<div class="text-base leading-7 break-words whitespace-pre-wrap text-ink">{content}</div>
 
 	<!-- Optional Image -->
 	{#if imageUrl}
@@ -62,14 +56,14 @@
 			<img
 				src={imageUrl}
 				alt="Post attachment"
-				class="max-h-[500px] w-full object-cover"
+				class="max-h-[500px] w-full object-contain"
 				loading="lazy"
 			/>
 		</div>
 	{/if}
 
 	<!-- Actions -->
-	<div class="mt-1 flex items-center border-t border-line/50 pt-2">
+	<div class="flex items-center">
 		<Button
 			variant="ghost"
 			size="sm"
@@ -77,7 +71,7 @@
 			class="group text-muted hover:bg-surface-muted hover:text-accent"
 		>
 			<FontAwesomeIcon icon={faMessage} class="size-4 transition-transform group-active:scale-95" />
-			<span class="font-medium">{replyCount} {replyCount === 1 ? 'reply' : 'replies'}</span>
+			<span class="font-medium">Reply</span>
 		</Button>
 	</div>
-</Card>
+</article>

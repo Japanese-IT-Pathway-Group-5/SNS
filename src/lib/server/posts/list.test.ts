@@ -1,17 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SQLiteSyncDialect } from 'drizzle-orm/sqlite-core';
 
-const { selectMock } = vi.hoisted(() => ({ selectMock: vi.fn() }));
+const { selectMock, whereMock } = vi.hoisted(() => ({ selectMock: vi.fn(), whereMock: vi.fn() }));
 
 vi.mock('$lib/server/db', () => ({
 	getDb: () => ({
 		select: () => ({
 			from: () => ({
 				innerJoin: () => ({
-					where: () => ({
-						orderBy: () => ({
-							limit: () => selectMock()
-						})
-					})
+					where: (condition: unknown) => {
+						whereMock(condition);
+						return {
+							orderBy: () => ({
+								limit: () => selectMock()
+							})
+						};
+					}
 				})
 			})
 		})
@@ -95,5 +99,22 @@ describe('listPosts', () => {
 
 		expect(result.items).toHaveLength(1);
 		expect(result.nextCursor).toBeNull();
+	});
+
+	it('binds search text literally while preserving the hidden-post filter', async () => {
+		selectMock.mockResolvedValueOnce([]);
+		const search = "%_' OR 1=1 --";
+		await listPosts({ d1: {} as D1Database, options: { search } });
+		const query = new SQLiteSyncDialect().sqlToQuery(whereMock.mock.calls[0][0]);
+		expect(query.sql).toContain('"post"."hidden_at" is null');
+		expect(query.params).toEqual([search]);
+		expect(query.sql).not.toContain(search);
+	});
+
+	it('rejects oversized search input at the domain boundary', async () => {
+		await expect(
+			listPosts({ d1: {} as D1Database, options: { search: 'a'.repeat(121) } })
+		).rejects.toThrow();
+		expect(selectMock).not.toHaveBeenCalled();
 	});
 });

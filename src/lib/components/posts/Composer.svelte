@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import { Button, Textarea, ImageAttachment, FormMessage, Avatar } from '$lib/components/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPaperPlane, faLightbulb } from '@fortawesome/free-solid-svg-icons';
@@ -87,7 +88,7 @@
 				postFormData.append('mediaId', mediaId);
 			}
 
-			const postRes = await fetch('?/createPost', {
+			const postRes = await fetch(`${resolve('/')}?/createPost`, {
 				method: 'POST',
 				body: postFormData
 			});
@@ -111,7 +112,7 @@
 			discardDraft();
 
 			// Reload page to show new post
-			window.location.reload();
+			window.location.assign(resolve('/'));
 		} catch (error) {
 			errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
 		} finally {
@@ -120,18 +121,19 @@
 	}
 </script>
 
-<div class="rounded-xl border border-line bg-surface p-4 shadow-sm sm:p-5">
+<section aria-label="Share a moment" class="rounded-xl border border-line bg-surface p-4 sm:p-6">
 	<div class="flex items-start gap-3 sm:gap-4">
 		<div class="hidden shrink-0 sm:block">
 			<Avatar name={user.name} src={user.image} size="md" />
 		</div>
-		<form class="flex-1 space-y-4" onsubmit={handleSubmit}>
+		<form class="min-w-0 flex-1 space-y-4" onsubmit={handleSubmit}>
 			<div class="space-y-2">
-				<div class="flex items-center justify-between">
-					<label for="post-body" class="text-sm font-bold text-ink">Today's entry</label>
+				<div class="flex flex-wrap items-center justify-between gap-2">
+					<label for="post-body" class="text-base font-semibold text-ink">A moment from today</label
+					>
 					<button
 						type="button"
-						class="flex items-center gap-1 text-xs text-accent hover:underline"
+						class="flex min-h-11 items-center gap-1 rounded-sm text-xs text-accent hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 						onclick={setIdea}
 					>
 						<FontAwesomeIcon icon={faLightbulb} class="size-3" />
@@ -145,6 +147,7 @@
 					showCount
 					maxCount={2000}
 					rows={3}
+					class="focus:bg-accent-soft"
 					disabled={isSubmitting}
 				/>
 			</div>
@@ -181,8 +184,10 @@
 				</div>
 			{/if}
 
-			<div class="mt-2 flex items-center justify-between border-t border-line/60 pt-3">
-				<p class="text-xs text-muted">Posts are visible to everyone</p>
+			<div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
+				<p class="max-w-40 text-xs leading-5 text-muted sm:max-w-none">
+					Posts are visible to everyone.
+				</p>
 				<Button
 					variant="primary"
 					type="submit"
@@ -190,9 +195,9 @@
 					disabled={isSubmitting || (!body.trim() && !file)}
 				>
 					<FontAwesomeIcon icon={faPaperPlane} class="mr-2 size-4" />
-					{isSubmitting ? 'Posting...' : 'Post'}
+					{isSubmitting ? 'Sharing...' : 'Share moment'}
 				</Button>
 			</div>
 		</form>
 	</div>
-</div>
+</section>

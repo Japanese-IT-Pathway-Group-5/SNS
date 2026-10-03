@@ -4,11 +4,25 @@ import { createPost, PostValidationError } from '$lib/server/posts/create';
 import { listPosts } from '$lib/server/posts/list';
 import type { PageServerLoad, Actions } from './$types';
 import type { R2Storage } from '$lib/server/storage/r2';
+import { searchQuerySchema } from '$lib/validation/search';
+import { listTrendingJournals } from '$lib/server/posts/trending';
 
 export const load: PageServerLoad = async ({ platform, url }) => {
+	const searchResult = searchQuerySchema.safeParse(url.searchParams.get('q') ?? '');
+	if (!searchResult.success) {
+		throw error(400, searchResult.error.issues[0].message);
+	}
+	const search = searchResult.data;
 	const d1 = platform?.env?.DB;
 	if (!d1) {
-		return { posts: [], nextCursor: null };
+		return {
+			posts: [],
+			nextCursor: null,
+			loadError: true,
+			search,
+			trendingJournals: [],
+			trendingError: true
+		};
 	}
 
 	let pagination;
@@ -21,21 +35,40 @@ export const load: PageServerLoad = async ({ platform, url }) => {
 		throw err;
 	}
 
+	const trendingResult = listTrendingJournals({ d1 }).then(
+		(items) => ({ items, error: false }),
+		(err) => {
+			console.error('Failed to load trending journals:', err);
+			return { items: [], error: true };
+		}
+	);
 	try {
-		const { items, nextCursor } = await listPosts({
-			d1,
-			options: { cursor: pagination.cursor }
-		});
+		const [{ items, nextCursor }, trending] = await Promise.all([
+			listPosts({
+				d1,
+				options: { cursor: pagination.cursor, ...(search ? { search } : {}) }
+			}),
+			trendingResult
+		]);
 
 		return {
 			posts: items,
-			nextCursor
+			nextCursor,
+			loadError: false,
+			search,
+			trendingJournals: trending.items,
+			trendingError: trending.error
 		};
 	} catch (err) {
 		console.error('Failed to load home feed:', err);
+		const trending = await trendingResult;
 		return {
 			posts: [],
-			nextCursor: null
+			nextCursor: null,
+			loadError: true,
+			search,
+			trendingJournals: trending.items,
+			trendingError: trending.error
 		};
 	}
 };

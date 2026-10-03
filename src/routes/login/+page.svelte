@@ -21,7 +21,6 @@
 	let passwordsMismatch = $state(false);
 
 	const redirectTo = $derived(sanitizeRedirectUrl(page.url.searchParams.get('redirectTo'), '/'));
-	const hasCustomRedirect = $derived(redirectTo !== '/');
 	const isSigningUp = $derived(authMode === 'sign-up');
 
 	function getCompletionUrl() {
@@ -203,14 +202,6 @@
 							: 'Sign in to share moments and join the conversation.'}
 					</p>
 				</div>
-
-				{#if hasCustomRedirect}
-					<p class="mb-5 rounded-lg bg-surface-muted px-4 py-3 text-sm text-muted">
-						After signing in, we'll take you back to <span class="font-medium text-ink"
-							>{redirectTo}</span
-						>.
-					</p>
-				{/if}
 
 				{#if errorMessage}
 					<div class="mb-5"><FormMessage type="error" message={errorMessage} /></div>

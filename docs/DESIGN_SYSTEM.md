@@ -9,10 +9,13 @@ A cozy, playful everyday journal with the warmth of a small handheld game. The u
 Text carries the interface; photos are optional. Keep reading surfaces quiet and concentrate pixel art in loading, empty and success states. Avoid dashboard widgets, decorative gradients, glass effects, large hero sections, and engagement counters inside the signed-in experience. This direction replaces the earlier off-white/forest-green palette.
 
 - One column, maximum reading width 42rem; 1rem side padding on phones and 1.5rem on wider screens.
-- Header: working app name, Home, My journal, and an account menu containing Settings. On small screens preserve text labels and comfortable targets; do not add a second navigation system.
+- Shared navigation on Home, post detail and Settings: full-width teal navbar with Claymore linked home, centered text search, an icon to create a post, and avatar/profile or sign-in controls. Put Home in the left sidebar. Keep the desktop sidebar expanded at 15rem with a scrollable navigation area; phones use a keyboard-accessible drawer. A My journal link should only appear once the archive page exists. Keep targets at least 44px and accessible names for icon controls.
+- Search submits a bounded text query for public posts and preserves it across cursor pages. Show empty/error states and chronological results. Create post opens one shared composer dialog; guests sign in first. Keep one mounted composer per page so local drafts cannot overwrite each other.
+- At the user's request, Home includes a right-hand Trending journals panel. It shows up to five authors active in the past seven days, with their latest visible entry and no public activity totals. Entries link to the actual post. Keep the reading column narrow; the panel sits beside it on wide screens and below it on smaller screens. Give the panel independent empty/failure states.
 - Home: inline composer, newest-first posts, explicit "Load older posts", and "You're caught up" when there are no more results.
 - Post detail: complete entry and flat replies. Journal: the same post component grouped by date. Settings: profile, draft controls, logout, and removal/contact information.
 - Feed entries use whitespace and subtle dividers rather than stacks of heavy cards. The composer uses a bordered warm-cream surface.
+- Shared PostCard displays author, accessible time, full text, an optional uncropped photo, and a Reply link without public counters. The feed uses explicit Older entries navigation and shows its end message only when no next cursor exists; load failures have a retry state distinct from an empty journal.
 - Support 320px-wide layouts, 200% zoom, long words, emoji, and Japanese input without horizontal page scrolling. Do not truncate short entries to force detail-page visits.
 
 ## Styling stack

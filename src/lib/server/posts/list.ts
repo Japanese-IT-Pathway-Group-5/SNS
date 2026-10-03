@@ -1,7 +1,8 @@
-import { and, desc, eq, isNull, lt, or } from 'drizzle-orm';
+import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
 import { post, user } from '$lib/server/db/schema';
 import { encodeCursor, type PaginationCursor } from '$lib/server/http/pagination';
+import { searchQuerySchema } from '$lib/validation/search';
 
 export const POSTS_PAGE_SIZE = 20;
 
@@ -10,6 +11,7 @@ export type PostCursor = PaginationCursor;
 export interface ListPostsOptions {
 	cursor?: PostCursor;
 	limit?: number;
+	search?: string;
 }
 
 export async function listPosts({
@@ -21,6 +23,11 @@ export async function listPosts({
 }) {
 	const db = getDb(d1);
 	const limit = Math.min(Math.max(options.limit ?? POSTS_PAGE_SIZE, 1), POSTS_PAGE_SIZE);
+	const search = searchQuerySchema.parse(options.search ?? '');
+	// instr treats percent signs, underscores and quotes as literal text, not SQL patterns.
+	const searchCondition = search
+		? sql`instr(lower(${post.body}), lower(${search})) > 0`
+		: undefined;
 
 	const cursorCondition = options.cursor
 		? or(
@@ -42,7 +49,7 @@ export async function listPosts({
 		})
 		.from(post)
 		.innerJoin(user, eq(user.id, post.authorId))
-		.where(and(isNull(post.hiddenAt), cursorCondition))
+		.where(and(isNull(post.hiddenAt), cursorCondition, searchCondition))
 		.orderBy(desc(post.createdAt), desc(post.id))
 		.limit(limit + 1);
 

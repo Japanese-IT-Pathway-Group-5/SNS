@@ -178,6 +178,9 @@ importers:
       '@fortawesome/svelte-fontawesome':
         specifier: ^0.2.4
         version: 0.2.4(@fortawesome/fontawesome-svg-core@7.3.1)(svelte@5.57.1(@typescript-eslint/types@8.70.0))
+      '@lucide/svelte':
+        specifier: 1.45.0
+        version: 1.45.0(svelte@5.57.1(@typescript-eslint/types@8.70.0))
       better-auth:
         specifier: ^1.7.6
         version: 1.7.6(@sveltejs/kit@2.70.3(@sveltejs/vite-plugin-svelte@7.3.0(svelte@5.57.1(@typescript-eslint/types@8.70.0))(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(svelte@5.57.1(@typescript-eslint/types@8.70.0))(typescript@6.0.3)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))(drizzle-kit@0.31.11)(drizzle-orm@0.45.3(kysely@0.29.6))(svelte@5.57.1(@typescript-eslint/types@8.70.0))(vitest@4.1.11(@types/node@24.13.6)(vite@8.3.0(@types/node@24.13.6)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)))
@@ -1300,6 +1303,11 @@ packages:
 
   '@keyv/serialize@1.1.1':
     resolution: {integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==}
+
+  '@lucide/svelte@1.45.0':
+    resolution: {integrity: sha512-SBqLvcYGEDz82Lwz7meR4qM+SGeDKRU/RBo8BhAhARNUzIXTrykbFLabW9X1Fokp01Yw2kOFx/AsLUUIxj0NLA==}
+    peerDependencies:
+      svelte: ^5
 
   '@noble/ciphers@2.4.0':
     resolution: {integrity: sha512-AnjFn0Jv92laAkvMrghlFZq4qQCIN/4DxFV/eooqtC2YTjB7kBeLMS2T9KJX4Dn+ZVXLOwK0lSgqDtx9gvxtiw==}
@@ -3555,6 +3563,10 @@ snapshots:
       keyv: 5.6.0
 
   '@keyv/serialize@1.1.1': {}
+
+  '@lucide/svelte@1.45.0(svelte@5.57.1(@typescript-eslint/types@8.70.0))':
+    dependencies:
+      svelte: 5.57.1(@typescript-eslint/types@8.70.0)
 
   '@noble/ciphers@2.4.0': {}
 

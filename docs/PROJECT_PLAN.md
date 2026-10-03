@@ -9,7 +9,7 @@ Build an everyday social journal: a personal blog where ordinary moments are wor
 
 Audience: public browsing with account-based participation. Anyone can read posts, replies, and attached photos; a Google or email/password account is required to post, reply, and manage account settings. Show "Posts are visible to everyone" beside the composer. Do not imply private-diary privacy. Follows and per-post audience selection are later decisions. Team size, availability, budget, branding, and grading rubric remain to be confirmed.
 
-Keep writing fast: a home-page composer, text first, one optional photo, no required title/tags/category, and an optional "Need an idea?" prompt. Encourage posting without streaks, guilt reminders, popularity totals, trending, reposts, or infinite scroll. Use a chronological feed with explicit pagination and a clear end. Posting should remain useful even without replies because entries accumulate in a personal archive.
+Keep writing fast: a home-page composer, text first, one optional photo, no required title/tags/category, and an optional "Need an idea?" prompt. Encourage posting without streaks, guilt reminders, popularity totals, reposts, or infinite scroll. At the user's request, a separate Trending journals panel highlights up to five authors by visible posting activity over the past seven days; each links to their latest visible entry, and activity totals are not displayed. The main feed stays chronological with explicit pagination and a clear end. Posting should remain useful even without replies because entries accumulate in a personal archive.
 
 The shared foundation is defined in [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md), [ENGINEERING.md](ENGINEERING.md), [CONTRIBUTING.md](../CONTRIBUTING.md), and the root [AGENTS.md](../AGENTS.md). These are implementation contracts, not installed tooling.
 
@@ -26,7 +26,7 @@ Required for the first release:
 - Responsive, keyboard-accessible UI with loading, empty, validation, and failure states. Verify Japanese text input and rendering; confirm whether Japanese UI copy is required by the class.
 - Tested access control, safe upload handling, CI/CD, operating instructions, and a repeatable demo.
 
-After the deadline: follows, private entries/audience controls, search, notifications, multiple images, richer profiles, and account self-service. Defer video, chat, algorithmic feeds, and microservices. If the rubric requires any of these, revise scope before implementation.
+Basic public-post text search is included at the user's request. Advanced/semantic search remains deferred. After the deadline: follows, private entries/audience controls, notifications, multiple images, richer profiles, and account self-service. Defer video, chat, algorithmic feeds, and microservices. If the rubric requires any of these, revise scope before implementation.
 
 Data science direction: evaluate opt-in semantic search over a member's own memories, comparing keyword retrieval with multilingual embeddings on a permissioned, held-out dataset. ML is a post-MVP experiment, not a release dependency. Do not send journal content to model providers or train on it without an explicit data-use decision and consent. Deletions and access restrictions must propagate to any future search index.
 
