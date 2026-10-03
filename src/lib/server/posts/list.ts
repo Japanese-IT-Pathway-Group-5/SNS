@@ -12,6 +12,8 @@ export interface ListPostsOptions {
 	cursor?: PostCursor;
 	limit?: number;
 	search?: string;
+	/** Only posts written by this user (personal journal). */
+	authorId?: string;
 }
 
 export async function listPosts({
@@ -28,6 +30,7 @@ export async function listPosts({
 	const searchCondition = search
 		? sql`instr(lower(${post.body}), lower(${search})) > 0`
 		: undefined;
+	const authorCondition = options.authorId ? eq(post.authorId, options.authorId) : undefined;
 
 	const cursorCondition = options.cursor
 		? or(
@@ -49,7 +52,7 @@ export async function listPosts({
 		})
 		.from(post)
 		.innerJoin(user, eq(user.id, post.authorId))
-		.where(and(isNull(post.hiddenAt), cursorCondition, searchCondition))
+		.where(and(isNull(post.hiddenAt), authorCondition, cursorCondition, searchCondition))
 		.orderBy(desc(post.createdAt), desc(post.id))
 		.limit(limit + 1);
 
