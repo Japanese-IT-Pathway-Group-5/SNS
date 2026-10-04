@@ -10,6 +10,11 @@
 	import Globe from '@lucide/svelte/icons/globe';
 	import { onMount } from 'svelte';
 	import type { User } from 'better-auth';
+	import {
+		createDraftPersistence,
+		DRAFT_CLEAR_EVENT,
+		type DraftStatus
+	} from '$lib/drafts/persistence';
 
 	let { user }: { user: User } = $props();
 	let body = $state('');
@@ -18,52 +23,56 @@
 	let imageAlt = $state('');
 	let isSubmitting = $state(false);
 	let errorMessage = $state<string | null>(null);
-	let hasDraft = $state(false);
+	let draftStatus = $state<DraftStatus>('idle');
+	let draftPersistence: ReturnType<typeof createDraftPersistence> | undefined;
+	let lastScheduledBody = '';
 	let submissionId = $state(crypto.randomUUID());
 	let storageReady = $state(false);
 	let tooLong = $derived(unicodeCodePointLength(body) > MAX_POST_LENGTH);
 	let placeholder = $state('Anything from today?');
-	const draftKey = $derived(`composer_draft_${user.id}`);
 
 	onMount(() => {
-		try {
-			const draft = localStorage.getItem(draftKey);
-			if (draft) {
-				body = draft;
-				hasDraft = true;
+		draftPersistence = createDraftPersistence(
+			user.id,
+			() => localStorage,
+			(status) => {
+				draftStatus = status;
 			}
-		} catch {
-			// Posting remains available when browser storage is blocked.
-		}
+		);
+		body = draftPersistence.restore();
+		lastScheduledBody = body;
 		storageReady = true;
+		const flush = () => draftPersistence?.flush();
+		const onVisibilityChange = () => {
+			if (document.visibilityState === 'hidden') flush();
+		};
+		const onClear = (event: Event) => {
+			if ((event as CustomEvent<string>).detail === user.id) discardDraft();
+		};
+		window.addEventListener('pagehide', flush);
+		document.addEventListener('visibilitychange', onVisibilityChange);
+		window.addEventListener(DRAFT_CLEAR_EVENT, onClear);
+		return () => {
+			flush();
+			window.removeEventListener('pagehide', flush);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+			window.removeEventListener(DRAFT_CLEAR_EVENT, onClear);
+		};
 	});
 	$effect(() => {
-		if (!storageReady) return;
-		try {
-			if (body.trim()) {
-				localStorage.setItem(draftKey, body);
-				hasDraft = true;
-			} else {
-				localStorage.removeItem(draftKey);
-				hasDraft = false;
-			}
-		} catch {
-			hasDraft = false;
-		}
+		if (!storageReady || body === lastScheduledBody) return;
+		lastScheduledBody = body;
+		draftPersistence?.schedule(body);
 	});
 	function discardDraft() {
+		lastScheduledBody = '';
 		body = '';
 		file = null;
 		fileError = null;
 		imageAlt = '';
 		errorMessage = null;
 		submissionId = crypto.randomUUID();
-		try {
-			localStorage.removeItem(draftKey);
-		} catch {
-			// In-memory controls still clear when storage is unavailable.
-		}
-		hasDraft = false;
+		draftPersistence?.clear();
 	}
 	function setIdea() {
 		placeholder = 'Something you noticed';
@@ -83,6 +92,7 @@
 		}
 		isSubmitting = true;
 		errorMessage = null;
+		draftPersistence?.flush();
 		try {
 			if (file) {
 				const uploadForm = new FormData();
@@ -196,9 +206,17 @@
 			<FormMessage type="error" message={errorMessage} />
 		{/if}
 
-		{#if hasDraft && !isSubmitting}
+		{#if (body.length || file) && !isSubmitting}
 			<div class="flex items-center gap-2 text-xs text-muted">
-				<span>Draft saved on this device</span>
+				<span
+					>{draftStatus === 'saved'
+						? 'Draft saved on this device'
+						: draftStatus === 'unavailable'
+							? 'Draft could not be saved on this device. Keep this page open.'
+							: body.length
+								? 'Saving draft...'
+								: 'Photo is not saved on this device'}</span
+				>
 				<span>•</span>
 				<button
 					type="button"
@@ -208,6 +226,7 @@
 					Discard
 				</button>
 			</div>
+			<p class="text-xs text-muted">Only text is saved. Reselect photos after reloading.</p>
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">

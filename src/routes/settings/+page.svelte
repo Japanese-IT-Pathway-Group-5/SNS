@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { clearUserDraft } from '$lib/drafts/persistence';
 	import { Switch } from 'bits-ui';
 	import { AppShell, Button, Card, ModalDialog, Avatar } from '$lib/components/ui';
 	import { onMount } from 'svelte';
@@ -131,11 +132,7 @@
 			onsubmit={() => {
 				isLoggingOut = true;
 				if (data.user?.id) {
-					try {
-						localStorage.removeItem(`composer_draft_${data.user.id}`);
-					} catch {
-						// storage may be unavailable
-					}
+					clearUserDraft(data.user.id);
 				}
 			}}
 		>
