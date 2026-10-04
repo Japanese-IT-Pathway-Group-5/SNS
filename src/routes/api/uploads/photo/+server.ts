@@ -2,6 +2,7 @@ import { json, type RequestHandler } from '@sveltejs/kit';
 import { getDb } from '$lib/server/db';
 import { media } from '$lib/server/db/schema';
 import { rateLimitUpload } from '$lib/server/security/rate-limit';
+import { requireMembership } from '$lib/server/auth/authorization';
 import { detectImageTypeFromFile } from '$lib/server/storage/image-signature';
 import { uploadPhoto } from '$lib/server/storage/photo-upload';
 import { deleteObject, type R2Storage } from '$lib/server/storage/r2';
@@ -15,8 +16,18 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		MEDIA_BUCKET?: R2Storage;
 	};
 
+	if (!env.MEDIA_BUCKET || !env.DB) {
+		return json({ error: 'Image storage is not configured' }, { status: 503 });
+	}
+
 	if (!locals.user) {
 		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
+	try {
+		await requireMembership(env.DB, locals.user.id);
+	} catch {
+		return json({ error: 'Membership required' }, { status: 403 });
 	}
 
 	const rateLimitResult = await rateLimitUpload(platform?.env?.UPLOAD_RATE_LIMITER, locals.user.id);
@@ -67,10 +78,6 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 	if (!imageType) {
 		return json({ error: 'Only JPEG, PNG or WebP images are allowed' }, { status: 415 });
-	}
-
-	if (!env.MEDIA_BUCKET || !env.DB) {
-		return json({ error: 'Image storage is not configured' }, { status: 503 });
 	}
 
 	let uploaded: Awaited<ReturnType<typeof uploadPhoto>> | undefined;
