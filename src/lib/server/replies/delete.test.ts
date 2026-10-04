@@ -37,25 +37,37 @@ const mockReply = (authorId = 'user-1') => ({
 	authorId
 });
 
+const expectDeleteRejected = async ({
+	reply,
+	input,
+	error
+}: {
+	reply: ReturnType<typeof mockReply> | undefined;
+	input?: Parameters<typeof deleteReply>[0];
+	error: new (...args: never[]) => Error;
+}) => {
+	selectMock.mockResolvedValueOnce(reply ? [reply] : []);
+
+	await expect(deleteReply(input ?? deleteInput())).rejects.toBeInstanceOf(error);
+	expect(updateMock).not.toHaveBeenCalled();
+};
+
 describe('deleteReply', () => {
 	beforeEach(() => vi.clearAllMocks());
 
-	it('rejects a missing reply', async () => {
-		selectMock.mockResolvedValueOnce([]);
-
-		await expect(deleteReply(deleteInput({ replyId: 'missing' }))).rejects.toBeInstanceOf(
-			ReplyNotFoundError
-		);
-
-		expect(updateMock).not.toHaveBeenCalled();
-	});
-
-	it('rejects deletion by another user', async () => {
-		selectMock.mockResolvedValueOnce([mockReply('user-2')]);
-
-		await expect(deleteReply(deleteInput())).rejects.toBeInstanceOf(ReplyForbiddenError);
-
-		expect(updateMock).not.toHaveBeenCalled();
+	it.each([
+		{
+			name: 'missing reply',
+			reply: undefined,
+			error: ReplyNotFoundError
+		},
+		{
+			name: 'reply owned by another user',
+			reply: mockReply('user-2'),
+			error: ReplyForbiddenError
+		}
+	])('rejects a $name', async ({ reply, error }) => {
+		await expectDeleteRejected({ reply, error });
 	});
 
 	it('soft deletes a reply owned by the authenticated user', async () => {
