@@ -181,7 +181,7 @@
 							<p class="mt-1 text-sm text-muted">Choose your preferred theme.</p>
 						</div>
 						<div class="flex gap-2 rounded-lg border border-line bg-surface-muted p-1">
-							{#each ['Light', 'Dark', 'System'] as theme}
+							{#each ['Light', 'Dark', 'System'] as theme (theme)}
 								<button
 									class="rounded-md px-4 py-1.5 text-sm font-medium transition-colors {appearance ===
 									theme

@@ -10,6 +10,9 @@ vi.mock('$lib/server/posts/list', () => ({
 	listPosts: listPostsMock
 }));
 vi.mock('$lib/server/posts/trending', () => ({ listTrendingJournals: trendingMock }));
+vi.mock('$lib/server/auth/authorization', () => ({
+	requireMembership: vi.fn().mockResolvedValue(undefined)
+}));
 
 import { load } from './+page.server';
 
