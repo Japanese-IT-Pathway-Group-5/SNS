@@ -32,32 +32,26 @@ const deleteInput = (overrides: Partial<Parameters<typeof deleteReply>[0]> = {})
 	...overrides
 });
 
+const mockReply = (authorId = 'user-1') => ({
+	id: 'reply-1',
+	authorId
+});
+
 describe('deleteReply', () => {
-	beforeEach(() => {
-		vi.clearAllMocks();
-	});
+	beforeEach(() => vi.clearAllMocks());
 
 	it('rejects a missing reply', async () => {
 		selectMock.mockResolvedValueOnce([]);
 
-		await expect(
-			deleteReply(
-				deleteInput({
-					replyId: 'missing'
-				})
-			)
-		).rejects.toBeInstanceOf(ReplyNotFoundError);
+		await expect(deleteReply(deleteInput({ replyId: 'missing' }))).rejects.toBeInstanceOf(
+			ReplyNotFoundError
+		);
 
 		expect(updateMock).not.toHaveBeenCalled();
 	});
 
 	it('rejects deletion by another user', async () => {
-		selectMock.mockResolvedValueOnce([
-			{
-				id: 'reply-1',
-				authorId: 'user-2'
-			}
-		]);
+		selectMock.mockResolvedValueOnce([mockReply('user-2')]);
 
 		await expect(deleteReply(deleteInput())).rejects.toBeInstanceOf(ReplyForbiddenError);
 
@@ -65,18 +59,10 @@ describe('deleteReply', () => {
 	});
 
 	it('soft deletes a reply owned by the authenticated user', async () => {
-		selectMock.mockResolvedValueOnce([
-			{
-				id: 'reply-1',
-				authorId: 'user-1'
-			}
-		]);
-
+		selectMock.mockResolvedValueOnce([mockReply()]);
 		updateMock.mockResolvedValueOnce(undefined);
 
-		const result = await deleteReply(deleteInput());
-
-		expect(result).toEqual({
+		await expect(deleteReply(deleteInput())).resolves.toEqual({
 			id: 'reply-1',
 			success: true
 		});
