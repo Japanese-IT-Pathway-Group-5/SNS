@@ -24,6 +24,14 @@ vi.mock('$lib/server/db', () => ({
 
 import { deleteReply, ReplyForbiddenError, ReplyNotFoundError } from './delete';
 
+const deleteInput = (overrides: Partial<Parameters<typeof deleteReply>[0]> = {}) => ({
+	d1: {} as D1Database,
+	userId: 'user-1',
+	postId: 'post-1',
+	replyId: 'reply-1',
+	...overrides
+});
+
 describe('deleteReply', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -33,12 +41,11 @@ describe('deleteReply', () => {
 		selectMock.mockResolvedValueOnce([]);
 
 		await expect(
-			deleteReply({
-				d1: {} as D1Database,
-				userId: 'user-1',
-				postId: 'post-1',
-				replyId: 'missing'
-			})
+			deleteReply(
+				deleteInput({
+					replyId: 'missing'
+				})
+			)
 		).rejects.toBeInstanceOf(ReplyNotFoundError);
 
 		expect(updateMock).not.toHaveBeenCalled();
@@ -52,14 +59,7 @@ describe('deleteReply', () => {
 			}
 		]);
 
-		await expect(
-			deleteReply({
-				d1: {} as D1Database,
-				userId: 'user-1',
-				postId: 'post-1',
-				replyId: 'reply-1'
-			})
-		).rejects.toBeInstanceOf(ReplyForbiddenError);
+		await expect(deleteReply(deleteInput())).rejects.toBeInstanceOf(ReplyForbiddenError);
 
 		expect(updateMock).not.toHaveBeenCalled();
 	});
@@ -74,12 +74,7 @@ describe('deleteReply', () => {
 
 		updateMock.mockResolvedValueOnce(undefined);
 
-		const result = await deleteReply({
-			d1: {} as D1Database,
-			userId: 'user-1',
-			postId: 'post-1',
-			replyId: 'reply-1'
-		});
+		const result = await deleteReply(deleteInput());
 
 		expect(result).toEqual({
 			id: 'reply-1',
