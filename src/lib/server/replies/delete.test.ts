@@ -5,22 +5,24 @@ const { selectMock, updateMock } = vi.hoisted(() => ({
 	updateMock: vi.fn()
 }));
 
-vi.mock('$lib/server/db', () => ({
-	getDb: () => ({
-		select: () => ({
-			from: () => ({
-				where: () => ({
-					limit: () => selectMock()
+vi.mock('$lib/server/db', () => {
+	const query = {
+		from: () => query,
+		where: () => query,
+		limit: () => selectMock()
+	};
+
+	return {
+		getDb: () => ({
+			select: () => query,
+			update: () => ({
+				set: () => ({
+					where: updateMock
 				})
 			})
-		}),
-		update: () => ({
-			set: () => ({
-				where: updateMock
-			})
 		})
-	})
-}));
+	};
+});
 
 import { deleteReply, ReplyForbiddenError, ReplyNotFoundError } from './delete';
 
