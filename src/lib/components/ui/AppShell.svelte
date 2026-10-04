@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { clearUserDraft } from '$lib/drafts/persistence';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
@@ -160,11 +161,7 @@
 							class="hidden"
 							onsubmit={() => {
 								if (user?.id) {
-									try {
-										localStorage.removeItem(`composer_draft_${user.id}`);
-									} catch {
-										// storage may be unavailable
-									}
+									clearUserDraft(user.id);
 								}
 							}}
 						></form>

@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { draftKey, DRAFT_CLEAR_EVENT } from '../../src/lib/drafts/persistence';
 
 test.beforeEach(async ({ page }) => {
 	await page.goto('/dev/components');
@@ -92,7 +93,63 @@ test('keeps text on a network failure and clears only after confirmed success', 
 	await page.getByRole('button', { name: 'Post', exact: true }).click();
 	await expect(page).toHaveURL('/');
 	expect(
-		await page.evaluate(() => localStorage.getItem('composer_draft_showcase-composer'))
+		await page.evaluate((key) => localStorage.getItem(key), draftKey('showcase-composer'))
+	).toBeNull();
+});
+
+test('saves and restores the latest text across an immediate reload', async ({ page }) => {
+	const text = '今日の小さなこと🌱\n  Keep my line breaks.  ';
+	await page.locator('#post-body').fill(text);
+	await page.reload();
+	await expect(page.locator('#post-body')).toHaveValue(text);
+	await expect(page.getByText('Draft saved on this device', { exact: true })).toBeVisible();
+	expect(
+		await page.evaluate((key) => localStorage.getItem(key), draftKey('showcase-composer'))
+	).toBe(text);
+});
+
+test('restores this account alone and discard cancels a pending save', async ({ page }) => {
+	await page.evaluate(
+		({ current, other }) => {
+			localStorage.setItem(current, 'My recovered draft.');
+			localStorage.setItem(other, 'Another account draft.');
+		},
+		{ current: draftKey('showcase-composer'), other: draftKey('another-account') }
+	);
+	await page.reload();
+	await expect(page.locator('#post-body')).toHaveValue('My recovered draft.');
+	await page.locator('#post-body').fill('Discard before the debounce finishes.');
+	await page.getByRole('button', { name: 'Discard', exact: true }).click();
+	await expect(page.locator('#post-body')).toHaveValue('');
+	await page.reload();
+	await expect(page.locator('#post-body')).toHaveValue('');
+	expect(
+		await page.evaluate((key) => localStorage.getItem(key), draftKey('showcase-composer'))
+	).toBeNull();
+	expect(await page.evaluate((key) => localStorage.getItem(key), draftKey('another-account'))).toBe(
+		'Another account draft.'
+	);
+});
+
+test('failure survives reload and the logout clear event cancels queued saves', async ({
+	page
+}) => {
+	await page.route('**/*?/createPost', (route) => route.abort());
+	await page.locator('#post-body').fill('Keep after failure.');
+	await page.getByRole('button', { name: 'Post', exact: true }).click();
+	await expect(page.getByRole('alert').filter({ hasText: 'could not be posted' })).toBeVisible();
+	await page.reload();
+	await expect(page.locator('#post-body')).toHaveValue('Keep after failure.');
+	await page.locator('#post-body').fill('Pending before logout.');
+	await page.evaluate(
+		(event) => window.dispatchEvent(new CustomEvent(event, { detail: 'showcase-composer' })),
+		DRAFT_CLEAR_EVENT
+	);
+	await expect(page.locator('#post-body')).toHaveValue('');
+	await page.reload();
+	await expect(page.locator('#post-body')).toHaveValue('');
+	expect(
+		await page.evaluate((key) => localStorage.getItem(key), draftKey('showcase-composer'))
 	).toBeNull();
 });
 
@@ -143,6 +200,9 @@ test('allows writing without device storage and fits mobile widths', async ({ pa
 	await page.locator('#post-body').fill('書いています🌱');
 	await expect(page.getByRole('button', { name: 'Post', exact: true })).toBeEnabled();
 	await expect(page.getByText('Draft saved on this device', { exact: true })).toHaveCount(0);
+	await expect(
+		page.getByText('Draft could not be saved on this device. Keep this page open.', { exact: true })
+	).toBeVisible();
 	for (const width of [320, 375, 1280]) {
 		await page.setViewportSize({ width, height: 900 });
 		expect(
