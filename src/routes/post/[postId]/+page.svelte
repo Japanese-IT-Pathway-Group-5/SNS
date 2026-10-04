@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 	import { AppShell, Button, Avatar, FormMessage } from '$lib/components/ui';
 	import type { ActionData, PageData } from './$types';
 
@@ -84,6 +86,22 @@
 							<time class="text-xs text-muted" datetime={new Date(reply.createdAt).toISOString()}>
 								{new Date(reply.createdAt).toLocaleString()}
 							</time>
+
+							{#if data.user?.id === reply.authorId}
+								<form method="POST" action="?/deleteReply" class="ml-auto">
+									<input type="hidden" name="replyId" value={reply.id} />
+									<Button
+										variant="ghost"
+										size="sm"
+										type="submit"
+										aria-label="Delete reply"
+										title="Delete reply"
+										class="text-muted hover:bg-red-50 hover:text-red-600"
+									>
+										<FontAwesomeIcon icon={faTrashCan} class="size-4" />
+									</Button>
+								</form>
+							{/if}
 						</div>
 						<p class="leading-relaxed whitespace-pre-wrap text-ink">{reply.body}</p>
 					</article>

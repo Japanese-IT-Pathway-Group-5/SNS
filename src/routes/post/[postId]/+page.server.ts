@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { getPost, PostNotFoundError } from '$lib/server/posts/get';
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
+import { deleteReply, ReplyForbiddenError } from '$lib/server/replies/delete';
 import { listReplies } from '$lib/server/replies/list';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -48,6 +49,39 @@ export const actions: Actions = {
 			if (cause instanceof ReplyNotFoundError) error(404, 'Post not found');
 			console.error('Failed to create reply:', cause);
 			return fail(500, { message: 'Could not post your reply. Please try again.', body });
+		}
+
+		redirect(303, `/post/${params.postId}`);
+	},
+	deleteReply: async ({ request, locals, params, platform }) => {
+		if (!locals.user) {
+			redirect(303, `/login?redirectTo=${encodeURIComponent(`/post/${params.postId}`)}`);
+		}
+
+		const d1 = platform?.env?.DB;
+		if (!d1) return fail(503, { message: 'Database is not configured' });
+
+		const formData = await request.formData();
+		const replyId = formData.get('replyId')?.toString() ?? '';
+
+		try {
+			await deleteReply({
+				d1,
+				userId: locals.user.id,
+				postId: params.postId,
+				replyId
+			});
+		} catch (cause) {
+			if (cause instanceof ReplyNotFoundError) {
+				return fail(404, { message: 'Reply not found' });
+			}
+
+			if (cause instanceof ReplyForbiddenError) {
+				return fail(403, { message: 'You are not authorized to delete this reply' });
+			}
+
+			console.error('Failed to delete reply:', cause);
+			return fail(500, { message: 'Could not delete your reply. Please try again.' });
 		}
 
 		redirect(303, `/post/${params.postId}`);
