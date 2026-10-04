@@ -3,12 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { onMount, tick, type Snippet } from 'svelte';
-	import { Dialog } from 'bits-ui';
+	import { Dialog, DropdownMenu } from 'bits-ui';
 	import Search from '@lucide/svelte/icons/search';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
 	import Menu from '@lucide/svelte/icons/menu';
 	import UserRound from '@lucide/svelte/icons/user-round';
 	import X from '@lucide/svelte/icons/x';
+	import ChevronDown from '@lucide/svelte/icons/chevron-down';
+	import Settings from '@lucide/svelte/icons/settings';
+	import LogOut from '@lucide/svelte/icons/log-out';
 	import type { User } from 'better-auth';
 	import { MAX_SEARCH_LENGTH } from '$lib/validation/search';
 	import Avatar from './Avatar.svelte';
@@ -22,6 +25,7 @@
 		children
 	}: { user?: User | null; createOpen?: boolean; children: Snippet } = $props();
 	let mobileOpen = $state(false);
+	let logoutForm = $state<HTMLFormElement>();
 	let searchInput = $state<HTMLInputElement>();
 	let search = $derived(page.url.searchParams.get('q') ?? '');
 	$effect(() => {
@@ -108,15 +112,62 @@
 						></button
 					>
 					{#if user}
-						<a
-							href={resolve('/settings')}
-							aria-label="Your profile and settings"
-							title="Your profile"
-							class="flex min-h-11 items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
-							><Avatar name={user.name} src={user.image} size="md" /><span
-								class="hidden max-w-28 truncate text-sm font-semibold lg:inline">{user.name}</span
-							></a
-						>
+						<DropdownMenu.Root>
+							<DropdownMenu.Trigger
+								aria-label="User menu"
+								class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
+								><Avatar name={user.name} src={user.image} size="md" /><span
+									class="hidden items-center gap-1 lg:inline-flex"
+									><span class="max-w-28 truncate text-sm font-semibold">{user.name}</span
+									><ChevronDown
+										class="size-3.5 opacity-70"
+										strokeWidth={2}
+										aria-hidden="true"
+									/></span
+								></DropdownMenu.Trigger
+							>
+							<DropdownMenu.Content
+								class="z-50 min-w-48 rounded-xl border border-line bg-surface p-1.5 shadow-lg"
+								sideOffset={8}
+								align="end"
+							>
+								<DropdownMenu.Item>
+									{#snippet child({ props })}
+										<a
+											href={resolve('/settings')}
+											{...props}
+											class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent"
+										>
+											<Settings class="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+											<span>Account &amp; settings</span>
+										</a>
+									{/snippet}
+								</DropdownMenu.Item>
+								<DropdownMenu.Separator class="my-1 h-px bg-line" />
+								<DropdownMenu.Item
+									class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent"
+									onSelect={() => logoutForm?.requestSubmit()}
+								>
+									<LogOut class="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+									<span>Sign out</span>
+								</DropdownMenu.Item>
+							</DropdownMenu.Content>
+						</DropdownMenu.Root>
+						<form
+							bind:this={logoutForm}
+							method="POST"
+							action={resolve('/logout')}
+							class="hidden"
+							onsubmit={() => {
+								if (user?.id) {
+									try {
+										localStorage.removeItem(`composer_draft_${user.id}`);
+									} catch {
+										// storage may be unavailable
+									}
+								}
+							}}
+						></form>
 					{:else}
 						<a
 							href={resolve('/login')}
