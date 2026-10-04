@@ -1,8 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes, HTMLAnchorAttributes } from 'svelte/elements';
-	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faSpinner } from '@fortawesome/free-solid-svg-icons';
+	import LoaderCircle from '@lucide/svelte/icons/loader-circle';
 	import { cn } from '$lib/utils';
 
 	interface BaseProps {
@@ -60,7 +59,10 @@
 		{...restProps as HTMLAnchorAttributes}
 	>
 		{#if loading}
-			<FontAwesomeIcon icon={faSpinner} class="size-4 animate-spin text-current" />
+			<LoaderCircle
+				class="size-4 animate-spin text-current motion-reduce:animate-none"
+				aria-hidden="true"
+			/>
 		{/if}
 		{#if children}
 			{@render children()}
@@ -77,7 +79,10 @@
 		{...buttonProps}
 	>
 		{#if loading}
-			<FontAwesomeIcon icon={faSpinner} class="size-4 animate-spin text-current" />
+			<LoaderCircle
+				class="size-4 animate-spin text-current motion-reduce:animate-none"
+				aria-hidden="true"
+			/>
 		{/if}
 		{#if children}
 			{@render children()}

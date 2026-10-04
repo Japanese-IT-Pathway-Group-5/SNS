@@ -12,7 +12,7 @@
 		ModalDialog,
 		ImageAttachment
 	} from '$lib/components/ui';
-	import { PostCard } from '$lib/components/posts';
+	import { Composer, PostCard } from '$lib/components/posts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import {
 		faHouse,
@@ -29,6 +29,15 @@
 
 	let sampleImageFile = $state<File | null>(null);
 	let sampleImageError = $state<string | null>(null);
+	const composerUser = {
+		id: 'showcase-composer',
+		name: 'Sample author',
+		email: 'showcase@example.invalid',
+		emailVerified: false,
+		image: null,
+		createdAt: new Date(0),
+		updatedAt: new Date(0)
+	};
 
 	function toggleLoading() {
 		loadingButton = true;
@@ -296,6 +305,16 @@
 	</section>
 
 	<!-- Post Card -->
+	<section class="space-y-4" aria-label="Composer reference">
+		<h2 class="text-lg font-bold text-ink">Post composer</h2>
+		<p class="text-sm text-muted">
+			This sample author cannot publish. Submission shows the signed-out error state.
+		</p>
+		<div class="rounded-xl border border-control-border bg-canvas">
+			<Composer user={composerUser} />
+		</div>
+	</section>
+
 	<section class="space-y-4">
 		<h2 class="text-lg font-bold text-ink">
 			Post Card (<code class="font-mono text-sm">&lt;PostCard /&gt;</code>)

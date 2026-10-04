@@ -231,7 +231,9 @@
 				{/each}
 			</div>
 		{/snippet}
-		<Composer {user} />
+		{#key user.id}
+			<Composer {user} />
+		{/key}
 	</ModalDialog>
 {/if}
 
