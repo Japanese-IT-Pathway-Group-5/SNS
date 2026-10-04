@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { enhance } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import type { SubmitFunction } from '@sveltejs/kit';
+	import { MAX_POST_LENGTH, unicodeCodePointLength } from '$lib/validation/posts';
 	import { Button, Textarea, ImageAttachment, FormMessage, Avatar } from '$lib/components/ui';
 	import Send from '@lucide/svelte/icons/send';
 	import Lightbulb from '@lucide/svelte/icons/lightbulb';
@@ -8,7 +12,6 @@
 	import type { User } from 'better-auth';
 
 	let { user }: { user: User } = $props();
-
 	let body = $state('');
 	let file = $state<File | null>(null);
 	let fileError = $state<string | null>(null);
@@ -16,110 +19,111 @@
 	let isSubmitting = $state(false);
 	let errorMessage = $state<string | null>(null);
 	let hasDraft = $state(false);
-
+	let submissionId = $state(crypto.randomUUID());
+	let storageReady = $state(false);
+	let tooLong = $derived(unicodeCodePointLength(body) > MAX_POST_LENGTH);
 	let placeholder = $state('Anything from today?');
-
 	const draftKey = $derived(`composer_draft_${user.id}`);
 
 	onMount(() => {
-		const draft = localStorage.getItem(draftKey);
-		if (draft) {
-			body = draft;
-			hasDraft = true;
+		try {
+			const draft = localStorage.getItem(draftKey);
+			if (draft) {
+				body = draft;
+				hasDraft = true;
+			}
+		} catch {
+			// Posting remains available when browser storage is blocked.
 		}
+		storageReady = true;
 	});
-
 	$effect(() => {
-		if (body.trim().length > 0) {
-			localStorage.setItem(draftKey, body);
-			hasDraft = true;
-		} else if (hasDraft && body.trim().length === 0) {
-			localStorage.removeItem(draftKey);
+		if (!storageReady) return;
+		try {
+			if (body.trim()) {
+				localStorage.setItem(draftKey, body);
+				hasDraft = true;
+			} else {
+				localStorage.removeItem(draftKey);
+				hasDraft = false;
+			}
+		} catch {
 			hasDraft = false;
 		}
 	});
-
 	function discardDraft() {
 		body = '';
 		file = null;
+		fileError = null;
 		imageAlt = '';
-		localStorage.removeItem(draftKey);
+		errorMessage = null;
+		submissionId = crypto.randomUUID();
+		try {
+			localStorage.removeItem(draftKey);
+		} catch {
+			// In-memory controls still clear when storage is unavailable.
+		}
 		hasDraft = false;
 	}
-
 	function setIdea() {
 		placeholder = 'Something you noticed';
 	}
 
-	async function handleSubmit(e: Event) {
-		e.preventDefault();
-		if (!body.trim() && !file) {
-			errorMessage = 'Please write something or attach a photo.';
+	const submitPost: SubmitFunction = async ({ formData, cancel }) => {
+		if (isSubmitting) {
+			cancel();
 			return;
 		}
-
+		if (tooLong || (!body.trim() && !file)) {
+			errorMessage = tooLong
+				? `Please shorten your entry to ${MAX_POST_LENGTH} characters or fewer.`
+				: 'Please write something or attach a photo.';
+			cancel();
+			return;
+		}
 		isSubmitting = true;
 		errorMessage = null;
-
 		try {
-			let mediaId: string | null = null;
-
 			if (file) {
-				const formData = new FormData();
-				formData.append('photo', file);
-
-				const uploadRes = await fetch('/api/uploads/photo', {
+				const uploadForm = new FormData();
+				uploadForm.append('photo', file);
+				const response = await fetch(resolve('/api/uploads/photo'), {
 					method: 'POST',
-					body: formData
+					body: uploadForm
 				});
-
-				if (!uploadRes.ok) {
-					const errorData = (await uploadRes.json()) as Record<string, string>;
-					throw new Error(errorData.error || 'Failed to upload photo');
-				}
-
-				const uploadData = (await uploadRes.json()) as { mediaId?: string };
-				mediaId = uploadData.mediaId ?? null;
+				if (!response.ok) throw new Error('upload');
+				const uploaded = (await response.json()) as { mediaId?: string };
+				if (!uploaded.mediaId) throw new Error('upload');
+				formData.set('mediaId', uploaded.mediaId);
 			}
-
-			const postFormData = new FormData();
-			postFormData.append('body', body);
-			postFormData.append('submissionId', crypto.randomUUID());
-			if (mediaId) {
-				postFormData.append('mediaId', mediaId);
-			}
-
-			const postRes = await fetch(`${resolve('/')}?/createPost`, {
-				method: 'POST',
-				body: postFormData
-			});
-
-			if (!postRes.ok) {
-				let errText = 'Failed to create post';
-				try {
-					const errJson = (await postRes.json()) as {
-						data?: { message?: string };
-						message?: string;
-					};
-					if (errJson?.data?.message) errText = errJson.data.message;
-					else if (errJson?.message) errText = errJson.message;
-				} catch {
-					// fallback to default
-				}
-				throw new Error(errText);
-			}
-
-			// Clear everything on success
-			discardDraft();
-
-			// Reload page to show new post
-			window.location.assign(resolve('/'));
-		} catch (error) {
-			errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-		} finally {
+		} catch {
+			cancel();
 			isSubmitting = false;
+			errorMessage =
+				'Your photo could not be uploaded. Your entry is still here. Please try again.';
+			return;
 		}
-	}
+		return async ({ result }) => {
+			try {
+				if (result.type === 'success' && result.data?.success === true) {
+					discardDraft();
+					await goto(resolve('/'), { invalidateAll: true });
+				} else if (
+					(result.type === 'failure' || result.type === 'error') &&
+					result.status === 401
+				) {
+					errorMessage = 'Please sign in again before posting. Your entry is still here.';
+				} else if (result.type === 'failure' && typeof result.data?.message === 'string') {
+					errorMessage = result.data.message;
+				} else {
+					errorMessage =
+						'Your entry could not be posted. Please try again; your text is still here.';
+				}
+			} finally {
+				isSubmitting = false;
+			}
+		};
+	};
 </script>
 
 <section aria-label="Share a moment" class="p-5 sm:p-6">
@@ -130,10 +134,18 @@
 			<p class="text-sm text-muted">A little piece of your day.</p>
 		</div>
 	</div>
-	<form class="min-w-0 space-y-5" onsubmit={handleSubmit}>
+	<form
+		class="min-w-0 space-y-5"
+		method="POST"
+		action={`${resolve('/')}?/createPost`}
+		use:enhance={submitPost}
+		aria-busy={isSubmitting}
+	>
+		<input type="hidden" name="submissionId" value={submissionId} />
+		<p class="sr-only" role="status">{isSubmitting ? 'Posting...' : ''}</p>
 		<div class="space-y-2">
 			<div class="flex flex-wrap items-center justify-between gap-2">
-				<label for="post-body" class="text-base font-semibold text-ink">A moment from today</label>
+				<label for="post-body" class="text-base font-semibold text-ink">Today's entry</label>
 				<button
 					type="button"
 					class="flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-accent hover:outline-2 hover:outline-offset-2 hover:outline-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -146,12 +158,16 @@
 			</div>
 			<Textarea
 				id="post-body"
+				name="body"
 				{placeholder}
 				bind:value={body}
 				showCount
-				maxCount={2000}
+				maxCount={MAX_POST_LENGTH}
+				error={tooLong
+					? `Please shorten your entry to ${MAX_POST_LENGTH} characters or fewer.`
+					: undefined}
 				rows={5}
-				autoResize={false}
+				autoResize
 				class="min-h-40 focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent focus:outline-solid focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid motion-reduce:transition-none"
 				disabled={isSubmitting}
 			/>
@@ -204,10 +220,10 @@
 				type="submit"
 				loading={isSubmitting}
 				class="min-h-12 w-full font-semibold shadow-none sm:w-auto"
-				disabled={isSubmitting || (!body.trim() && !file)}
+				disabled={isSubmitting || tooLong || (!body.trim() && !file)}
 			>
 				{#if !isSubmitting}<Send class="size-4" strokeWidth={1.75} aria-hidden="true" />{/if}
-				{isSubmitting ? 'Sharing...' : 'Share moment'}
+				{isSubmitting ? 'Posting...' : 'Post'}
 			</Button>
 		</div>
 	</form>

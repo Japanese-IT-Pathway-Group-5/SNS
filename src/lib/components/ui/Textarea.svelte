@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { HTMLTextareaAttributes } from 'svelte/elements';
 	import { cn } from '$lib/utils';
+	import { unicodeCodePointLength } from '$lib/validation/posts';
 
 	interface Props extends HTMLTextareaAttributes {
 		label?: string;
@@ -12,11 +13,12 @@
 		autoResize?: boolean;
 	}
 
+	const generatedId = $props.id();
 	let {
 		label,
 		description,
 		error,
-		id = `textarea-${Math.random().toString(36).slice(2, 9)}`,
+		id = generatedId,
 		disabled = false,
 		required = false,
 		rows = 4,
@@ -32,7 +34,7 @@
 	let errorId = $derived(`${id}-error`);
 
 	// Unicode code points count helper
-	let charCount = $derived(value ? Array.from(String(value)).length : 0);
+	let charCount = $derived(unicodeCodePointLength(String(value ?? '')));
 	let isOverLimit = $derived(maxCount !== undefined && charCount > maxCount);
 
 	let textareaEl = $state<HTMLTextAreaElement | null>(null);
@@ -40,7 +42,9 @@
 	function adjustHeight() {
 		if (autoResize && textareaEl) {
 			textareaEl.style.height = 'auto';
-			textareaEl.style.height = `${textareaEl.scrollHeight}px`;
+			const styles = getComputedStyle(textareaEl);
+			const borders = parseFloat(styles.borderTopWidth) + parseFloat(styles.borderBottomWidth);
+			textareaEl.style.height = `${textareaEl.scrollHeight + borders}px`;
 		}
 	}
 
@@ -49,7 +53,25 @@
 			adjustHeight();
 		}
 	});
+
+	function handleInput(event: Event & { currentTarget: EventTarget & HTMLTextAreaElement }) {
+		adjustHeight();
+		restProps.oninput?.(event);
+	}
+
+	let describedBy = $derived(
+		[
+			restProps['aria-describedby'],
+			description && descriptionId,
+			error && errorId,
+			showCount && maxCount !== undefined && `${id}-count`
+		]
+			.filter(Boolean)
+			.join(' ') || undefined
+	);
 </script>
+
+<svelte:window onresize={adjustHeight} />
 
 <div class="flex w-full flex-col gap-1.5">
 	{#if label || (showCount && maxCount)}
@@ -64,8 +86,8 @@
 			{/if}
 			{#if showCount && maxCount}
 				<span
-					class={cn('font-mono text-xs', isOverLimit ? 'font-semibold text-danger' : 'text-muted')}
-					aria-live="polite"
+					id={`${id}-count`}
+					class={cn('text-sm', isOverLimit ? 'font-semibold text-danger' : 'text-muted')}
 				>
 					{charCount}/{maxCount}
 				</span>
@@ -74,16 +96,16 @@
 	{/if}
 
 	<textarea
+		{...restProps}
 		{id}
 		{disabled}
 		{required}
 		{rows}
 		bind:this={textareaEl}
 		bind:value
-		oninput={adjustHeight}
-		maxlength={maxCount}
+		oninput={handleInput}
 		aria-invalid={error || isOverLimit ? 'true' : undefined}
-		aria-describedby={error ? errorId : description ? descriptionId : undefined}
+		aria-describedby={describedBy}
 		class={cn(
 			'w-full resize-none rounded-lg border bg-surface px-3.5 py-2.5 text-base leading-relaxed text-ink transition-colors',
 			'placeholder:text-muted focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:outline-none',
@@ -92,8 +114,7 @@
 				: 'border-control-border hover:border-accent',
 			disabled && 'cursor-not-allowed bg-surface-muted opacity-60',
 			className
-		)}
-		{...restProps}></textarea>
+		)}></textarea>
 
 	{#if description && !error}
 		<p id={descriptionId} class="text-xs text-muted">

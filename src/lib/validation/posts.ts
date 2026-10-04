@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const MAX_POST_LENGTH = 2000;
 export const MAX_REPLY_LENGTH = 500;
 
-const unicodeCodePointLength = (value: string): number => [...value].length;
+export const unicodeCodePointLength = (value: string): number => [...value].length;
 
 export const postInputSchema = z.object({
 	submissionId: z.string().trim().min(1).max(200),
