@@ -2,7 +2,6 @@
 	import { Switch } from 'bits-ui';
 	import { AppShell, Button, Card, ModalDialog, Avatar } from '$lib/components/ui';
 	import { onMount } from 'svelte';
-	import { authClient } from '$lib/auth-client';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faArrowLeft } from '@fortawesome/free-solid-svg-icons';
 	import type { PageData } from './$types';
@@ -26,21 +25,6 @@
 			document.documentElement.classList.remove('reduce-motion');
 		}
 	});
-
-	async function handleLogout() {
-		isLoggingOut = true;
-		try {
-			if (data.user?.id) {
-				localStorage.removeItem(`composer_draft_${data.user.id}`);
-			}
-			await authClient.signOut();
-			window.location.href = '/login';
-		} catch (error) {
-			console.error('Logout failed:', error);
-			isLoggingOut = false;
-			logoutDialogOpen = false;
-		}
-	}
 
 	let joinedDate = $derived(
 		new Date(data.user.createdAt).toLocaleDateString(undefined, {
@@ -140,6 +124,22 @@
 		<Button variant="ghost" onclick={() => (logoutDialogOpen = false)} disabled={isLoggingOut}>
 			Cancel
 		</Button>
-		<Button variant="danger" onclick={handleLogout} loading={isLoggingOut}>Log out</Button>
+		<form
+			method="POST"
+			action="/logout"
+			class="contents"
+			onsubmit={() => {
+				isLoggingOut = true;
+				if (data.user?.id) {
+					try {
+						localStorage.removeItem(`composer_draft_${data.user.id}`);
+					} catch {
+						// storage may be unavailable
+					}
+				}
+			}}
+		>
+			<Button variant="danger" type="submit" loading={isLoggingOut}>Log out</Button>
+		</form>
 	{/snippet}
 </ModalDialog>
