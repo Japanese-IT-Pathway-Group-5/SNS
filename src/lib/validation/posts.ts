@@ -12,7 +12,7 @@ export const postInputSchema = z.object({
 	}),
 	mediaId: z
 		.string()
-		.regex(/^images\/[A-Za-z0-9_-]+$/, 'Invalid image key')
+		.uuid('Invalid photo reference')
 		.optional()
 		.nullable()
 });

@@ -84,6 +84,12 @@ Foundation is ready when a fresh clone works from written instructions, componen
 
 ## Journal profile and stable columns
 
+Loading placeholders use the shared `Skeleton` primitive and `LoadingImage` wrapper. AppShell shows destination-shaped placeholders during client navigation to another path, preserving the mounted source content until navigation completes. Same-page refreshes keep existing content visible. Reply threads show placeholder rows only for their first fetch; avatars, attachments and crop previews show placeholders while images load. Failures end the placeholder state. No artificial delays, dependencies, schema changes or new color tokens are added; system and app reduced-motion settings disable the pulse. Initial page HTML still comes from server loads.
+
+Post upload responses contain a UUID `mediaId`, separate from the R2 object key. Post validation accepts that UUID; the domain operation still checks authenticated ownership and pending media status before attaching it. Storage paths are not accepted as media IDs. The composer draft notice separates text-save status from the photo reload reminder and provides a Clear draft action. The shared textarea counter uses compact, right-aligned metadata sizing. The 2,000-character post limit is unchanged.
+
+Profile photo selection opens `ProfilePhotoCropper` before staging a replacement. Pointer dragging, arrow keys and a zoom slider adjust a circular preview; Use photo exports a 512px square PNG into the existing validated upload flow. Cancel retains the previous selection. Save profile remains the persistence step. UI, upload and loading changes remain unverified while checks are paused at the user's request.
+
 Drawing strokes accept an optional validated opacity between 0 and 1. The editor saves the opacity slider value on each new stroke; older strokes without it render at their original opacity. This extends the existing JSON format without another database migration.
 
 Shared `ModalDialog` supports `fullscreenOnMobile`. Below 640px it anchors all four edges to the viewport, removes desktop centering transforms, includes padding in its constrained width and allows vertical scrolling. Both the drawing editor and Create post use this option to avoid conflicting desktop/modal positioning on phones.

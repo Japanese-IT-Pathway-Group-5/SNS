@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils';
+	import Skeleton from './Skeleton.svelte';
 
 	interface Props {
 		src?: string | null;
@@ -11,7 +12,13 @@
 
 	let { src, alt = '', name = '', size = 'md', class: className }: Props = $props();
 
-	let imageFailed = $state(false);
+	let failedSrc = $state<string | null>(null);
+	let loadedSrc = $state<string | null>(null);
+	let image = $state<HTMLImageElement>();
+	$effect(() => {
+		const currentSrc = src;
+		if (image?.complete && image.naturalWidth > 0) loadedSrc = currentSrc ?? null;
+	});
 
 	let initials = $derived.by(() => {
 		if (!name) return '?';
@@ -34,13 +41,19 @@
 		className
 	)}
 >
-	{#if src && !imageFailed}
+	{#if src && failedSrc !== src}
+		{#key src}
 		<img
+			bind:this={image}
 			{src}
 			alt={alt || name || 'User avatar'}
 			class="size-full object-cover"
-			onerror={() => (imageFailed = true)}
+			class:opacity-0={loadedSrc !== src}
+			onload={() => loadedSrc = src ?? null}
+			onerror={() => failedSrc = src ?? null}
 		/>
+		{/key}
+		{#if loadedSrc !== src}<div class="absolute inset-0"><Skeleton class="size-full rounded-full" /></div>{/if}
 	{:else}
 		<span aria-hidden="true">{initials}</span>
 	{/if}

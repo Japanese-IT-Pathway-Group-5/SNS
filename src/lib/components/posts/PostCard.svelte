@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import LoadingImage from '$lib/components/ui/LoadingImage.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
@@ -62,11 +63,11 @@
 
 	<!-- Optional Image -->
 	{#if imageUrl}
-		<div class="mt-1 overflow-hidden rounded-xl border border-line bg-surface-muted">
-			<img
+		<div class="mt-1 w-fit max-w-full overflow-hidden rounded-xl border border-line">
+			<LoadingImage
 				src={imageUrl}
 				alt="Post attachment"
-				class="max-h-[500px] w-full object-contain"
+				class="block max-h-[500px] w-auto max-w-full h-auto"
 				loading="lazy"
 			/>
 		</div>

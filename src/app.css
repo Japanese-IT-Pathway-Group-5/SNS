@@ -25,6 +25,29 @@
 }
 
 @layer base {
+	* {
+		scrollbar-width: thin;
+		scrollbar-color: var(--color-teal-soft) transparent;
+	}
+
+	::-webkit-scrollbar {
+		width: 6px;
+		height: 6px;
+	}
+
+	::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	::-webkit-scrollbar-thumb {
+		border-radius: 999px;
+		background: var(--color-teal-soft);
+	}
+
+	::-webkit-scrollbar-thumb:hover {
+		background: var(--color-accent);
+	}
+
 	@media (min-width: 768px) {
 		html {
 			scrollbar-gutter: stable;

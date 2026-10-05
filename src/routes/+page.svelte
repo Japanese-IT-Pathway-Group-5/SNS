@@ -19,6 +19,61 @@
 	const searchUrl = $derived(
 		data.search ? `${resolve('/')}?q=${encodeURIComponent(data.search)}` : resolve('/')
 	);
+
+	// svelte-ignore state_referenced_locally
+	let feedPosts = $state(data.posts);
+	// svelte-ignore state_referenced_locally
+	let nextCursor = $state(data.nextCursor);
+	let isLoadingMore = $state(false);
+	let loadMoreError = $state<string | null>(null);
+	let sentinelEl = $state<HTMLDivElement | null>(null);
+
+	$effect(() => {
+		feedPosts = data.posts;
+		nextCursor = data.nextCursor;
+		loadMoreError = null;
+	});
+
+	async function loadMore() {
+		if (isLoadingMore || !nextCursor) return;
+		isLoadingMore = true;
+		loadMoreError = null;
+		try {
+			const params = new URLSearchParams();
+			params.set('cursor', nextCursor);
+			if (data.search) params.set('q', data.search);
+
+			const res = await fetch(`${resolve('/api/posts')}?${params.toString()}`);
+			if (!res.ok) throw new Error('Failed to load more posts');
+			const result = (await res.json()) as { items: typeof data.posts; nextCursor: string | null };
+
+			const existingIds = new Set(feedPosts.map((p) => p.id));
+			const newItems = result.items.filter((p) => !existingIds.has(p.id));
+			feedPosts = [...feedPosts, ...newItems];
+			nextCursor = result.nextCursor;
+		} catch {
+			loadMoreError = 'Could not load older entries. Please try again.';
+		} finally {
+			isLoadingMore = false;
+		}
+	}
+
+	$effect(() => {
+		if (!sentinelEl || !nextCursor) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const first = entries[0];
+				if (first.isIntersecting && !isLoadingMore && nextCursor) {
+					loadMore();
+				}
+			},
+			{ rootMargin: '300px' }
+		);
+
+		observer.observe(sentinelEl);
+		return () => observer.disconnect();
+	});
 </script>
 
 <svelte:head>
@@ -94,9 +149,9 @@
 						>Try again</Button
 					>
 				</div>
-			{:else if data.posts.length > 0}
+			{:else if feedPosts.length > 0}
 				<div class="space-y-4 pt-4">
-					{#each data.posts as post (post.id)}
+					{#each feedPosts as post (post.id)}
 						<PostCard
 							id={post.id}
 							authorName={post.authorName}
@@ -110,12 +165,27 @@
 					{/each}
 				</div>
 				<div class="mt-6 border-t border-line pt-6 text-center">
-					{#if data.nextCursor}
-						<Button
-							variant="secondary"
-							href={`${searchUrl}${data.search ? '&' : '?'}cursor=${encodeURIComponent(data.nextCursor)}#feed-heading`}
-							loading={!!navigating.to}>Older entries</Button
-						>
+					{#if nextCursor}
+						<div bind:this={sentinelEl} class="space-y-3">
+							{#if loadMoreError}
+								<p class="text-sm text-danger">{loadMoreError}</p>
+								<Button variant="secondary" onclick={loadMore}>Try again</Button>
+							{:else if isLoadingMore}
+								<div class="flex items-center justify-center gap-2 py-3 text-sm text-muted">
+									<span class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"></span>
+									<span>Loading older entries...</span>
+								</div>
+							{:else}
+								<Button
+									variant="secondary"
+									onclick={(e) => { e.preventDefault(); loadMore(); }}
+									href={`${searchUrl}${data.search ? '&' : '?'}cursor=${encodeURIComponent(nextCursor)}#feed-heading`}
+									loading={isLoadingMore}
+								>
+									Older entries
+								</Button>
+							{/if}
+						</div>
 					{:else}
 						<p class="text-sm font-medium text-muted">
 							{data.search ? 'That’s all the matches.' : 'You’re caught up.'}

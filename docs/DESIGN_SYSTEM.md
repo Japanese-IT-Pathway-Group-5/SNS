@@ -77,6 +77,8 @@ Do not use `line` for a control whose boundary is necessary to identify it. Text
 
 ## Typography, spacing, shape and motion
 
+Shared scrollbars use a thin, rounded teal-soft thumb and transparent track, with an accent hover color where the browser supports it. Apply this treatment to both document and dialog scrolling. Loading skeletons use surface-muted with a gentle opacity pulse only during real pending work; reduced-motion settings keep them still. Character counters use compact right-aligned 12px metadata text.
+
 - Use a system sans-serif stack: `system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans JP", sans-serif`. Noto Sans JP is an optional locally available fallback, not a required web-font download.
 - Body and inputs: 1rem/1.6; metadata and helper text: 0.875rem/1.5; page heading: 1.5rem/1.3. Normal text weight 400, controls/headings 600. No all-caps section labels.
 - Pixel lettering is optional for the future wordmark or tiny decorative labels only. Keep posts, navigation, buttons, forms and status messages in the readable system font. Do not introduce a blocking font download.

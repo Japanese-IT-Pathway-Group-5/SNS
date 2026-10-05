@@ -12,6 +12,7 @@
 		FormMessage
 	} from '$lib/components/ui';
 	import BannerEditor from '$lib/components/profile/BannerEditor.svelte';
+	import ProfilePhotoCropper from '$lib/components/profile/ProfilePhotoCropper.svelte';
 	import { MAX_PROFILE_DESCRIPTION_LENGTH } from '$lib/validation/profile';
 	import { MAX_PHOTO_BYTES } from '$lib/validation/photo-upload';
 	import type { ActionData, PageData } from './$types';
@@ -42,6 +43,8 @@
 	let saving = $state(false);
 	let message = $state(untrack(() => form?.message ?? ''));
 	let photoError = $state('');
+	let cropFile = $state<File | null>(null);
+	let cropOpen = $state(false);
 	$effect(() => {
 		if (!selectedPhoto) {
 			preview = undefined;
@@ -54,8 +57,12 @@
 	function choosePhoto(event: Event) {
 		const file = (event.currentTarget as HTMLInputElement).files?.[0] ?? null;
 		photoError = file && file.size > MAX_PHOTO_BYTES ? 'Choose a photo smaller than 5 MiB.' : '';
-		selectedPhoto = photoError ? null : file;
-		if (file) removePhoto = false;
+		if (file && !photoError) {
+			if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+				photoError = 'Choose a JPEG, PNG or WebP photo.';
+			} else { cropFile = file; cropOpen = true; }
+		}
+		if (photoInput) photoInput.value = '';
 	}
 </script>
 
@@ -74,7 +81,8 @@
 			method="POST"
 			enctype="multipart/form-data"
 			class="space-y-6"
-			use:enhance={() => {
+			use:enhance={({ formData }) => {
+				if (selectedPhoto && !removePhoto) formData.set('photo', selectedPhoto);
 				saving = true;
 				message = '';
 				return async ({ result, update }) => {
@@ -184,3 +192,14 @@
 		</form>
 	</main>
 </AppShell>
+
+<ProfilePhotoCropper file={cropFile} bind:open={cropOpen} onUse={(file) => {
+	selectedPhoto = file;
+	removePhoto = false;
+	photoError = '';
+	if (photoInput) {
+		const selection = new DataTransfer();
+		selection.items.add(file);
+		photoInput.files = selection.files;
+	}
+}} />

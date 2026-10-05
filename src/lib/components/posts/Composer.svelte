@@ -16,7 +16,7 @@
 		type DraftStatus
 	} from '$lib/drafts/persistence';
 
-	let { user }: { user: User } = $props();
+	let { user, onSuccess }: { user: User; onSuccess?: () => void } = $props();
 	let body = $state('');
 	let file = $state<File | null>(null);
 	let fileError = $state<string | null>(null);
@@ -117,6 +117,7 @@
 			try {
 				if (result.type === 'success' && result.data?.success === true) {
 					discardDraft();
+					onSuccess?.();
 					await goto(resolve('/'), { invalidateAll: true });
 				} else if (
 					(result.type === 'failure' || result.type === 'error') &&
@@ -136,16 +137,16 @@
 	};
 </script>
 
-<section aria-label="Share a moment" class="p-5 sm:p-6">
-	<div class="mb-5 flex items-center gap-3">
+<section aria-label="Share a moment" class="p-4 sm:p-6">
+	<div class="mb-4 flex items-center gap-3">
 		<Avatar name={user.name} src={user.image} size="md" />
 		<div class="min-w-0">
 			<p class="truncate text-base font-semibold text-ink">{user.name}</p>
-			<p class="text-sm text-muted">A little piece of your day.</p>
+			<p class="flex items-center gap-1.5 text-xs text-muted"><Globe class="size-3.5" aria-hidden="true" />Visible to everyone</p>
 		</div>
 	</div>
 	<form
-		class="min-w-0 space-y-5"
+		class="min-w-0 space-y-4"
 		method="POST"
 		action={`${resolve('/')}?/createPost`}
 		use:enhance={submitPost}
@@ -176,9 +177,9 @@
 				error={tooLong
 					? `Please shorten your entry to ${MAX_POST_LENGTH} characters or fewer.`
 					: undefined}
-				rows={5}
+				rows={4}
 				autoResize
-				class="min-h-40 focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent focus:outline-solid focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid motion-reduce:transition-none"
+				class="min-h-32 focus:border-accent focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-accent focus:outline-solid focus-visible:ring-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid motion-reduce:transition-none"
 				disabled={isSubmitting}
 			/>
 		</div>
@@ -207,26 +208,15 @@
 		{/if}
 
 		{#if (body.length || file) && !isSubmitting}
-			<div class="flex items-center gap-2 text-xs text-muted">
-				<span
-					>{draftStatus === 'saved'
-						? 'Draft saved on this device'
-						: draftStatus === 'unavailable'
-							? 'Draft could not be saved on this device. Keep this page open.'
-							: body.length
-								? 'Saving draft...'
-								: 'Photo is not saved on this device'}</span
-				>
-				<span>•</span>
-				<button
-					type="button"
-					class="min-h-11 rounded-sm px-2 text-danger hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-					onclick={discardDraft}
-				>
-					Discard
-				</button>
+			<div class="flex items-start justify-between gap-3 rounded-lg bg-canvas px-3 py-2">
+				<div class="min-w-0 py-1 text-xs leading-5 text-muted">
+					{#if body.length}
+						<p role="status">{draftStatus === 'saved' ? 'Text draft saved' : draftStatus === 'unavailable' ? 'Draft saving unavailable. Keep this page open.' : 'Saving text draft...'}</p>
+					{/if}
+					{#if file}<p>Reselect your photo if you reload.</p>{/if}
+				</div>
+				<button type="button" class="min-h-11 shrink-0 rounded-lg px-2 text-xs text-muted hover:bg-surface-muted hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onclick={discardDraft}>Clear draft</button>
 			</div>
-			<p class="text-xs text-muted">Only text is saved. Reselect photos after reloading.</p>
 		{/if}
 
 		<div class="mt-2 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
