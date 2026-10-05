@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { AppShell, Button, Avatar, FormMessage } from '$lib/components/ui';
+	import { HidePostDialog } from '$lib/components/posts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import { AppShell, Button, Avatar, FormMessage } from '$lib/components/ui';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -23,14 +24,19 @@
 		>
 
 		<article class="mt-4 border-b border-line pb-8">
-			<div class="mb-4 flex items-center gap-3">
-				<Avatar src={post.authorImage ?? null} name={post.authorName} size="md" />
-				<div>
-					<p class="font-semibold text-ink">{post.authorName}</p>
-					<time class="text-sm text-muted" datetime={new Date(post.createdAt).toISOString()}>
-						{new Date(post.createdAt).toLocaleString()}
-					</time>
+			<div class="mb-4 flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3">
+					<Avatar src={post.authorImage ?? null} name={post.authorName} size="md" />
+					<div>
+						<p class="font-semibold text-ink">{post.authorName}</p>
+						<time class="text-sm text-muted" datetime={new Date(post.createdAt).toISOString()}>
+							{new Date(post.createdAt).toLocaleString()}
+						</time>
+					</div>
 				</div>
+				{#if data.isModerator}
+					<HidePostDialog postId={post.id} hideError={form?.hideError ?? null} />
+				{/if}
 			</div>
 			<p class="text-base leading-relaxed whitespace-pre-wrap text-ink">{post.body}</p>
 			{#if post.mediaId}

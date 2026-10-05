@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ModerationNotFoundError, ModerationValidationError, moderatePost } from './moderation';
+import {
+	ModerationConflictError,
+	ModerationNotFoundError,
+	ModerationValidationError,
+	moderatePost
+} from './moderation';
 
-const { selectMock, updateMock, insertMock, requireModeratorMock } = vi.hoisted(() => ({
+const { selectMock, updateReturningMock, insertMock, requireModeratorMock } = vi.hoisted(() => ({
 	selectMock: vi.fn(),
-	updateMock: vi.fn(),
+	updateReturningMock: vi.fn(),
 	insertMock: vi.fn(),
 	requireModeratorMock: vi.fn()
 }));
@@ -21,7 +26,9 @@ vi.mock('$lib/server/db', () => ({
 		}),
 		update: () => ({
 			set: () => ({
-				where: updateMock
+				where: () => ({
+					returning: updateReturningMock
+				})
 			})
 		}),
 		insert: () => ({
@@ -44,7 +51,7 @@ describe('moderatePost', () => {
 			role: 'moderator'
 		});
 
-		updateMock.mockResolvedValue(undefined);
+		updateReturningMock.mockResolvedValue([{ id: 'post-1' }]);
 		insertMock.mockResolvedValue(undefined);
 	});
 
@@ -86,7 +93,8 @@ describe('moderatePost', () => {
 		).rejects.toBeInstanceOf(ModerationValidationError);
 	});
 
-	it('returns not found when the post does not exist', async () => {
+	it('returns not found when the post does not exist (hide path)', async () => {
+		updateReturningMock.mockResolvedValueOnce([]);
 		selectMock.mockResolvedValueOnce([]);
 
 		await expect(
@@ -100,13 +108,40 @@ describe('moderatePost', () => {
 		).rejects.toBeInstanceOf(ModerationNotFoundError);
 	});
 
+	it('throws ModerationConflictError when the post is already hidden', async () => {
+		updateReturningMock.mockResolvedValueOnce([]);
+		selectMock.mockResolvedValueOnce([{ id: 'post-1' }]);
+
+		await expect(
+			moderatePost({
+				d1: mockD1,
+				moderatorId: 'moderator-1',
+				postId: 'post-1',
+				action: 'hide',
+				reason: 'Spam'
+			})
+		).rejects.toBeInstanceOf(ModerationConflictError);
+	});
+
+	it('does not write an audit event when the post is already hidden', async () => {
+		updateReturningMock.mockResolvedValueOnce([]);
+		selectMock.mockResolvedValueOnce([{ id: 'post-1' }]);
+
+		await expect(
+			moderatePost({
+				d1: mockD1,
+				moderatorId: 'moderator-1',
+				postId: 'post-1',
+				action: 'hide',
+				reason: 'Spam'
+			})
+		).rejects.toBeInstanceOf(ModerationConflictError);
+
+		expect(insertMock).not.toHaveBeenCalled();
+	});
+
 	it('hides a post and records the moderation event', async () => {
-		selectMock.mockResolvedValueOnce([
-			{
-				id: 'post-1',
-				hiddenAt: null
-			}
-		]);
+		updateReturningMock.mockResolvedValueOnce([{ id: 'post-1' }]);
 
 		const result = await moderatePost({
 			d1: mockD1,
@@ -119,7 +154,7 @@ describe('moderatePost', () => {
 		expect(result.postId).toBe('post-1');
 		expect(result.action).toBe('hide');
 		expect(result.hiddenAt).toBeInstanceOf(Date);
-		expect(updateMock).toHaveBeenCalledOnce();
+		expect(updateReturningMock).toHaveBeenCalledOnce();
 		expect(insertMock).toHaveBeenCalledOnce();
 	});
 
@@ -142,7 +177,20 @@ describe('moderatePost', () => {
 		expect(result.postId).toBe('post-1');
 		expect(result.action).toBe('unhide');
 		expect(result.hiddenAt).toBeNull();
-		expect(updateMock).toHaveBeenCalledOnce();
 		expect(insertMock).toHaveBeenCalledOnce();
+	});
+
+	it('returns not found when the post does not exist (unhide path)', async () => {
+		selectMock.mockResolvedValueOnce([]);
+
+		await expect(
+			moderatePost({
+				d1: mockD1,
+				moderatorId: 'moderator-1',
+				postId: 'missing',
+				action: 'unhide',
+				reason: 'Review completed'
+			})
+		).rejects.toBeInstanceOf(ModerationNotFoundError);
 	});
 });

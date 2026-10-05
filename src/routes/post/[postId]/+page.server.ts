@@ -3,6 +3,7 @@ import { getPost, PostNotFoundError } from '$lib/server/posts/get';
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
 import { deleteReply, ReplyForbiddenError } from '$lib/server/replies/delete';
 import { listReplies } from '$lib/server/replies/list';
+import { handleHidePost } from '$lib/server/posts/hide-action';
 import { requireMembership } from '$lib/server/auth/authorization';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -66,6 +67,15 @@ export const actions: Actions = {
 		}
 
 		redirect(303, `/post/${params.postId}`);
+	},
+
+	hidePost: async ({ request, locals, platform }) => {
+		return handleHidePost({
+			request,
+			user: locals.user,
+			d1: platform?.env?.DB,
+			redirectTo: '/'
+		});
 	},
 	deleteReply: async ({ request, locals, params, platform }) => {
 		if (!locals.user) {

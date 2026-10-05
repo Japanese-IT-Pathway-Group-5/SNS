@@ -1,17 +1,22 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { moderatePostMock, ModerationNotFoundErrorMock, ModerationValidationErrorMock } = vi.hoisted(
-	() => ({
-		moderatePostMock: vi.fn(),
-		ModerationNotFoundErrorMock: class ModerationNotFoundError extends Error {},
-		ModerationValidationErrorMock: class ModerationValidationError extends Error {}
-	})
-);
+const {
+	moderatePostMock,
+	ModerationNotFoundErrorMock,
+	ModerationValidationErrorMock,
+	ModerationConflictErrorMock
+} = vi.hoisted(() => ({
+	moderatePostMock: vi.fn(),
+	ModerationNotFoundErrorMock: class ModerationNotFoundError extends Error {},
+	ModerationValidationErrorMock: class ModerationValidationError extends Error {},
+	ModerationConflictErrorMock: class ModerationConflictError extends Error {}
+}));
 
 vi.mock('$lib/server/posts/moderation', () => ({
 	moderatePost: moderatePostMock,
 	ModerationNotFoundError: ModerationNotFoundErrorMock,
-	ModerationValidationError: ModerationValidationErrorMock
+	ModerationValidationError: ModerationValidationErrorMock,
+	ModerationConflictError: ModerationConflictErrorMock
 }));
 
 import { POST } from './moderation';
@@ -111,6 +116,25 @@ describe('POST /api/posts/moderation', () => {
 		expect(response.status).toBe(400);
 		expect(await response.json()).toEqual({
 			error: 'Moderation reason is required'
+		});
+	});
+
+	it('returns 409 when the post is already hidden', async () => {
+		moderatePostMock.mockRejectedValueOnce(
+			new ModerationConflictErrorMock('Post is already hidden')
+		);
+
+		const response = await POST(
+			makeEvent({
+				postId: 'post-1',
+				action: 'hide',
+				reason: 'Spam'
+			})
+		);
+
+		expect(response.status).toBe(409);
+		expect(await response.json()).toEqual({
+			error: 'Post is already hidden'
 		});
 	});
 

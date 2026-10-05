@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faMessage } from '@fortawesome/free-regular-svg-icons';
+	import HidePostDialog from './HidePostDialog.svelte';
 
 	interface Props {
 		id: string;
@@ -11,9 +12,22 @@
 		createdAt: Date | string | number;
 		content: string;
 		imageUrl?: string | null;
+		isModerator?: boolean;
+		hideError?: string | null;
+		hideErrorPostId?: string | null;
 	}
 
-	let { id, authorName, authorAvatar, createdAt, content, imageUrl }: Props = $props();
+	let {
+		id,
+		authorName,
+		authorAvatar,
+		createdAt,
+		content,
+		imageUrl,
+		isModerator = false,
+		hideError = null,
+		hideErrorPostId = null
+	}: Props = $props();
 
 	function getRelativeTime(dateInput: Date | string | number) {
 		const date = new Date(dateInput);
@@ -31,6 +45,7 @@
 	}
 
 	let timeAgo = $derived(getRelativeTime(createdAt));
+	let myHideError = $derived(hideErrorPostId === id ? hideError : null);
 </script>
 
 <article class="flex min-w-0 flex-col gap-4 py-6 sm:py-7">
@@ -63,7 +78,7 @@
 	{/if}
 
 	<!-- Actions -->
-	<div class="flex items-center">
+	<div class="flex items-center gap-2">
 		<Button
 			variant="ghost"
 			size="sm"
@@ -73,5 +88,9 @@
 			<FontAwesomeIcon icon={faMessage} class="size-4 transition-transform group-active:scale-95" />
 			<span class="font-medium">Reply</span>
 		</Button>
+
+		{#if isModerator}
+			<HidePostDialog postId={id} hideError={myHideError} />
+		{/if}
 	</div>
 </article>

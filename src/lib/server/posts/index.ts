@@ -5,3 +5,4 @@ export * from './moderation';
 export * from './trending';
 export { updatePost, PostForbiddenError } from './update';
 export { deletePost } from './delete';
+export { handleHidePost } from './hide-action';

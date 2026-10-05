@@ -2,6 +2,7 @@ import { error, fail } from '@sveltejs/kit';
 import { parsePaginationParams, PaginationValidationError } from '$lib/server/http/pagination';
 import { createPost, PostValidationError } from '$lib/server/posts/create';
 import { listPosts } from '$lib/server/posts/list';
+import { handleHidePost } from '$lib/server/posts/hide-action';
 import { requireMembership } from '$lib/server/auth/authorization';
 import type { PageServerLoad, Actions } from './$types';
 import type { R2Storage } from '$lib/server/storage/r2';
@@ -128,5 +129,14 @@ export const actions: Actions = {
 			console.error('Failed to create post:', err);
 			return fail(500, { message: 'Failed to create post' });
 		}
+	},
+
+	hidePost: async ({ request, locals, platform }) => {
+		return handleHidePost({
+			request,
+			user: locals.user,
+			d1: platform?.env?.DB,
+			redirectTo: '/'
+		});
 	}
 };

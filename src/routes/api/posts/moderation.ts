@@ -1,6 +1,7 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import {
 	moderatePost,
+	ModerationConflictError,
 	ModerationNotFoundError,
 	ModerationValidationError,
 	type ModerationAction
@@ -57,6 +58,10 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 
 		if (error instanceof ModerationNotFoundError) {
 			return json({ error: 'Post not found' }, { status: 404 });
+		}
+
+		if (error instanceof ModerationConflictError) {
+			return json({ error: error.message }, { status: 409 });
 		}
 
 		if (error instanceof Error && error.message === 'Moderator permission required') {
