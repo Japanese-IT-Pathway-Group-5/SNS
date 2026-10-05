@@ -9,6 +9,7 @@ const PUBLIC_PREFIXES = [
 	'/api/posts',
 	'/api/replies',
 	'/api/media',
+	'/api/profile/photo',
 	'/post',
 	'/dev',
 	'/demo'

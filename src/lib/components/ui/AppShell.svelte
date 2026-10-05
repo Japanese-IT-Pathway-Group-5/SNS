@@ -3,7 +3,8 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { onMount, type Snippet } from 'svelte';
+	import { getContext, onMount, type Snippet } from 'svelte';
+	import { SIDEBAR_CONTEXT, type SidebarState } from '$lib/navigation/sidebar';
 	import { Dialog, DropdownMenu } from 'bits-ui';
 	import Search from '@lucide/svelte/icons/search';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
@@ -23,11 +24,16 @@
 	let {
 		user = null,
 		createOpen = $bindable(false),
+		rightRail,
 		children
-	}: { user?: User | null; createOpen?: boolean; children: Snippet } = $props();
+	}: {
+		user?: User | null;
+		createOpen?: boolean;
+		rightRail?: Snippet;
+		children: Snippet;
+	} = $props();
 	let mobileOpen = $state(false);
-	let sidebarCollapsed = $state(false);
-	let sidebarWidth = $state(240);
+	const sidebarState = getContext<SidebarState>(SIDEBAR_CONTEXT);
 	let sidebarResizing = $state(false);
 	const minSidebarWidth = 192;
 	const maxSidebarWidth = 320;
@@ -41,18 +47,21 @@
 		if (user && page.url.searchParams.get('compose') === '1') createOpen = true;
 	});
 	onMount(() => {
-		try {
-			sidebarCollapsed = localStorage.getItem(sidebarPreferenceKey) === 'true';
-			const savedWidth = Number(localStorage.getItem(sidebarWidthKey));
-			if (
-				Number.isFinite(savedWidth) &&
-				savedWidth >= minSidebarWidth &&
-				savedWidth <= maxSidebarWidth
-			) {
-				sidebarWidth = savedWidth;
+		if (!sidebarState.restored) {
+			try {
+				sidebarState.collapsed = localStorage.getItem(sidebarPreferenceKey) === 'true';
+				const savedWidth = Number(localStorage.getItem(sidebarWidthKey));
+				if (
+					Number.isFinite(savedWidth) &&
+					savedWidth >= minSidebarWidth &&
+					savedWidth <= maxSidebarWidth
+				) {
+					sidebarState.width = savedWidth;
+				}
+			} catch {
+				// Navigation still works when browser storage is unavailable.
 			}
-		} catch {
-			// Navigation still works when browser storage is unavailable.
+			sidebarState.restored = true;
 		}
 		const desktop = window.matchMedia('(min-width: 768px)');
 		const closeDrawer = () => {
@@ -62,21 +71,21 @@
 		return () => desktop.removeEventListener('change', closeDrawer);
 	});
 	function toggleSidebar() {
-		sidebarCollapsed = !sidebarCollapsed;
+		sidebarState.collapsed = !sidebarState.collapsed;
 		saveSidebarPreference();
 	}
 	function saveSidebarPreference() {
 		try {
-			localStorage.setItem(sidebarPreferenceKey, String(sidebarCollapsed));
-			localStorage.setItem(sidebarWidthKey, String(sidebarWidth));
+			localStorage.setItem(sidebarPreferenceKey, String(sidebarState.collapsed));
+			localStorage.setItem(sidebarWidthKey, String(sidebarState.width));
 		} catch {
 			// Resizing remains available without persistent browser storage.
 		}
 	}
 	function resizeSidebar(width: number) {
-		sidebarCollapsed = width < sidebarCollapseThreshold;
-		if (sidebarCollapsed) return;
-		sidebarWidth = Math.round(Math.min(maxSidebarWidth, Math.max(minSidebarWidth, width)));
+		sidebarState.collapsed = width < sidebarCollapseThreshold;
+		if (sidebarState.collapsed) return;
+		sidebarState.width = Math.round(Math.min(maxSidebarWidth, Math.max(minSidebarWidth, width)));
 	}
 	function startSidebarResize(event: PointerEvent) {
 		if (event.button !== 0 || !event.isPrimary) return;
@@ -101,10 +110,10 @@
 		}
 		const widths: Record<string, number> = {
 			ArrowLeft:
-				sidebarCollapsed || sidebarWidth === minSidebarWidth
+				sidebarState.collapsed || sidebarState.width === minSidebarWidth
 					? collapsedSidebarWidth
-					: sidebarWidth - 16,
-			ArrowRight: sidebarCollapsed ? sidebarWidth : sidebarWidth + 16,
+					: sidebarState.width - 16,
+			ArrowRight: sidebarState.collapsed ? sidebarState.width : sidebarState.width + 16,
 			Home: collapsedSidebarWidth,
 			End: maxSidebarWidth
 		};
@@ -124,7 +133,7 @@
 <div
 	class="app-shell min-h-svh bg-canvas"
 	class:sidebar-resizing={sidebarResizing}
-	style:--sidebar-width={sidebarCollapsed ? '4rem' : `${sidebarWidth}px`}
+	style:--sidebar-width={sidebarState.collapsed ? '4rem' : `${sidebarState.width}px`}
 	style:--sidebar-transition={sidebarResizing ? '0ms' : '160ms'}
 >
 	<Dialog.Root bind:open={mobileOpen}>
@@ -275,7 +284,7 @@
 		</Dialog.Portal>
 	</Dialog.Root>
 	<div class="desktop-sidebar fixed bottom-0 left-0 z-30 hidden md:block">
-		<Sidebar {user} collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+		<Sidebar {user} collapsed={sidebarState.collapsed} onToggle={toggleSidebar} />
 		<!-- A focusable ARIA separator is an interactive splitter (WAI-ARIA window splitter pattern). -->
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 		<div
@@ -285,8 +294,8 @@
 			aria-orientation="vertical"
 			aria-valuemin={collapsedSidebarWidth}
 			aria-valuemax={maxSidebarWidth}
-			aria-valuenow={sidebarCollapsed ? collapsedSidebarWidth : sidebarWidth}
-			aria-valuetext={sidebarCollapsed ? 'Collapsed' : `${sidebarWidth} pixels wide`}
+			aria-valuenow={sidebarState.collapsed ? collapsedSidebarWidth : sidebarState.width}
+			aria-valuetext={sidebarState.collapsed ? 'Collapsed' : `${sidebarState.width} pixels wide`}
 			aria-controls="desktop-sidebar-navigation"
 			title="Drag to resize. Use arrow keys when focused."
 			class="sidebar-resize-handle"
@@ -298,7 +307,16 @@
 			onkeydown={keyboardSidebarResize}
 		></div>
 	</div>
-	<div class="shell-content">{@render children()}</div>
+	<div class="shell-content">
+		<div
+			class="mx-auto grid max-w-2xl items-start gap-8 px-4 pt-7 pb-12 sm:px-6 sm:pt-9 sm:pb-16 xl:max-w-6xl xl:grid-cols-[minmax(0,1fr)_18rem]"
+		>
+			<div class="shell-reading w-full max-w-2xl min-w-0 justify-self-center">
+				{@render children()}
+			</div>
+			{#if rightRail}{@render rightRail()}{/if}
+		</div>
+	</div>
 </div>
 
 {#if user}
@@ -306,13 +324,14 @@
 		bind:open={createOpen}
 		title="Share a moment"
 		description="A few words, one photo, or a little of both."
+		fullscreenOnMobile
 		class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-2xl gap-0 overflow-y-auto bg-canvas p-0"
-		headerClass="overflow-hidden rounded-t-xl bg-accent p-5 text-on-accent sm:p-6"
+		headerClass="overflow-hidden rounded-t-xl bg-accent p-5 text-on-accent max-sm:rounded-none max-sm:pt-[max(1.25rem,env(safe-area-inset-top))] sm:p-6"
 	>
 		{#snippet headerArtwork()}
 			<div
 				aria-hidden="true"
-				class="pointer-events-none absolute inset-0 grid grid-cols-4 opacity-[0.14]"
+				class="pointer-events-none absolute inset-0 hidden grid-cols-4 opacity-[0.14] sm:grid"
 			>
 				{#each ['/art/reading.svg', '/art/swinging.svg', '/art/dancing.svg', '/art/sitting-reading.svg'] as art (art)}
 					<img src={art} alt="" class="h-full min-h-0 w-full object-contain" />

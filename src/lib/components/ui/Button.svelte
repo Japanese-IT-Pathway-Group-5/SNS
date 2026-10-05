@@ -5,7 +5,7 @@
 	import { cn } from '$lib/utils';
 
 	interface BaseProps {
-		variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+		variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'link';
 		size?: 'sm' | 'md';
 		loading?: boolean;
 		children?: Snippet;
@@ -43,6 +43,7 @@
 		secondary:
 			'bg-surface text-ink border border-control-border hover:bg-surface-muted active:bg-surface-muted',
 		ghost: 'bg-transparent text-ink hover:bg-surface-muted active:bg-surface-muted',
+		link: 'bg-transparent text-accent underline-offset-4 hover:underline',
 		danger: 'bg-danger text-on-danger hover:opacity-90 active:opacity-95'
 	};
 

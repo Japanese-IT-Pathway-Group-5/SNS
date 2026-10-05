@@ -2,7 +2,7 @@
 	import { resolve } from '$app/paths';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import { AppShell, Button, Avatar, FormMessage } from '$lib/components/ui';
+	import { AppShell, Button, BackButton, Avatar, FormMessage } from '$lib/components/ui';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -15,12 +15,8 @@
 </svelte:head>
 
 <AppShell user={data.user}>
-	<main class="mx-auto max-w-2xl px-4 py-8 sm:px-6 sm:py-12">
-		<a
-			href={resolve('/')}
-			class="mb-6 inline-flex min-h-11 items-center text-sm font-medium text-accent underline underline-offset-4"
-			>Back to home</a
-		>
+	<main class="w-full min-w-0">
+		<BackButton href={resolve('/')} label="Back to home" class="mb-6" />
 
 		<article class="mt-4 border-b border-line pb-8">
 			<div class="mb-4 flex items-center gap-3">

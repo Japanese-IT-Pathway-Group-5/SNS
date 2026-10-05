@@ -29,6 +29,20 @@
       "when": 1791100000000,
       "tag": "0003_post_media_reference",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791188157280,
+      "tag": "0004_profile_description",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791190000000,
+      "tag": "0005_profile_banner",
+      "breakpoints": true
     }
   ]
 }
