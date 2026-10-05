@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { getPost, PostNotFoundError } from '$lib/server/posts/get';
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
 import { listReplies } from '$lib/server/replies/list';
+import { handleHidePost } from '$lib/server/posts/hide-action';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ params, platform }) => {
@@ -51,5 +52,14 @@ export const actions: Actions = {
 		}
 
 		redirect(303, `/post/${params.postId}`);
+	},
+
+	hidePost: async ({ request, locals, platform }) => {
+		return handleHidePost({
+			request,
+			user: locals.user,
+			d1: platform?.env?.DB,
+			redirectTo: '/'
+		});
 	}
 };

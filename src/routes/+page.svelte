@@ -4,9 +4,9 @@
 	import { AppShell, Avatar, Button, EmptyState, FormMessage } from '$lib/components/ui';
 	import { PostCard } from '$lib/components/posts';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
-	import type { PageData } from './$types';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
 	let createOpen = $state(false);
 	const viewingOlder = $derived(page.url.searchParams.has('cursor'));
 	const searchUrl = $derived(
@@ -104,6 +104,9 @@
 								createdAt={post.createdAt}
 								content={post.body}
 								imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
+								isModerator={data.isModerator}
+								hideError={form?.hideError ?? null}
+								hideErrorPostId={form?.postId ?? null}
 							/>
 						{/each}
 					</div>
