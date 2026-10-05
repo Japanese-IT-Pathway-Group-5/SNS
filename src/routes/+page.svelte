@@ -172,13 +172,18 @@
 								<Button variant="secondary" onclick={loadMore}>Try again</Button>
 							{:else if isLoadingMore}
 								<div class="flex items-center justify-center gap-2 py-3 text-sm text-muted">
-									<span class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"></span>
+									<span
+										class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
+									></span>
 									<span>Loading older entries...</span>
 								</div>
 							{:else}
 								<Button
 									variant="secondary"
-									onclick={(e) => { e.preventDefault(); loadMore(); }}
+									onclick={(e) => {
+										e.preventDefault();
+										loadMore();
+									}}
 									href={`${searchUrl}${data.search ? '&' : '?'}cursor=${encodeURIComponent(nextCursor)}#feed-heading`}
 									loading={isLoadingMore}
 								>

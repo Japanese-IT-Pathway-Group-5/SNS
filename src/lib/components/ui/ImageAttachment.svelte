@@ -95,7 +95,7 @@
 				src={previewUrl}
 				loading="eager"
 				alt="Selected attachment preview"
-				class="block max-h-[400px] w-auto max-w-full h-auto"
+				class="block h-auto max-h-[400px] w-auto max-w-full"
 			/>
 
 			<button

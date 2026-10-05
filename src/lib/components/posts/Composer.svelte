@@ -142,7 +142,9 @@
 		<Avatar name={user.name} src={user.image} size="md" />
 		<div class="min-w-0">
 			<p class="truncate text-base font-semibold text-ink">{user.name}</p>
-			<p class="flex items-center gap-1.5 text-xs text-muted"><Globe class="size-3.5" aria-hidden="true" />Visible to everyone</p>
+			<p class="flex items-center gap-1.5 text-xs text-muted">
+				<Globe class="size-3.5" aria-hidden="true" />Visible to everyone
+			</p>
 		</div>
 	</div>
 	<form
@@ -211,11 +213,21 @@
 			<div class="flex items-start justify-between gap-3 rounded-lg bg-canvas px-3 py-2">
 				<div class="min-w-0 py-1 text-xs leading-5 text-muted">
 					{#if body.length}
-						<p role="status">{draftStatus === 'saved' ? 'Text draft saved' : draftStatus === 'unavailable' ? 'Draft saving unavailable. Keep this page open.' : 'Saving text draft...'}</p>
+						<p role="status">
+							{draftStatus === 'saved'
+								? 'Text draft saved'
+								: draftStatus === 'unavailable'
+									? 'Draft saving unavailable. Keep this page open.'
+									: 'Saving text draft...'}
+						</p>
 					{/if}
 					{#if file}<p>Reselect your photo if you reload.</p>{/if}
 				</div>
-				<button type="button" class="min-h-11 shrink-0 rounded-lg px-2 text-xs text-muted hover:bg-surface-muted hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onclick={discardDraft}>Clear draft</button>
+				<button
+					type="button"
+					class="min-h-11 shrink-0 rounded-lg px-2 text-xs text-muted hover:bg-surface-muted hover:text-danger focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+					onclick={discardDraft}>Clear draft</button
+				>
 			</div>
 		{/if}
 

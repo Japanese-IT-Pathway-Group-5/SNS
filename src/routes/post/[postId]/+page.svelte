@@ -4,7 +4,14 @@
 	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import { AppShell, Button, BackButton, Avatar, FormMessage, LoadingImage } from '$lib/components/ui';
+	import {
+		AppShell,
+		Button,
+		BackButton,
+		Avatar,
+		FormMessage,
+		LoadingImage
+	} from '$lib/components/ui';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -45,7 +52,7 @@
 					<LoadingImage
 						src={`/api/media/${post.mediaId}`}
 						alt="Post attachment"
-						class="block max-h-[600px] w-auto max-w-full h-auto"
+						class="block h-auto max-h-[600px] w-auto max-w-full"
 						loading="lazy"
 					/>
 				</div>
@@ -59,30 +66,35 @@
 
 			{#if data.user}
 				{#if !writing}
-					<Button variant="secondary" size="sm" class="mt-4" onclick={startWriting}>Write a reply</Button>
-				{:else}
-				<form
-					method="POST"
-					action="?/reply"
-					class="mt-5 space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5"
-				>
-					<label for="reply-body" class="block text-sm font-semibold text-ink">Write a reply</label>
-					<textarea
-						id="reply-body"
-						name="body"
-						rows="3"
-						maxlength="500"
-						required
-						placeholder="Add to the conversation…"
-						class="w-full resize-y rounded-lg border border-control-border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-						>{form?.body ?? ''}</textarea
+					<Button variant="secondary" size="sm" class="mt-4" onclick={startWriting}
+						>Write a reply</Button
 					>
-					{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
-					<div class="flex justify-end gap-2">
-						<Button variant="ghost" type="button" onclick={() => writing = false}>Cancel</Button>
-						<Button variant="primary" type="submit">Reply</Button>
-					</div>
-				</form>
+				{:else}
+					<form
+						method="POST"
+						action="?/reply"
+						class="mt-5 space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5"
+					>
+						<label for="reply-body" class="block text-sm font-semibold text-ink"
+							>Write a reply</label
+						>
+						<textarea
+							id="reply-body"
+							name="body"
+							rows="3"
+							maxlength="500"
+							required
+							placeholder="Add to the conversation…"
+							class="w-full resize-y rounded-lg border border-control-border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+							>{form?.body ?? ''}</textarea
+						>
+						{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
+						<div class="flex justify-end gap-2">
+							<Button variant="ghost" type="button" onclick={() => (writing = false)}>Cancel</Button
+							>
+							<Button variant="primary" type="submit">Reply</Button>
+						</div>
+					</form>
 				{/if}
 			{:else}
 				<div class="mt-5 rounded-xl border border-line bg-surface p-4 sm:p-5">

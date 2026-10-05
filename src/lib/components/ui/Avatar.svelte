@@ -43,17 +43,19 @@
 >
 	{#if src && failedSrc !== src}
 		{#key src}
-		<img
-			bind:this={image}
-			{src}
-			alt={alt || name || 'User avatar'}
-			class="size-full object-cover"
-			class:opacity-0={loadedSrc !== src}
-			onload={() => loadedSrc = src ?? null}
-			onerror={() => failedSrc = src ?? null}
-		/>
+			<img
+				bind:this={image}
+				{src}
+				alt={alt || name || 'User avatar'}
+				class="size-full object-cover"
+				class:opacity-0={loadedSrc !== src}
+				onload={() => (loadedSrc = src ?? null)}
+				onerror={() => (failedSrc = src ?? null)}
+			/>
 		{/key}
-		{#if loadedSrc !== src}<div class="absolute inset-0"><Skeleton class="size-full rounded-full" /></div>{/if}
+		{#if loadedSrc !== src}<div class="absolute inset-0">
+				<Skeleton class="size-full rounded-full" />
+			</div>{/if}
 	{:else}
 		<span aria-hidden="true">{initials}</span>
 	{/if}

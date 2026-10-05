@@ -35,7 +35,11 @@
 		children: Snippet;
 	} = $props();
 	let mobileOpen = $state(false);
-	let loadingPage = $derived(Boolean(navigating.to && !navigating.willUnload && navigating.to.url.pathname !== page.url.pathname));
+	let loadingPage = $derived(
+		Boolean(
+			navigating.to && !navigating.willUnload && navigating.to.url.pathname !== page.url.pathname
+		)
+	);
 	const sidebarState = getContext<SidebarState>(SIDEBAR_CONTEXT);
 	let sidebarResizing = $state(false);
 	const minSidebarWidth = 192;
@@ -329,9 +333,20 @@
 				<div hidden={loadingPage}>{@render children()}</div>
 			</div>
 			{#if loadingPage && navigating.to?.url.pathname === resolve('/')}
-				<div class="hidden space-y-4 rounded-xl border border-line bg-surface p-5 xl:block" aria-hidden="true"><Skeleton class="h-5 w-36" />{#each [1, 2, 3] as row (row)}<div class="flex items-center gap-3"><Skeleton class="size-10 rounded-full" /><Skeleton class="h-4 w-28" /></div>{/each}</div>
+				<div
+					class="hidden space-y-4 rounded-xl border border-line bg-surface p-5 xl:block"
+					aria-hidden="true"
+				>
+					<Skeleton class="h-5 w-36" />{#each [1, 2, 3] as row (row)}<div
+							class="flex items-center gap-3"
+						>
+							<Skeleton class="size-10 rounded-full" /><Skeleton class="h-4 w-28" />
+						</div>{/each}
+				</div>
 			{/if}
-			{#if rightRail}<div hidden={loadingPage} class={!loadingPage ? 'contents' : undefined}>{@render rightRail()}</div>{/if}
+			{#if rightRail}<div hidden={loadingPage} class={!loadingPage ? 'contents' : undefined}>
+					{@render rightRail()}
+				</div>{/if}
 		</div>
 	</div>
 </div>
@@ -356,7 +371,12 @@
 			</div>
 		{/snippet}
 		{#key user.id}
-			<Composer {user} onSuccess={() => { createOpen = false; }} />
+			<Composer
+				{user}
+				onSuccess={() => {
+					createOpen = false;
+				}}
+			/>
 		{/key}
 	</ModalDialog>
 {/if}

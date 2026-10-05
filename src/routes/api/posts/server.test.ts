@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const { createPostMock, rateLimitPostMock, listPostsMock, PostValidationErrorMock } = vi.hoisted(() => ({
-	createPostMock: vi.fn(),
-	rateLimitPostMock: vi.fn(),
-	listPostsMock: vi.fn(),
-	PostValidationErrorMock: class PostValidationError extends Error {}
-}));
+const { createPostMock, rateLimitPostMock, listPostsMock, PostValidationErrorMock } = vi.hoisted(
+	() => ({
+		createPostMock: vi.fn(),
+		rateLimitPostMock: vi.fn(),
+		listPostsMock: vi.fn(),
+		PostValidationErrorMock: class PostValidationError extends Error {}
+	})
+);
 
 vi.mock('$lib/server/posts/create', () => ({
 	createPost: createPostMock,
@@ -188,10 +190,7 @@ describe('GET /api/posts', () => {
 		return {
 			url: new URL(`http://localhost/api/posts${query ? `?${query}` : ''}`),
 			locals: {
-				user:
-					options.user === undefined
-						? { id: 'user-123', name: 'Test User' }
-						: options.user,
+				user: options.user === undefined ? { id: 'user-123', name: 'Test User' } : options.user,
 				session: null
 			},
 			platform: {

@@ -10,11 +10,7 @@ export const postInputSchema = z.object({
 	body: z.string().refine((value) => unicodeCodePointLength(value.trim()) <= MAX_POST_LENGTH, {
 		message: `Post must be ${MAX_POST_LENGTH} characters or fewer`
 	}),
-	mediaId: z
-		.string()
-		.uuid('Invalid photo reference')
-		.optional()
-		.nullable()
+	mediaId: z.string().uuid('Invalid photo reference').optional().nullable()
 });
 
 export const updatePostInputSchema = z.object({

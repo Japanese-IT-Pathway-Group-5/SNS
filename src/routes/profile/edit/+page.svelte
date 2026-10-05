@@ -60,7 +60,10 @@
 		if (file && !photoError) {
 			if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
 				photoError = 'Choose a JPEG, PNG or WebP photo.';
-			} else { cropFile = file; cropOpen = true; }
+			} else {
+				cropFile = file;
+				cropOpen = true;
+			}
 		}
 		if (photoInput) photoInput.value = '';
 	}
@@ -193,13 +196,17 @@
 	</main>
 </AppShell>
 
-<ProfilePhotoCropper file={cropFile} bind:open={cropOpen} onUse={(file) => {
-	selectedPhoto = file;
-	removePhoto = false;
-	photoError = '';
-	if (photoInput) {
-		const selection = new DataTransfer();
-		selection.items.add(file);
-		photoInput.files = selection.files;
-	}
-}} />
+<ProfilePhotoCropper
+	file={cropFile}
+	bind:open={cropOpen}
+	onUse={(file) => {
+		selectedPhoto = file;
+		removePhoto = false;
+		photoError = '';
+		if (photoInput) {
+			const selection = new DataTransfer();
+			selection.items.add(file);
+			photoInput.files = selection.files;
+		}
+	}}
+/>

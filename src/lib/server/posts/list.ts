@@ -49,7 +49,10 @@ export async function listPosts({
 			body: post.body,
 			mediaId: post.mediaId,
 			createdAt: post.createdAt,
-			replyCount: sql<number>`(select count(*) from ${reply} where ${reply.postId} = ${post.id} and ${reply.hiddenAt} is null)`.mapWith(Number)
+			replyCount:
+				sql<number>`(select count(*) from ${reply} where ${reply.postId} = ${post.id} and ${reply.hiddenAt} is null)`.mapWith(
+					Number
+				)
 		})
 		.from(post)
 		.innerJoin(user, eq(user.id, post.authorId))

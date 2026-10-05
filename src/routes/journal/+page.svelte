@@ -48,7 +48,9 @@
 		isLoadingMore = true;
 		loadMoreError = null;
 		try {
-			const res = await fetch(`${resolve('/api/posts')}?journal=1&cursor=${encodeURIComponent(nextCursor)}`);
+			const res = await fetch(
+				`${resolve('/api/posts')}?journal=1&cursor=${encodeURIComponent(nextCursor)}`
+			);
 			if (!res.ok) throw new Error('Failed to load more posts');
 			const result = (await res.json()) as { items: typeof data.posts; nextCursor: string | null };
 
@@ -193,13 +195,18 @@
 								<Button variant="secondary" onclick={loadMore}>Try again</Button>
 							{:else if isLoadingMore}
 								<div class="flex items-center justify-center gap-2 py-3 text-sm text-muted">
-									<span class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"></span>
+									<span
+										class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
+									></span>
 									<span>Loading older entries...</span>
 								</div>
 							{:else}
 								<Button
 									variant="secondary"
-									onclick={(e) => { e.preventDefault(); loadMore(); }}
+									onclick={(e) => {
+										e.preventDefault();
+										loadMore();
+									}}
 									href={`${resolve('/journal')}?cursor=${encodeURIComponent(nextCursor)}#journal-heading`}
 									loading={isLoadingMore}
 								>

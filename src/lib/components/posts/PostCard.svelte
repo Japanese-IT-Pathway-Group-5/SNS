@@ -20,11 +20,22 @@
 		user?: User | null;
 	}
 
-	let { id, authorName, authorAvatar, createdAt, content, imageUrl, replyCount = 0, user = null }: Props = $props();
+	let {
+		id,
+		authorName,
+		authorAvatar,
+		createdAt,
+		content,
+		imageUrl,
+		replyCount = 0,
+		user = null
+	}: Props = $props();
 	let count = $state(untrack(() => replyCount));
 	let expanded = $state(false);
 	let opened = $state(false);
-	$effect(() => { count = replyCount; });
+	$effect(() => {
+		count = replyCount;
+	});
 
 	function getRelativeTime(dateInput: Date | string | number) {
 		const date = new Date(dateInput);
@@ -51,11 +62,16 @@
 			<Avatar src={authorAvatar} name={authorName} size="md" />
 			<span class="min-w-0 font-semibold break-words text-ink">{authorName}</span>
 		</div>
-		<a href={resolve('/post/[postId]', { postId: id })} class="shrink-0 rounded text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" aria-label="Open this journal entry"><time
-			class="shrink-0 pt-2 text-xs text-muted"
-			datetime={new Date(createdAt).toISOString()}
-			title={new Date(createdAt).toLocaleString()}>{timeAgo}</time
-		></a>
+		<a
+			href={resolve('/post/[postId]', { postId: id })}
+			class="shrink-0 rounded text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+			aria-label="Open this journal entry"
+			><time
+				class="shrink-0 pt-2 text-xs text-muted"
+				datetime={new Date(createdAt).toISOString()}
+				title={new Date(createdAt).toLocaleString()}>{timeAgo}</time
+			></a
+		>
 	</div>
 
 	<!-- Content -->
@@ -67,7 +83,7 @@
 			<LoadingImage
 				src={imageUrl}
 				alt="Post attachment"
-				class="block max-h-[500px] w-auto max-w-full h-auto"
+				class="block h-auto max-h-[500px] w-auto max-w-full"
 				loading="lazy"
 			/>
 		</div>
@@ -78,14 +94,24 @@
 		<Button
 			variant="ghost"
 			size="sm"
-			onclick={() => { opened = true; expanded = !expanded; }}
+			onclick={() => {
+				opened = true;
+				expanded = !expanded;
+			}}
 			aria-expanded={expanded}
 			aria-controls={`replies-${id}`}
 			class="group text-muted hover:bg-surface-muted hover:text-accent"
 		>
-			<span aria-hidden="true"><FontAwesomeIcon icon={faMessage} class="size-4 transition-transform group-active:scale-95" /></span>
+			<span aria-hidden="true"
+				><FontAwesomeIcon
+					icon={faMessage}
+					class="size-4 transition-transform group-active:scale-95"
+				/></span
+			>
 			<span class="font-medium">{count} {count === 1 ? 'reply' : 'replies'}</span>
 		</Button>
 	</div>
-	{#if opened}<div hidden={!expanded}><PostReplies postId={id} {user} onAdded={() => count += 1} /></div>{/if}
+	{#if opened}<div hidden={!expanded}>
+			<PostReplies postId={id} {user} onAdded={() => (count += 1)} />
+		</div>{/if}
 </article>
