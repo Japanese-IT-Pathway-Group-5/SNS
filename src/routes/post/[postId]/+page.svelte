@@ -41,7 +41,7 @@
 			</div>
 			<p class="text-base leading-relaxed whitespace-pre-wrap text-ink">{post.body}</p>
 			{#if post.mediaId}
-				<div class="mt-4 w-fit max-w-full overflow-hidden rounded-xl border border-line">
+				<div class="mt-4 w-fit max-w-full overflow-hidden rounded-none border border-line">
 					<LoadingImage
 						src={`/api/media/${post.mediaId}`}
 						alt="Post attachment"

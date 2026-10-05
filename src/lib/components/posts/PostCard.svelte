@@ -63,7 +63,7 @@
 
 	<!-- Optional Image -->
 	{#if imageUrl}
-		<div class="mt-1 w-fit max-w-full overflow-hidden rounded-xl border border-line">
+		<div class="mt-1 w-fit max-w-full overflow-hidden rounded-none border border-line">
 			<LoadingImage
 				src={imageUrl}
 				alt="Post attachment"
