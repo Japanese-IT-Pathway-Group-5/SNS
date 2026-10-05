@@ -58,6 +58,12 @@ Target script contract after scaffolding: `pnpm dev`, `pnpm build`, `pnpm format
 
 ## Testing and performance
 
+The composer sends its attachment to `/api/uploads/photo` as multipart field `file`, matching `validatePhotoUpload`. The profile-photo action uses its separate `photo` field; do not interchange the two contracts. The upload endpoint returns a pending `mediaId`, which the composer includes in the create-post action.
+
+Feed and journal use the shared bordered `PostCard` container. `listPosts` includes `replyCount` as a correlated SQL count filtered to non-hidden replies on each visible post; it adds no schema, dependency or per-post request loop. Reply summaries now include the author's public image URL.
+
+`PostReplies.svelte` fetches the existing paginated GET replies endpoint only when a conversation is first expanded. Closing the thread hides rather than unmounts it, retaining an unfinished reply. Write a reply explicitly reveals and focuses the shared textarea. Submission uses the existing post-detail server form action (including its membership and parent-visibility checks), retains text on failures, updates the local count and reloads replies after a confirmed successful redirect. Native form submission remains available when enhancement is unavailable. Guest participation links to sign-in; it does not change read/write permissions. Post detail also hides its reply form until explicit writing intent. UI verification for this change remains deferred at the user's request.
+
 Issue #20 composer implementation: `Composer.svelte` uses the root `createPost` form action with `use:enhance`, keeps a submission ID across retries, retains text on failure, and clears only after confirmed success. The shared `Textarea` expands with its content and uses the exported Unicode code-point counter with `MAX_POST_LENGTH`. `maxCount` provides counting and over-limit feedback; it no longer sets native `maxlength` (which counts UTF-16 units). Callers must enforce their limit before submission and validate on the server; an explicitly supplied native `maxlength` is still forwarded. The shared Button uses a decorative Lucide pending spinner with a reduced-motion still state. No dependencies, schema, or theme tokens changed.
 
 The development-only component showcase includes a sample composer. Run its focused browser checks with `pnpm exec playwright test --config tests/e2e/composer.config.ts`; they use the development server and mocked action responses, covering expansion, Japanese/emoji counts, pending and duplicate submission, failure/retry, confirmed-success clearing, unavailable storage, keyboard focus, and widths of 320, 375, and 1280 pixels. They do not verify authenticated D1/R2 persistence. Image-description persistence remains follow-up work for the photo feature.
@@ -77,6 +83,12 @@ Render initial feed HTML on the server. Use system fonts, named icon imports, bo
 Foundation is ready when a fresh clone works from written instructions, component variants are reviewable, critical checks run in CI, isolated staging login works, and one feature can follow an existing end-to-end pattern. Docs alone do not satisfy this gate.
 
 ## Journal profile and stable columns
+
+Loading placeholders use the shared `Skeleton` primitive and `LoadingImage` wrapper. AppShell shows destination-shaped placeholders during client navigation to another path, preserving the mounted source content until navigation completes. Same-page refreshes keep existing content visible. Reply threads show placeholder rows only for their first fetch; avatars, attachments and crop previews show placeholders while images load. Failures end the placeholder state. No artificial delays, dependencies, schema changes or new color tokens are added; system and app reduced-motion settings disable the pulse. Initial page HTML still comes from server loads.
+
+Post upload responses contain a UUID `mediaId`, separate from the R2 object key. Post validation accepts that UUID; the domain operation still checks authenticated ownership and pending media status before attaching it. Storage paths are not accepted as media IDs. The composer draft notice separates text-save status from the photo reload reminder and provides a Clear draft action. The shared textarea counter uses compact, right-aligned metadata sizing. The 2,000-character post limit is unchanged.
+
+Profile photo selection opens `ProfilePhotoCropper` before staging a replacement. Pointer dragging, arrow keys and a zoom slider adjust a circular preview; Use photo exports a 512px square PNG into the existing validated upload flow. Cancel retains the previous selection. Save profile remains the persistence step. UI, upload and loading changes remain unverified while checks are paused at the user's request.
 
 Drawing strokes accept an optional validated opacity between 0 and 1. The editor saves the opacity slider value on each new stroke; older strokes without it render at their original opacity. This extends the existing JSON format without another database migration.
 

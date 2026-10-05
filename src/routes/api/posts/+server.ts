@@ -5,7 +5,9 @@ import { listPosts } from '$lib/server/posts/list';
 import { rateLimitPost } from '$lib/server/security/rate-limit';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-export const GET: RequestHandler = async ({ platform, url }) => {
+import { searchQuerySchema } from '$lib/validation/search';
+
+export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	const env = platform?.env as {
 		DB?: D1Database;
 	};
@@ -26,10 +28,29 @@ export const GET: RequestHandler = async ({ platform, url }) => {
 		throw error;
 	}
 
+	const searchParam = url.searchParams.get('q');
+	let search: string | undefined;
+	if (searchParam) {
+		const searchResult = searchQuerySchema.safeParse(searchParam);
+		if (!searchResult.success) {
+			return json({ error: searchResult.error.issues[0].message }, { status: 400 });
+		}
+		search = searchResult.data;
+	}
+
+	const isJournal = url.searchParams.get('journal') === '1';
+	let authorId: string | undefined;
+	if (isJournal) {
+		if (!locals.user) {
+			return json({ error: 'Unauthorized' }, { status: 401 });
+		}
+		authorId = locals.user.id;
+	}
+
 	try {
 		const result = await listPosts({
 			d1: env.DB,
-			options: pagination
+			options: { ...pagination, ...(search ? { search } : {}), ...(authorId ? { authorId } : {}) }
 		});
 
 		return json(result);

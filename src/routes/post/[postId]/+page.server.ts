@@ -3,19 +3,11 @@ import { getPost, PostNotFoundError } from '$lib/server/posts/get';
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
 import { deleteReply, ReplyForbiddenError } from '$lib/server/replies/delete';
 import { listReplies } from '$lib/server/replies/list';
-import { requireMembership } from '$lib/server/auth/authorization';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, platform, locals }) => {
+export const load: PageServerLoad = async ({ params, platform }) => {
 	const d1 = platform?.env?.DB;
 	if (!d1) error(503, 'Database is not configured');
-
-	if (!locals.user) error(401, 'Unauthorized');
-	try {
-		await requireMembership(d1, locals.user.id);
-	} catch {
-		error(403, 'Membership required');
-	}
 
 	try {
 		const [post, replyPage] = await Promise.all([
@@ -39,12 +31,6 @@ export const actions: Actions = {
 
 		const d1 = platform?.env?.DB;
 		if (!d1) return fail(503, { message: 'Database is not configured', body: '' });
-
-		try {
-			await requireMembership(d1, locals.user.id);
-		} catch {
-			return fail(403, { message: 'Membership required', body: '' });
-		}
 
 		const formData = await request.formData();
 		const body = formData.get('body')?.toString() ?? '';

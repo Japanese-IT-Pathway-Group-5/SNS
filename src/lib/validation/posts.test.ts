@@ -35,12 +35,12 @@ describe('post validation', () => {
 			postInputSchema.safeParse({
 				submissionId: 'sub-1',
 				body: '',
-				mediaId: 'images/test-key'
+				mediaId: 'aaf029d8-7201-4390-a311-91d8a5a890cd'
 			}).success
 		).toBe(true);
 	});
 
-	it('rejects an invalid image key', () => {
+	it('rejects an invalid media reference', () => {
 		expect(
 			postInputSchema.safeParse({
 				submissionId: 'sub-1',

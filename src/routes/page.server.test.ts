@@ -10,9 +10,6 @@ vi.mock('$lib/server/posts/list', () => ({
 	listPosts: listPostsMock
 }));
 vi.mock('$lib/server/posts/trending', () => ({ listTrendingJournals: trendingMock }));
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: vi.fn().mockResolvedValue(undefined)
-}));
 
 import { load } from './+page.server';
 
@@ -52,6 +49,22 @@ describe('home feed load', () => {
 			search: '',
 			trendingJournals: [],
 			trendingError: false
+		});
+	});
+
+	it('allows guests to load the feed without being logged in', async () => {
+		listPostsMock.mockResolvedValueOnce({ items: [{ id: 'post-guest' }], nextCursor: null });
+
+		const guestEvent = {
+			url: new URL('http://localhost/'),
+			locals: { user: null, session: null },
+			platform: { env: { DB: {} } }
+		} as unknown as Parameters<typeof load>[0];
+
+		const result = await load(guestEvent);
+		expect(result).toMatchObject({
+			posts: [{ id: 'post-guest' }],
+			loadError: false
 		});
 	});
 

@@ -87,7 +87,10 @@
 			{#if showCount && maxCount}
 				<span
 					id={`${id}-count`}
-					class={cn('text-sm', isOverLimit ? 'font-semibold text-danger' : 'text-muted')}
+					class={cn(
+						'ml-auto text-xs tabular-nums',
+						isOverLimit ? 'font-semibold text-danger' : 'text-muted'
+					)}
 				>
 					{charCount}/{maxCount}
 				</span>

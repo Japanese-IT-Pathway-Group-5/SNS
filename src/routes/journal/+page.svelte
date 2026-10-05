@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import { page, navigating } from '$app/state';
+	import { page } from '$app/state';
 	import {
 		AppShell,
 		Avatar,
@@ -26,8 +26,61 @@
 		timeZone = undefined;
 	});
 
+	// svelte-ignore state_referenced_locally
+	let feedPosts = $state(data.posts);
+	// svelte-ignore state_referenced_locally
+	let nextCursor = $state(data.nextCursor);
+	let isLoadingMore = $state(false);
+	let loadMoreError = $state<string | null>(null);
+	let sentinelEl = $state<HTMLDivElement | null>(null);
+
+	$effect(() => {
+		feedPosts = data.posts;
+		nextCursor = data.nextCursor;
+		loadMoreError = null;
+	});
+
 	const viewingOlder = $derived(page.url.searchParams.has('cursor'));
-	const groups = $derived(groupByDate(data.posts, { timeZone }));
+	const groups = $derived(groupByDate(feedPosts, { timeZone }));
+
+	async function loadMore() {
+		if (isLoadingMore || !nextCursor) return;
+		isLoadingMore = true;
+		loadMoreError = null;
+		try {
+			const res = await fetch(
+				`${resolve('/api/posts')}?journal=1&cursor=${encodeURIComponent(nextCursor)}`
+			);
+			if (!res.ok) throw new Error('Failed to load more posts');
+			const result = (await res.json()) as { items: typeof data.posts; nextCursor: string | null };
+
+			const existingIds = new Set(feedPosts.map((p) => p.id));
+			const newItems = result.items.filter((p) => !existingIds.has(p.id));
+			feedPosts = [...feedPosts, ...newItems];
+			nextCursor = result.nextCursor;
+		} catch {
+			loadMoreError = 'Could not load older entries. Please try again.';
+		} finally {
+			isLoadingMore = false;
+		}
+	}
+
+	$effect(() => {
+		if (!sentinelEl || !nextCursor) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				const first = entries[0];
+				if (first.isIntersecting && !isLoadingMore && nextCursor) {
+					loadMore();
+				}
+			},
+			{ rootMargin: '300px' }
+		);
+
+		observer.observe(sentinelEl);
+		return () => observer.disconnect();
+	});
 </script>
 
 <svelte:head>
@@ -118,7 +171,7 @@
 						>
 							<time datetime={group.key}>{group.label}</time>
 						</h3>
-						<div class="divide-y divide-line">
+						<div class="mt-3 space-y-4">
 							{#each group.entries as post (post.id)}
 								<PostCard
 									id={post.id}
@@ -126,6 +179,8 @@
 									authorAvatar={post.authorImage ?? null}
 									createdAt={post.createdAt}
 									content={post.body}
+									replyCount={post.replyCount}
+									user={data.user}
 									imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
 								/>
 							{/each}
@@ -133,12 +188,32 @@
 					</section>
 				{/each}
 				<div class="mt-2 border-t border-line pt-6 text-center">
-					{#if data.nextCursor}
-						<Button
-							variant="secondary"
-							href={`${resolve('/journal')}?cursor=${encodeURIComponent(data.nextCursor)}#journal-heading`}
-							loading={!!navigating.to}>Older entries</Button
-						>
+					{#if nextCursor}
+						<div bind:this={sentinelEl} class="space-y-3">
+							{#if loadMoreError}
+								<p class="text-sm text-danger">{loadMoreError}</p>
+								<Button variant="secondary" onclick={loadMore}>Try again</Button>
+							{:else if isLoadingMore}
+								<div class="flex items-center justify-center gap-2 py-3 text-sm text-muted">
+									<span
+										class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
+									></span>
+									<span>Loading older entries...</span>
+								</div>
+							{:else}
+								<Button
+									variant="secondary"
+									onclick={(e) => {
+										e.preventDefault();
+										loadMore();
+									}}
+									href={`${resolve('/journal')}?cursor=${encodeURIComponent(nextCursor)}#journal-heading`}
+									loading={isLoadingMore}
+								>
+									Older entries
+								</Button>
+							{/if}
+						</div>
 					{:else}
 						<p class="text-sm font-medium text-muted">You’ve reached your very first entry.</p>
 					{/if}

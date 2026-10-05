@@ -1,12 +1,30 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import { AppShell, Button, BackButton, Avatar, FormMessage } from '$lib/components/ui';
+	import {
+		AppShell,
+		Button,
+		BackButton,
+		Avatar,
+		FormMessage,
+		LoadingImage
+	} from '$lib/components/ui';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const post = $derived(data.post);
+	let writing = $state(false);
+	$effect(() => {
+		if (page.url.searchParams.get('reply') === '1' || (form && 'body' in form)) writing = true;
+	});
+	async function startWriting() {
+		writing = true;
+		await tick();
+		document.getElementById('reply-body')?.focus();
+	}
 </script>
 
 <svelte:head>
@@ -30,42 +48,54 @@
 			</div>
 			<p class="text-base leading-relaxed whitespace-pre-wrap text-ink">{post.body}</p>
 			{#if post.mediaId}
-				<img
-					src={`/api/media/${post.mediaId}`}
-					alt="Post attachment"
-					class="mt-4 max-h-[600px] w-full rounded-xl border border-line object-contain"
-					loading="lazy"
-				/>
+				<div class="mt-4 w-fit max-w-full overflow-hidden rounded-none border border-line">
+					<LoadingImage
+						src={`/api/media/${post.mediaId}`}
+						alt="Post attachment"
+						class="block h-auto max-h-[600px] w-auto max-w-full"
+						loading="lazy"
+					/>
+				</div>
 			{/if}
 		</article>
 
 		<section class="mt-8" aria-labelledby="replies-heading">
-			<h2 id="replies-heading" class="text-xl font-semibold text-ink">
+			<h2 id="replies-heading" class="text-base font-semibold text-ink">
 				Replies ({data.replies.length})
 			</h2>
 
 			{#if data.user}
-				<form
-					method="POST"
-					action="?/reply"
-					class="mt-5 space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5"
-				>
-					<label for="reply-body" class="block text-sm font-semibold text-ink">Write a reply</label>
-					<textarea
-						id="reply-body"
-						name="body"
-						rows="3"
-						maxlength="500"
-						required
-						placeholder="Add to the conversation…"
-						class="w-full resize-y rounded-lg border border-control-border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-						>{form?.body ?? ''}</textarea
+				{#if !writing}
+					<Button variant="secondary" size="sm" class="mt-4" onclick={startWriting}
+						>Write a reply</Button
 					>
-					{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
-					<div class="flex justify-end">
-						<Button variant="primary" type="submit">Reply</Button>
-					</div>
-				</form>
+				{:else}
+					<form
+						method="POST"
+						action="?/reply"
+						class="mt-5 space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5"
+					>
+						<label for="reply-body" class="block text-sm font-semibold text-ink"
+							>Write a reply</label
+						>
+						<textarea
+							id="reply-body"
+							name="body"
+							rows="3"
+							maxlength="500"
+							required
+							placeholder="Add to the conversation…"
+							class="w-full resize-y rounded-lg border border-control-border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+							>{form?.body ?? ''}</textarea
+						>
+						{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
+						<div class="flex justify-end gap-2">
+							<Button variant="ghost" type="button" onclick={() => (writing = false)}>Cancel</Button
+							>
+							<Button variant="primary" type="submit">Reply</Button>
+						</div>
+					</form>
+				{/if}
 			{:else}
 				<div class="mt-5 rounded-xl border border-line bg-surface p-4 sm:p-5">
 					<p class="text-sm text-muted">Sign in to reply and create your profile.</p>
