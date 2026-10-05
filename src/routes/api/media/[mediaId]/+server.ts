@@ -1,8 +1,9 @@
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { getMedia, MediaNotFoundError } from '$lib/server/media/get';
+import { requireMembership } from '$lib/server/auth/authorization';
 import type { R2Storage } from '$lib/server/storage/r2';
 
-export const GET: RequestHandler = async ({ params, platform }) => {
+export const GET: RequestHandler = async ({ params, platform, locals }) => {
 	const env = platform?.env as {
 		DB?: D1Database;
 		MEDIA_BUCKET?: R2Storage;
@@ -16,6 +17,16 @@ export const GET: RequestHandler = async ({ params, platform }) => {
 
 	if (!mediaId) {
 		return json({ error: 'mediaId is required' }, { status: 400 });
+	}
+
+	if (!locals.user) {
+		return json({ error: 'Unauthorized' }, { status: 401 });
+	}
+
+	try {
+		await requireMembership(env.DB, locals.user.id);
+	} catch {
+		return json({ error: 'Membership required' }, { status: 403 });
 	}
 
 	try {

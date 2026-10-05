@@ -8,7 +8,7 @@ const getAuthBaseURL = () => {
 		const isLocal =
 			window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 		if (isLocal) {
-			return 'https://claymore.jitp-group5.workers.dev';
+			return window.location.origin;
 		}
 	}
 	return undefined;

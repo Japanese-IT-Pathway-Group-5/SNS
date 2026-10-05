@@ -1,13 +1,22 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { getPost, PostNotFoundError } from '$lib/server/posts/get';
 import { createReply, ReplyNotFoundError, ReplyValidationError } from '$lib/server/replies/create';
+import { deleteReply, ReplyForbiddenError } from '$lib/server/replies/delete';
 import { listReplies } from '$lib/server/replies/list';
 import { handleHidePost } from '$lib/server/posts/hide-action';
+import { requireMembership } from '$lib/server/auth/authorization';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, platform }) => {
+export const load: PageServerLoad = async ({ params, platform, locals }) => {
 	const d1 = platform?.env?.DB;
 	if (!d1) error(503, 'Database is not configured');
+
+	if (!locals.user) error(401, 'Unauthorized');
+	try {
+		await requireMembership(d1, locals.user.id);
+	} catch {
+		error(403, 'Membership required');
+	}
 
 	try {
 		const [post, replyPage] = await Promise.all([
@@ -31,6 +40,12 @@ export const actions: Actions = {
 
 		const d1 = platform?.env?.DB;
 		if (!d1) return fail(503, { message: 'Database is not configured', body: '' });
+
+		try {
+			await requireMembership(d1, locals.user.id);
+		} catch {
+			return fail(403, { message: 'Membership required', body: '' });
+		}
 
 		const formData = await request.formData();
 		const body = formData.get('body')?.toString() ?? '';
@@ -61,5 +76,38 @@ export const actions: Actions = {
 			d1: platform?.env?.DB,
 			redirectTo: '/'
 		});
+	},
+	deleteReply: async ({ request, locals, params, platform }) => {
+		if (!locals.user) {
+			redirect(303, `/login?redirectTo=${encodeURIComponent(`/post/${params.postId}`)}`);
+		}
+
+		const d1 = platform?.env?.DB;
+		if (!d1) return fail(503, { message: 'Database is not configured' });
+
+		const formData = await request.formData();
+		const replyId = formData.get('replyId')?.toString() ?? '';
+
+		try {
+			await deleteReply({
+				d1,
+				userId: locals.user.id,
+				postId: params.postId,
+				replyId
+			});
+		} catch (cause) {
+			if (cause instanceof ReplyNotFoundError) {
+				return fail(404, { message: 'Reply not found' });
+			}
+
+			if (cause instanceof ReplyForbiddenError) {
+				return fail(403, { message: 'You are not authorized to delete this reply' });
+			}
+
+			console.error('Failed to delete reply:', cause);
+			return fail(500, { message: 'Could not delete your reply. Please try again.' });
+		}
+
+		redirect(303, `/post/${params.postId}`);
 	}
 };

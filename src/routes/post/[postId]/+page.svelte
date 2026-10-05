@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { resolve } from '$app/paths';
-	import { AppShell, Button, Avatar, FormMessage, ModalDialog, Textarea } from '$lib/components/ui';
+	import { AppShell, Button, Avatar, FormMessage } from '$lib/components/ui';
+	import { HidePostDialog } from '$lib/components/posts';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import { faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const post = $derived(data.post);
-
-	let hideOpen = $state(false);
-	let hideReason = $state('');
 </script>
 
 <svelte:head>
@@ -38,20 +35,7 @@
 					</div>
 				</div>
 				{#if data.isModerator}
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => {
-							hideOpen = true;
-						}}
-						class="group text-muted hover:bg-surface-muted hover:text-danger"
-					>
-						<FontAwesomeIcon
-							icon={faEyeSlash}
-							class="size-4 transition-transform group-active:scale-95"
-						/>
-						<span class="font-medium">Hide</span>
-					</Button>
+					<HidePostDialog postId={post.id} hideError={form?.hideError ?? null} />
 				{/if}
 			</div>
 			<p class="text-base leading-relaxed whitespace-pre-wrap text-ink">{post.body}</p>
@@ -63,57 +47,7 @@
 					loading="lazy"
 				/>
 			{/if}
-
-			{#if form?.hideError}
-				<div class="mt-4">
-					<FormMessage type="error" message={form.hideError} />
-				</div>
-			{/if}
 		</article>
-
-		{#if data.isModerator}
-			<ModalDialog
-				bind:open={hideOpen}
-				title="Hide post"
-				description="This post will be hidden from all readers."
-			>
-				<form
-					method="POST"
-					action="?/hidePost"
-					use:enhance={() => {
-						return async ({ update, result }) => {
-							if (result.type === 'redirect') {
-								hideOpen = false;
-								hideReason = '';
-							}
-							await update();
-						};
-					}}
-				>
-					<input type="hidden" name="postId" value={post.id} />
-					<Textarea
-						label="Reason"
-						name="reason"
-						required
-						placeholder="Why should this post be hidden?"
-						maxCount={500}
-						showCount
-						rows={3}
-						bind:value={hideReason}
-					/>
-					<div class="mt-4 flex items-center justify-end gap-2">
-						<Button
-							variant="secondary"
-							size="sm"
-							onclick={() => {
-								hideOpen = false;
-							}}>Cancel</Button
-						>
-						<Button variant="danger" size="sm" type="submit">Hide post</Button>
-					</div>
-				</form>
-			</ModalDialog>
-		{/if}
 
 		<section class="mt-8" aria-labelledby="replies-heading">
 			<h2 id="replies-heading" class="text-xl font-semibold text-ink">
@@ -158,6 +92,22 @@
 							<time class="text-xs text-muted" datetime={new Date(reply.createdAt).toISOString()}>
 								{new Date(reply.createdAt).toLocaleString()}
 							</time>
+
+							{#if data.user?.id === reply.authorId}
+								<form method="POST" action="?/deleteReply" class="ml-auto">
+									<input type="hidden" name="replyId" value={reply.id} />
+									<Button
+										variant="ghost"
+										size="sm"
+										type="submit"
+										aria-label="Delete reply"
+										title="Delete reply"
+										class="text-muted hover:bg-red-50 hover:text-red-600"
+									>
+										<FontAwesomeIcon icon={faTrashCan} class="size-4" />
+									</Button>
+								</form>
+							{/if}
 						</div>
 						<p class="leading-relaxed whitespace-pre-wrap text-ink">{reply.body}</p>
 					</article>
