@@ -9,10 +9,6 @@ vi.mock('$lib/server/media/get', () => ({
 	MediaNotFoundError: class MediaNotFoundError extends Error {}
 }));
 
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: vi.fn().mockResolvedValue(undefined)
-}));
-
 import { GET } from './+server';
 
 const makeEvent = (options: {

@@ -9,10 +9,6 @@ vi.mock('$lib/server/security/rate-limit', () => ({
 	rateLimitUpload: vi.fn()
 }));
 
-vi.mock('$lib/server/auth/authorization', () => ({
-	requireMembership: vi.fn().mockResolvedValue(undefined)
-}));
-
 vi.mock('$lib/server/storage/photo-upload', () => ({
 	uploadPhoto: vi.fn()
 }));
