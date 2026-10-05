@@ -118,7 +118,7 @@
 						>
 							<time datetime={group.key}>{group.label}</time>
 						</h3>
-						<div class="divide-y divide-line">
+						<div class="mt-3 space-y-4">
 							{#each group.entries as post (post.id)}
 								<PostCard
 									id={post.id}
@@ -126,6 +126,8 @@
 									authorAvatar={post.authorImage ?? null}
 									createdAt={post.createdAt}
 									content={post.body}
+									replyCount={post.replyCount}
+									user={data.user}
 									imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
 								/>
 							{/each}

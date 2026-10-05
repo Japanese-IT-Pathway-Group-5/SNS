@@ -95,7 +95,7 @@
 					>
 				</div>
 			{:else if data.posts.length > 0}
-				<div class="divide-y divide-line">
+				<div class="space-y-4 pt-4">
 					{#each data.posts as post (post.id)}
 						<PostCard
 							id={post.id}
@@ -103,11 +103,13 @@
 							authorAvatar={post.authorImage ?? null}
 							createdAt={post.createdAt}
 							content={post.body}
+							replyCount={post.replyCount}
+							user={data.user}
 							imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
 						/>
 					{/each}
 				</div>
-				<div class="border-t border-line pt-6 text-center">
+				<div class="mt-6 border-t border-line pt-6 text-center">
 					{#if data.nextCursor}
 						<Button
 							variant="secondary"

@@ -55,6 +55,22 @@ describe('home feed load', () => {
 		});
 	});
 
+	it('allows guests to load the feed without being logged in', async () => {
+		listPostsMock.mockResolvedValueOnce({ items: [{ id: 'post-guest' }], nextCursor: null });
+
+		const guestEvent = {
+			url: new URL('http://localhost/'),
+			locals: { user: null, session: null },
+			platform: { env: { DB: {} } }
+		} as unknown as Parameters<typeof load>[0];
+
+		const result = await load(guestEvent);
+		expect(result).toMatchObject({
+			posts: [{ id: 'post-guest' }],
+			loadError: false
+		});
+	});
+
 	it('reports a feed failure separately from a genuinely empty journal', async () => {
 		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		listPostsMock.mockRejectedValueOnce(new Error('Database unavailable'));

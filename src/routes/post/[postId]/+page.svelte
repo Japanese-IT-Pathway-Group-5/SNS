@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
+	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 	import { AppShell, Button, BackButton, Avatar, FormMessage } from '$lib/components/ui';
@@ -7,6 +9,15 @@
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const post = $derived(data.post);
+	let writing = $state(false);
+	$effect(() => {
+		if (page.url.searchParams.get('reply') === '1' || (form && 'body' in form)) writing = true;
+	});
+	async function startWriting() {
+		writing = true;
+		await tick();
+		document.getElementById('reply-body')?.focus();
+	}
 </script>
 
 <svelte:head>
@@ -40,11 +51,14 @@
 		</article>
 
 		<section class="mt-8" aria-labelledby="replies-heading">
-			<h2 id="replies-heading" class="text-xl font-semibold text-ink">
+			<h2 id="replies-heading" class="text-base font-semibold text-ink">
 				Replies ({data.replies.length})
 			</h2>
 
 			{#if data.user}
+				{#if !writing}
+					<Button variant="secondary" size="sm" class="mt-4" onclick={startWriting}>Write a reply</Button>
+				{:else}
 				<form
 					method="POST"
 					action="?/reply"
@@ -62,10 +76,12 @@
 						>{form?.body ?? ''}</textarea
 					>
 					{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
-					<div class="flex justify-end">
+					<div class="flex justify-end gap-2">
+						<Button variant="ghost" type="button" onclick={() => writing = false}>Cancel</Button>
 						<Button variant="primary" type="submit">Reply</Button>
 					</div>
 				</form>
+				{/if}
 			{:else}
 				<div class="mt-5 rounded-xl border border-line bg-surface p-4 sm:p-5">
 					<p class="text-sm text-muted">Sign in to reply and create your profile.</p>

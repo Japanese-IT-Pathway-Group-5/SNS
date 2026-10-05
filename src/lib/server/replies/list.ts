@@ -51,6 +51,7 @@ export async function listReplies({
 			postId: reply.postId,
 			authorId: reply.authorId,
 			authorName: user.name,
+			authorImage: user.image,
 			body: reply.body,
 			createdAt: reply.createdAt
 		})
