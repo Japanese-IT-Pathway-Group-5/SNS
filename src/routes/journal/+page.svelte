@@ -2,9 +2,20 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { page, navigating } from '$app/state';
-	import { AppShell, Button, EmptyState, FormMessage } from '$lib/components/ui';
+	import {
+		AppShell,
+		Avatar,
+		Button,
+		BackButton,
+		EmptyState,
+		FormMessage
+	} from '$lib/components/ui';
 	import { PostCard } from '$lib/components/posts';
 	import { groupByDate } from '$lib/journal/group-by-date';
+	import Palette from '@lucide/svelte/icons/palette';
+	import BannerArtwork from '$lib/components/profile/BannerArtwork.svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -24,16 +35,60 @@
 </svelte:head>
 
 <AppShell user={data.user} bind:createOpen>
-	<main id="journal" class="mx-auto w-full max-w-2xl px-4 pt-7 pb-12 sm:px-6 sm:pt-9 sm:pb-16">
-		<div class="mb-6 sm:mb-8">
-			<h1 class="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">My journal</h1>
-			<p class="mt-2 text-sm leading-6 text-muted sm:text-base">
-				Everything you’ve written, day by day.
-			</p>
-			<p class="mt-1 text-xs text-muted">
-				Only you see this collection, but each moment is still visible to everyone on Claymore.
-			</p>
-		</div>
+	<main id="journal" class="w-full min-w-0">
+		{#if data.user}
+			<header class="mb-6 sm:mb-8">
+				<div class="h-32 overflow-hidden rounded-xl border border-line sm:h-40">
+					{#if data.banner}
+						<div class="h-full overflow-hidden rounded-xl">
+							<BannerArtwork value={data.banner} />
+						</div>
+					{:else}<div
+							role="img"
+							aria-label="Journal drawing banner placeholder. No drawing yet."
+							class="flex h-full items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 text-accent"
+						>
+							<Palette class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+							<span class="text-xs">Your little canvas</span>
+						</div>{/if}
+				</div>
+				<div
+					class="relative -mt-8 grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-3 gap-y-3 px-3 sm:-mt-10 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-x-4 sm:px-4"
+				>
+					<Avatar
+						name={data.user.name}
+						src={data.user.image}
+						size="lg"
+						class="size-20 bg-surface text-xl ring-4 ring-canvas sm:size-24 sm:text-2xl"
+					/>
+					<div class="col-span-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1 sm:pt-12">
+						<h1 class="text-2xl font-semibold tracking-tight break-words text-ink sm:text-3xl">
+							{data.user.name}
+						</h1>
+						<div class="mt-1 min-h-6">
+							{#if data.profileError}
+								<p class="text-sm leading-6 text-muted">
+									Your description couldn't load. Please try again.
+								</p>
+							{:else if data.description}
+								<p
+									class="text-sm leading-6 break-words whitespace-pre-wrap text-muted sm:text-base"
+								>
+									{data.description}
+								</p>
+							{/if}
+						</div>
+					</div>
+					<div class="col-start-2 row-start-1 flex justify-end pt-10 sm:col-start-3 sm:pt-12">
+						<Button variant="secondary" size="sm" href={resolve('/profile/edit')}>
+							<span aria-hidden="true"
+								><FontAwesomeIcon icon={faPenToSquare} class="size-3.5" /></span
+							>Edit profile
+						</Button>
+					</div>
+				</div>
+			</header>
+		{/if}
 
 		<section aria-labelledby="journal-heading">
 			<div class="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
@@ -41,11 +96,7 @@
 					{viewingOlder ? 'Earlier entries' : 'Your entries'}
 				</h2>
 				{#if viewingOlder}
-					<a
-						href={resolve('/journal')}
-						class="inline-flex min-h-11 items-center text-sm text-accent underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-						>Back to newest</a
-					>
+					<BackButton href={resolve('/journal')} label="Back to newest" />
 				{:else}
 					<span class="text-xs text-muted">Newest first</span>
 				{/if}
@@ -102,7 +153,7 @@
 					>
 						{#snippet action()}
 							{#if viewingOlder}
-								<Button variant="ghost" href={resolve('/journal')}>Back to newest</Button>
+								<BackButton href={resolve('/journal')} label="Back to newest" />
 							{:else}
 								<Button
 									variant="primary"

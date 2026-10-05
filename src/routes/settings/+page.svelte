@@ -1,315 +1,139 @@
 <script lang="ts">
-	import { clearUserDraft } from '$lib/drafts/persistence';
-	import { Switch } from 'bits-ui';
-	import { AppShell, Button, Card, ModalDialog, Avatar } from '$lib/components/ui';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
+	import { Switch } from 'bits-ui';
+	import LogOut from '@lucide/svelte/icons/log-out';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
-	import {
-		faArrowLeft,
-		faUser,
-		faCog,
-		faLock,
-		faFileAlt,
-		faExclamationTriangle
-	} from '@fortawesome/free-solid-svg-icons';
+	import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
+	import { AppShell, Button, BackButton } from '$lib/components/ui';
+	import { clearUserDraft } from '$lib/drafts/persistence';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
-
-	let logoutDialogOpen = $state(false);
 	let reduceMotion = $state(false);
+	let preferencesReady = $state(false);
+	let storageUnavailable = $state(false);
 	let isLoggingOut = $state(false);
-	let appearance = $state('System');
 
 	onMount(() => {
-		reduceMotion = localStorage.getItem('reduceMotion') === 'true';
+		try {
+			const saved = localStorage.getItem('reduceMotion');
+			reduceMotion =
+				saved === null
+					? window.matchMedia('(prefers-reduced-motion: reduce)').matches
+					: saved === 'true';
+		} catch {
+			reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+		}
+		preferencesReady = true;
 	});
 
 	$effect(() => {
-		if (reduceMotion) {
-			localStorage.setItem('reduceMotion', 'true');
-			document.documentElement.classList.add('reduce-motion');
-		} else {
-			localStorage.setItem('reduceMotion', 'false');
-			document.documentElement.classList.remove('reduce-motion');
+		if (!preferencesReady) return;
+		document.documentElement.classList.toggle('reduce-motion', reduceMotion);
+		try {
+			localStorage.setItem('reduceMotion', String(reduceMotion));
+			storageUnavailable = false;
+		} catch {
+			storageUnavailable = true;
 		}
 	});
-
-	let joinedDate = $derived(
-		new Date(data.user.createdAt).toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: 'long',
-			day: 'numeric'
-		})
-	);
 </script>
 
+<svelte:head><title>Account &amp; settings - Claymore</title></svelte:head>
+
 <AppShell user={data.user}>
-	<main class="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-		<div class="mb-10 flex items-center gap-4">
-			<Button variant="ghost" size="sm" href="/" aria-label="Go back">
-				<FontAwesomeIcon icon={faArrowLeft} class="size-4" />
-			</Button>
-			<h1 class="text-3xl font-bold tracking-tight text-ink">Settings</h1>
-		</div>
+	<main class="w-full min-w-0">
+		<header class="mb-6 sm:mb-8">
+			<BackButton href={resolve('/')} class="mb-2 -ml-2" />
+			<h1 class="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+				Account &amp; settings
+			</h1>
+			<p class="mt-2 text-sm leading-6 text-muted">Your account and a few personal preferences.</p>
+		</header>
 
-		<div class="space-y-12">
-			<!-- 1. Account Section -->
-			<section>
-				<h2 class="mb-4 flex items-center gap-2 text-xl font-bold text-ink">
-					<FontAwesomeIcon icon={faUser} class="size-5 text-accent" />
-					Account
-				</h2>
-				<div class="space-y-4">
-					<!-- Profile Info -->
-					<Card class="overflow-hidden shadow-sm">
-						<div class="flex items-center justify-between bg-surface p-6 sm:p-8">
-							<div class="flex items-center gap-5">
-								<Avatar name={data.user.name} src={data.user.image} size="lg" />
-								<div>
-									<h3 class="text-xl font-bold text-ink sm:text-2xl">{data.user.name}</h3>
-									<p class="text-muted">{data.user.email}</p>
-								</div>
-							</div>
-							<Button variant="ghost" size="sm">Edit Profile</Button>
-						</div>
-					</Card>
-
-					<!-- Change Password -->
-					<Card class="overflow-hidden shadow-sm">
-						<div class="space-y-4 p-6 sm:p-8">
-							<h3 class="mb-4 text-lg font-bold text-ink">Change Password</h3>
-							<div class="max-w-sm space-y-4">
-								<div>
-									<label class="mb-1 block text-sm font-medium text-ink" for="current-password"
-										>Current Password</label
-									>
-									<input
-										id="current-password"
-										type="password"
-										class="w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm"
-										placeholder="Enter current password"
-									/>
-								</div>
-								<div>
-									<label class="mb-1 block text-sm font-medium text-ink" for="new-password"
-										>New Password</label
-									>
-									<input
-										id="new-password"
-										type="password"
-										class="w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm"
-										placeholder="Enter new password"
-									/>
-								</div>
-								<div>
-									<label class="mb-1 block text-sm font-medium text-ink" for="confirm-password"
-										>Confirm New Password</label
-									>
-									<input
-										id="confirm-password"
-										type="password"
-										class="w-full rounded-md border border-line bg-canvas px-3 py-2 text-sm"
-										placeholder="Confirm new password"
-									/>
-								</div>
-								<Button variant="primary" class="mt-2 w-full sm:w-auto">Update Password</Button>
-							</div>
-						</div>
-					</Card>
-
-					<!-- Member Since -->
-					<Card class="overflow-hidden shadow-sm">
-						<div class="bg-surface p-6 sm:p-8">
-							<div class="flex items-center justify-between">
-								<span class="font-medium text-ink">Member since</span>
-								<span class="font-mono text-muted">{joinedDate}</span>
-							</div>
-						</div>
-					</Card>
+		<div class="space-y-6">
+			<section
+				aria-labelledby="account-heading"
+				class="rounded-xl border border-line bg-surface p-4 sm:p-6"
+			>
+				<h2 id="account-heading" class="text-base font-semibold text-ink">Account</h2>
+				<div class="mt-4 border-b border-line pb-4">
+					<p class="text-sm font-medium text-ink">Email</p>
+					<p class="mt-1 text-sm break-all text-muted">{data.user.email}</p>
+					<p class="mt-1 text-xs text-muted">Only visible to you.</p>
+				</div>
+				<div class="flex flex-wrap items-center justify-between gap-3 pt-4">
+					<div class="min-w-0">
+						<p class="text-sm font-medium text-ink">Profile</p>
+						<p class="mt-1 text-sm leading-6 text-muted">
+							Your name, photo, description and banner.
+						</p>
+					</div>
+					<Button variant="link" size="sm" href={resolve('/profile/edit')} class="min-h-11 px-0">
+						<span aria-hidden="true"><FontAwesomeIcon icon={faPenToSquare} class="size-3.5" /></span
+						>
+						Edit profile
+					</Button>
 				</div>
 			</section>
 
-			<!-- 2. Preferences Section -->
-			<section>
-				<h2 class="mb-4 flex items-center gap-2 text-xl font-bold text-ink">
-					<FontAwesomeIcon icon={faCog} class="size-5 text-accent" />
-					Preferences
-				</h2>
-				<Card class="divide-y divide-line/60 shadow-sm">
-					<!-- Language -->
-					<div class="flex items-center justify-between gap-4 p-6 sm:p-8">
-						<div>
-							<p class="text-lg font-bold text-ink">Language</p>
-							<p class="mt-1 text-sm text-muted">Select your interface language.</p>
-						</div>
-						<select
-							class="rounded-lg border border-line bg-canvas px-4 py-2 text-sm font-medium text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-						>
-							<option>English (US)</option>
-							<option>日本語 (Japanese)</option>
-						</select>
+			<section
+				aria-labelledby="preferences-heading"
+				class="rounded-xl border border-line bg-surface p-4 sm:p-6"
+			>
+				<h2 id="preferences-heading" class="text-base font-semibold text-ink">Preferences</h2>
+				<div class="mt-4 flex items-center justify-between gap-4">
+					<div class="min-w-0">
+						<label for="reduce-motion" class="text-sm font-medium text-ink">Reduce motion</label>
+						<p id="motion-description" class="mt-1 text-sm leading-6 text-muted">
+							Keep animations and transitions to a minimum.
+						</p>
 					</div>
-
-					<!-- Reduce Motion -->
-					<div
-						class="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+					<Switch.Root
+						id="reduce-motion"
+						aria-label="Reduce motion"
+						aria-describedby="motion-description"
+						bind:checked={reduceMotion}
+						disabled={!preferencesReady}
+						class="inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent disabled:opacity-50 data-[state=checked]:bg-accent data-[state=unchecked]:bg-control-border"
 					>
-						<div class="max-w-md">
-							<p class="text-lg font-bold text-ink">Reduce Motion</p>
-							<p class="mt-1 text-sm leading-relaxed text-muted">
-								Disables UI animations and transitions. Recommended if you prefer a simpler, faster
-								feel or experience discomfort from motion.
-							</p>
-						</div>
-						<Switch.Root
-							bind:checked={reduceMotion}
-							class="peer inline-flex h-7 w-12 shrink-0 cursor-pointer items-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-accent data-[state=unchecked]:bg-line"
-						>
-							<Switch.Thumb
-								class="pointer-events-none block h-6 w-6 rounded-full bg-white shadow-sm ring-0 transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0.5"
-							/>
-						</Switch.Root>
-					</div>
+						<Switch.Thumb
+							class="pointer-events-none block size-6 rounded-full bg-surface shadow-xs transition-transform data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0.5"
+						/>
+					</Switch.Root>
+				</div>
+				<p class="mt-4 text-xs text-muted">
+					{storageUnavailable
+						? 'Applies for this visit. Device saving is unavailable.'
+						: 'Saved on this device.'}
+				</p>
+			</section>
 
-					<!-- Appearance -->
-					<div
-						class="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+			<div class="border-t border-line pt-5">
+				<form
+					method="POST"
+					action={resolve('/logout')}
+					onsubmit={() => {
+						isLoggingOut = true;
+						clearUserDraft(data.user.id);
+					}}
+				>
+					<Button
+						variant="secondary"
+						size="sm"
+						type="submit"
+						loading={isLoggingOut}
+						disabled={isLoggingOut}
 					>
-						<div>
-							<p class="text-lg font-bold text-ink">Appearance</p>
-							<p class="mt-1 text-sm text-muted">Choose your preferred theme.</p>
-						</div>
-						<div class="flex gap-2 rounded-lg border border-line bg-surface-muted p-1">
-							{#each ['Light', 'Dark', 'System'] as theme (theme)}
-								<button
-									class="rounded-md px-4 py-1.5 text-sm font-medium transition-colors {appearance ===
-									theme
-										? 'bg-white text-ink shadow-sm'
-										: 'text-muted hover:text-ink'}"
-									onclick={() => (appearance = theme)}
-								>
-									{theme}
-								</button>
-							{/each}
-						</div>
-					</div>
-				</Card>
-			</section>
-
-			<!-- 3. Privacy & Security Section -->
-			<section>
-				<h2 class="mb-4 flex items-center gap-2 text-xl font-bold text-ink">
-					<FontAwesomeIcon icon={faLock} class="size-5 text-accent" />
-					Privacy & Security
-				</h2>
-				<Card class="divide-y divide-line/60 shadow-sm">
-					<!-- Login Sessions -->
-					<div class="flex items-center justify-between gap-4 p-6 sm:p-8">
-						<div>
-							<p class="text-lg font-bold text-ink">Login Sessions</p>
-							<p class="mt-1 text-sm text-muted">
-								Manage devices currently logged into your account.
-							</p>
-						</div>
-						<Button variant="ghost" size="sm">Manage Sessions</Button>
-					</div>
-
-					<!-- Profile Visibility -->
-					<div class="flex items-center justify-between gap-4 p-6 sm:p-8">
-						<div>
-							<p class="text-lg font-bold text-ink">Profile Visibility</p>
-							<p class="mt-1 text-sm text-muted">Control who can see your account details.</p>
-						</div>
-						<select
-							class="rounded-lg border border-line bg-canvas px-4 py-2 text-sm font-medium text-ink outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-						>
-							<option>Public</option>
-							<option>Private</option>
-						</select>
-					</div>
-
-					<!-- Sign Out -->
-					<div class="flex items-center justify-between gap-4 p-6 sm:p-8">
-						<div>
-							<p class="text-lg font-bold text-ink">Sign Out</p>
-							<p class="mt-1 text-sm text-muted">End your session on this device.</p>
-						</div>
-						<Button
-							variant="danger"
-							class="w-full sm:w-auto"
-							onclick={() => (logoutDialogOpen = true)}
-						>
-							Log Out
-						</Button>
-					</div>
-				</Card>
-			</section>
-
-			<!-- 4. Content Section -->
-			<section>
-				<h2 class="mb-4 flex items-center gap-2 text-xl font-bold text-ink">
-					<FontAwesomeIcon icon={faFileAlt} class="size-5 text-accent" />
-					Content
-				</h2>
-				<Card class="shadow-sm">
-					<div class="flex items-center justify-between gap-4 p-6 sm:p-8">
-						<div>
-							<p class="text-lg font-bold text-ink">Drafts</p>
-							<p class="mt-1 text-sm text-muted">Manage your saved drafts and incomplete posts.</p>
-						</div>
-						<Button variant="ghost" size="sm">View Drafts</Button>
-					</div>
-				</Card>
-			</section>
-
-			<!-- 5. Danger Zone -->
-			<section>
-				<h2 class="mb-4 flex items-center gap-2 text-xl font-bold text-danger">
-					<FontAwesomeIcon icon={faExclamationTriangle} class="size-5 text-danger" />
-					Danger Zone
-				</h2>
-				<Card class="overflow-hidden border-danger/30 shadow-sm">
-					<div
-						class="flex flex-col gap-4 bg-danger/5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8"
-					>
-						<div class="max-w-md">
-							<p class="text-lg font-bold text-danger">Delete Account</p>
-							<p class="mt-1 text-sm leading-relaxed text-danger/80">
-								Permanently remove your account and all of your content. This action cannot be
-								undone.
-							</p>
-						</div>
-						<Button variant="danger" class="w-full sm:w-auto">Delete Account</Button>
-					</div>
-				</Card>
-			</section>
+						<LogOut class="size-4" strokeWidth={1.75} aria-hidden="true" />
+						Sign out
+					</Button>
+				</form>
+				<p class="mt-2 text-xs leading-5 text-muted">
+					Signing out clears your draft saved on this device.
+				</p>
+			</div>
 		</div>
 	</main>
 </AppShell>
-
-<ModalDialog
-	bind:open={logoutDialogOpen}
-	title="Log out"
-	description="Are you sure you want to log out?"
->
-	<p class="text-ink">You can sign back in with Google or your email and password.</p>
-	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (logoutDialogOpen = false)} disabled={isLoggingOut}>
-			Cancel
-		</Button>
-		<form
-			method="POST"
-			action="/logout"
-			class="contents"
-			onsubmit={() => {
-				isLoggingOut = true;
-				if (data.user?.id) {
-					clearUserDraft(data.user.id);
-				}
-			}}
-		>
-			<Button variant="danger" type="submit" loading={isLoggingOut}>Log out</Button>
-		</form>
-	{/snippet}
-</ModalDialog>

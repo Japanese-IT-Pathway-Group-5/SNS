@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-@theme {
+@theme static {
 	--color-canvas: #e8f8ef;
 	--color-surface: #fffcf5;
 	--color-surface-muted: #dceee5;
@@ -25,6 +25,12 @@
 }
 
 @layer base {
+	@media (min-width: 768px) {
+		html {
+			scrollbar-gutter: stable;
+		}
+	}
+
 	*,
 	::after,
 	::before,

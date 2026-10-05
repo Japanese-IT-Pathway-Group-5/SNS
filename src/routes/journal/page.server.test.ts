@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '$lib/server/http/pagination';
 
-const { listPostsMock } = vi.hoisted(() => ({
-	listPostsMock: vi.fn()
+const { listPostsMock, getDescriptionMock } = vi.hoisted(() => ({
+	listPostsMock: vi.fn(),
+	getDescriptionMock: vi.fn()
+}));
+
+vi.mock('$lib/server/profile/update', () => ({
+	getOwnProfile: getDescriptionMock
 }));
 
 vi.mock('$lib/server/posts/list', () => ({
@@ -22,6 +27,7 @@ function createEvent(search = '', user: object | null = { id: 'user-123', name: 
 describe('journal load', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		getDescriptionMock.mockResolvedValue({ description: 'A few everyday moments.', banner: '' });
 	});
 
 	it('redirects signed-out visitors to login and back to the journal', async () => {
@@ -43,7 +49,10 @@ describe('journal load', () => {
 		expect(result).toEqual({
 			posts: [{ id: 'post-1' }],
 			nextCursor: 'next-token',
-			loadError: false
+			loadError: false,
+			description: 'A few everyday moments.',
+			banner: '',
+			profileError: false
 		});
 	});
 
@@ -67,7 +76,14 @@ describe('journal load', () => {
 		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 		listPostsMock.mockRejectedValueOnce(new Error('Database unavailable'));
 		try {
-			expect(await load(createEvent())).toEqual({ posts: [], nextCursor: null, loadError: true });
+			expect(await load(createEvent())).toEqual({
+				posts: [],
+				nextCursor: null,
+				loadError: true,
+				description: 'A few everyday moments.',
+				banner: '',
+				profileError: false
+			});
 		} finally {
 			consoleSpy.mockRestore();
 		}
