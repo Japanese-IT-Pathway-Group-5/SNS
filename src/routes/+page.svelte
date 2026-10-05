@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { resolve } from '$app/paths';
-	import { page, navigating } from '$app/state';
+	import { page } from '$app/state';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import {
 		AppShell,
 		Avatar,
@@ -39,7 +40,7 @@
 		isLoadingMore = true;
 		loadMoreError = null;
 		try {
-			const params = new URLSearchParams();
+			const params = new SvelteURLSearchParams();
 			params.set('cursor', nextCursor);
 			if (data.search) params.set('q', data.search);
 

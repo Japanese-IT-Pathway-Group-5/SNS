@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from 'better-auth';
@@ -40,7 +41,7 @@
 		loadError = '';
 		controller = new AbortController();
 		const version = ++requestVersion;
-		const params = new URLSearchParams({ postId });
+		const params = new SvelteURLSearchParams({ postId });
 		if (!reset && nextCursor) {
 			params.set('cursorCreatedAt', String(nextCursor.createdAt));
 			params.set('cursorId', nextCursor.id);

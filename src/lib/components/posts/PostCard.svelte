@@ -2,7 +2,6 @@
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import LoadingImage from '$lib/components/ui/LoadingImage.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { untrack } from 'svelte';
 	import { resolve } from '$app/paths';
 	import type { User } from 'better-auth';
 	import PostReplies from './PostReplies.svelte';
@@ -30,12 +29,10 @@
 		replyCount = 0,
 		user = null
 	}: Props = $props();
-	let count = $state(untrack(() => replyCount));
+	let extraReplies = $state(0);
+	let count = $derived(replyCount + extraReplies);
 	let expanded = $state(false);
 	let opened = $state(false);
-	$effect(() => {
-		count = replyCount;
-	});
 
 	function getRelativeTime(dateInput: Date | string | number) {
 		const date = new Date(dateInput);
@@ -112,6 +109,6 @@
 		</Button>
 	</div>
 	{#if opened}<div hidden={!expanded}>
-			<PostReplies postId={id} {user} onAdded={() => (count += 1)} />
+			<PostReplies postId={id} {user} onAdded={() => (extraReplies += 1)} />
 		</div>{/if}
 </article>
