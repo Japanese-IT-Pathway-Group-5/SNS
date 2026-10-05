@@ -6,7 +6,7 @@ describe('security headers', () => {
 		const response = addSecurityHeaders(new Response('ok'));
 
 		expect(response.headers.get('Content-Security-Policy')).toBe(
-			"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+			"default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.googleusercontent.com; font-src 'self' data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
 		);
 		expect(response.headers.get('X-Frame-Options')).toBe('DENY');
 		expect(response.headers.get('X-Content-Type-Options')).toBe('nosniff');

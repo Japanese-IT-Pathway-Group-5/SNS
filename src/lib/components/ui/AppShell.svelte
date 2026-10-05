@@ -3,7 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import { onMount, tick, type Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { Dialog, DropdownMenu } from 'bits-ui';
 	import Search from '@lucide/svelte/icons/search';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
@@ -26,13 +26,34 @@
 		children
 	}: { user?: User | null; createOpen?: boolean; children: Snippet } = $props();
 	let mobileOpen = $state(false);
+	let sidebarCollapsed = $state(false);
+	let sidebarWidth = $state(240);
+	let sidebarResizing = $state(false);
+	const minSidebarWidth = 192;
+	const maxSidebarWidth = 320;
+	const collapsedSidebarWidth = 64;
+	const sidebarCollapseThreshold = 128;
+	const sidebarPreferenceKey = 'claymore_sidebar_collapsed_v1';
+	const sidebarWidthKey = 'claymore_sidebar_width_v1';
 	let logoutForm = $state<HTMLFormElement>();
-	let searchInput = $state<HTMLInputElement>();
 	let search = $derived(page.url.searchParams.get('q') ?? '');
 	$effect(() => {
 		if (user && page.url.searchParams.get('compose') === '1') createOpen = true;
 	});
 	onMount(() => {
+		try {
+			sidebarCollapsed = localStorage.getItem(sidebarPreferenceKey) === 'true';
+			const savedWidth = Number(localStorage.getItem(sidebarWidthKey));
+			if (
+				Number.isFinite(savedWidth) &&
+				savedWidth >= minSidebarWidth &&
+				savedWidth <= maxSidebarWidth
+			) {
+				sidebarWidth = savedWidth;
+			}
+		} catch {
+			// Navigation still works when browser storage is unavailable.
+		}
 		const desktop = window.matchMedia('(min-width: 768px)');
 		const closeDrawer = () => {
 			if (desktop.matches) mobileOpen = false;
@@ -40,20 +61,72 @@
 		desktop.addEventListener('change', closeDrawer);
 		return () => desktop.removeEventListener('change', closeDrawer);
 	});
+	function toggleSidebar() {
+		sidebarCollapsed = !sidebarCollapsed;
+		saveSidebarPreference();
+	}
+	function saveSidebarPreference() {
+		try {
+			localStorage.setItem(sidebarPreferenceKey, String(sidebarCollapsed));
+			localStorage.setItem(sidebarWidthKey, String(sidebarWidth));
+		} catch {
+			// Resizing remains available without persistent browser storage.
+		}
+	}
+	function resizeSidebar(width: number) {
+		sidebarCollapsed = width < sidebarCollapseThreshold;
+		if (sidebarCollapsed) return;
+		sidebarWidth = Math.round(Math.min(maxSidebarWidth, Math.max(minSidebarWidth, width)));
+	}
+	function startSidebarResize(event: PointerEvent) {
+		if (event.button !== 0 || !event.isPrimary) return;
+		event.preventDefault();
+		const handle = event.currentTarget as HTMLElement;
+		handle.setPointerCapture(event.pointerId);
+		sidebarResizing = true;
+	}
+	function moveSidebarResize(event: PointerEvent) {
+		if (sidebarResizing) resizeSidebar(event.clientX);
+	}
+	function finishSidebarResize() {
+		if (!sidebarResizing) return;
+		sidebarResizing = false;
+		saveSidebarPreference();
+	}
+	function keyboardSidebarResize(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			toggleSidebar();
+			return;
+		}
+		const widths: Record<string, number> = {
+			ArrowLeft:
+				sidebarCollapsed || sidebarWidth === minSidebarWidth
+					? collapsedSidebarWidth
+					: sidebarWidth - 16,
+			ArrowRight: sidebarCollapsed ? sidebarWidth : sidebarWidth + 16,
+			Home: collapsedSidebarWidth,
+			End: maxSidebarWidth
+		};
+		if (!(event.key in widths)) return;
+		event.preventDefault();
+		resizeSidebar(widths[event.key]);
+		saveSidebarPreference();
+	}
 
 	function createPost() {
 		mobileOpen = false;
 		if (user) createOpen = true;
 		else void goto(resolve(`/login?redirectTo=${encodeURIComponent('/?compose=1')}`));
 	}
-	async function focusSearch() {
-		mobileOpen = false;
-		await tick();
-		searchInput?.focus();
-	}
 </script>
 
-<div class="min-h-svh bg-canvas">
+<div
+	class="app-shell min-h-svh bg-canvas"
+	class:sidebar-resizing={sidebarResizing}
+	style:--sidebar-width={sidebarCollapsed ? '4rem' : `${sidebarWidth}px`}
+	style:--sidebar-transition={sidebarResizing ? '0ms' : '160ms'}
+>
 	<Dialog.Root bind:open={mobileOpen}>
 		<header class="sticky top-0 z-40 bg-accent text-on-accent">
 			<div class="navbar relative grid items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-6 lg:px-8">
@@ -84,7 +157,6 @@
 				>
 					<input
 						id="nav-search"
-						bind:this={searchInput}
 						bind:value={search}
 						name="q"
 						type="search"
@@ -195,8 +267,6 @@
 				<Sidebar
 					{user}
 					mobile
-					onCreatePost={createPost}
-					onSearch={focusSearch}
 					onNavigate={() => {
 						mobileOpen = false;
 					}}
@@ -205,9 +275,30 @@
 		</Dialog.Portal>
 	</Dialog.Root>
 	<div class="desktop-sidebar fixed bottom-0 left-0 z-30 hidden md:block">
-		<Sidebar {user} onCreatePost={createPost} onSearch={focusSearch} />
+		<Sidebar {user} collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
+		<!-- A focusable ARIA separator is an interactive splitter (WAI-ARIA window splitter pattern). -->
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+		<div
+			role="separator"
+			tabindex="0"
+			aria-label="Resize sidebar"
+			aria-orientation="vertical"
+			aria-valuemin={collapsedSidebarWidth}
+			aria-valuemax={maxSidebarWidth}
+			aria-valuenow={sidebarCollapsed ? collapsedSidebarWidth : sidebarWidth}
+			aria-valuetext={sidebarCollapsed ? 'Collapsed' : `${sidebarWidth} pixels wide`}
+			aria-controls="desktop-sidebar-navigation"
+			title="Drag to resize. Use arrow keys when focused."
+			class="sidebar-resize-handle"
+			onpointerdown={startSidebarResize}
+			onpointermove={moveSidebarResize}
+			onpointerup={finishSidebarResize}
+			onpointercancel={finishSidebarResize}
+			onlostpointercapture={finishSidebarResize}
+			onkeydown={keyboardSidebarResize}
+		></div>
 	</div>
-	<div class="md:pl-60">{@render children()}</div>
+	<div class="shell-content">{@render children()}</div>
 </div>
 
 {#if user}
@@ -235,6 +326,25 @@
 {/if}
 
 <style>
+	.sidebar-resize-handle {
+		position: absolute;
+		inset-block: 0;
+		right: -6px;
+		width: 12px;
+		cursor: col-resize;
+		touch-action: none;
+	}
+	.sidebar-resize-handle:focus-visible {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 2px;
+	}
+	.sidebar-resizing .sidebar-resize-handle:focus-visible {
+		outline: none;
+	}
+	.app-shell.sidebar-resizing {
+		cursor: col-resize;
+		user-select: none;
+	}
 	.navbar {
 		grid-template-columns: minmax(0, 1fr) auto;
 	}
@@ -244,8 +354,14 @@
 	}
 	.desktop-sidebar {
 		top: 8.75rem;
+		width: var(--sidebar-width);
+		transition: width var(--sidebar-transition) ease;
 	}
 	@media (min-width: 768px) {
+		.shell-content {
+			padding-left: var(--sidebar-width);
+			transition: padding-left var(--sidebar-transition) ease;
+		}
 		.navbar {
 			min-height: 5rem;
 			grid-template-columns: minmax(12rem, 1fr) minmax(12rem, 36rem) minmax(8rem, 1fr);
@@ -256,6 +372,12 @@
 		}
 		.desktop-sidebar {
 			top: 5rem;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.desktop-sidebar,
+		.shell-content {
+			transition: none;
 		}
 	}
 </style>
