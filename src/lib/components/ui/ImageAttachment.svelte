@@ -90,7 +90,7 @@
 <div class="relative w-full">
 	{#if previewUrl}
 		<!-- Image Preview -->
-		<div class="relative mx-auto w-fit max-w-full overflow-hidden rounded-xl border border-line">
+		<div class="relative mx-auto w-fit max-w-full overflow-hidden rounded-none border border-line">
 			<LoadingImage
 				src={previewUrl}
 				loading="eager"
