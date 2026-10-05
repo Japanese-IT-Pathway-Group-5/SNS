@@ -5,6 +5,7 @@
 	import type { User } from 'better-auth';
 	import { Avatar, Button, Textarea, FormMessage } from '$lib/components/ui';
 	import { unicodeCodePointLength } from '$lib/validation/posts';
+	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 
 	interface Reply {
 		id: string;
@@ -64,7 +65,12 @@
 </script>
 
 <section id={`replies-${postId}`} aria-label="Replies to this entry" class="border-t border-line pt-4">
-	{#if loading && !loaded}<p role="status" class="text-sm text-muted">Loading replies...</p>{/if}
+	{#if loading && !loaded}
+		<div role="status" aria-label="Loading replies" class="space-y-4">
+			<span class="sr-only">Loading replies…</span>
+			{#each [1, 2] as row (row)}<div class="flex gap-2.5"><Skeleton class="size-8 shrink-0 rounded-full" /><div class="flex-1 space-y-3 rounded-lg bg-canvas p-3"><Skeleton class="h-3 w-24" /><Skeleton class="h-3 w-4/5" /></div></div>{/each}
+		</div>
+	{/if}
 	{#if loaded}
 		<div class="space-y-4">
 			{#each replies as reply (reply.id)}

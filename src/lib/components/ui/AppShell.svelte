@@ -2,7 +2,9 @@
 	import { clearUserDraft } from '$lib/drafts/persistence';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/state';
+	import { page, navigating } from '$app/state';
+	import PageSkeleton from './PageSkeleton.svelte';
+	import Skeleton from './Skeleton.svelte';
 	import { getContext, onMount, type Snippet } from 'svelte';
 	import { SIDEBAR_CONTEXT, type SidebarState } from '$lib/navigation/sidebar';
 	import { Dialog, DropdownMenu } from 'bits-ui';
@@ -33,6 +35,7 @@
 		children: Snippet;
 	} = $props();
 	let mobileOpen = $state(false);
+	let loadingPage = $derived(Boolean(navigating.to && !navigating.willUnload && navigating.to.url.pathname !== page.url.pathname));
 	const sidebarState = getContext<SidebarState>(SIDEBAR_CONTEXT);
 	let sidebarResizing = $state(false);
 	const minSidebarWidth = 192;
@@ -44,7 +47,12 @@
 	let logoutForm = $state<HTMLFormElement>();
 	let search = $derived(page.url.searchParams.get('q') ?? '');
 	$effect(() => {
-		if (user && page.url.searchParams.get('compose') === '1') createOpen = true;
+		if (user && page.url.searchParams.get('compose') === '1') {
+			createOpen = true;
+			const url = new URL(page.url);
+			url.searchParams.delete('compose');
+			history.replaceState(history.state, '', url.pathname + (url.search || '') + url.hash);
+		}
 	});
 	onMount(() => {
 		if (!sidebarState.restored) {
@@ -70,9 +78,14 @@
 		desktop.addEventListener('change', closeDrawer);
 		return () => desktop.removeEventListener('change', closeDrawer);
 	});
+	let sidebarAnimating = $state(false);
 	function toggleSidebar() {
+		sidebarAnimating = true;
 		sidebarState.collapsed = !sidebarState.collapsed;
 		saveSidebarPreference();
+		setTimeout(() => {
+			sidebarAnimating = false;
+		}, 200);
 	}
 	function saveSidebarPreference() {
 		try {
@@ -134,7 +147,7 @@
 	class="app-shell min-h-svh bg-canvas"
 	class:sidebar-resizing={sidebarResizing}
 	style:--sidebar-width={sidebarState.collapsed ? '4rem' : `${sidebarState.width}px`}
-	style:--sidebar-transition={sidebarResizing ? '0ms' : '160ms'}
+	style:--sidebar-transition={sidebarAnimating && !sidebarResizing ? '160ms' : '0ms'}
 >
 	<Dialog.Root bind:open={mobileOpen}>
 		<header class="sticky top-0 z-40 bg-accent text-on-accent">
@@ -312,9 +325,13 @@
 			class="mx-auto grid max-w-2xl items-start gap-8 px-4 pt-7 pb-12 sm:px-6 sm:pt-9 sm:pb-16 xl:max-w-6xl xl:grid-cols-[minmax(0,1fr)_18rem]"
 		>
 			<div class="shell-reading w-full max-w-2xl min-w-0 justify-self-center">
-				{@render children()}
+				{#if loadingPage}<PageSkeleton pathname={navigating.to?.url.pathname ?? ''} />{/if}
+				<div hidden={loadingPage}>{@render children()}</div>
 			</div>
-			{#if rightRail}{@render rightRail()}{/if}
+			{#if loadingPage && navigating.to?.url.pathname === resolve('/')}
+				<div class="hidden space-y-4 rounded-xl border border-line bg-surface p-5 xl:block" aria-hidden="true"><Skeleton class="h-5 w-36" />{#each [1, 2, 3] as row (row)}<div class="flex items-center gap-3"><Skeleton class="size-10 rounded-full" /><Skeleton class="h-4 w-28" /></div>{/each}</div>
+			{/if}
+			{#if rightRail}<div hidden={loadingPage} class={!loadingPage ? 'contents' : undefined}>{@render rightRail()}</div>{/if}
 		</div>
 	</div>
 </div>
@@ -325,8 +342,8 @@
 		title="Share a moment"
 		description="A few words, one photo, or a little of both."
 		fullscreenOnMobile
-		class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-2xl gap-0 overflow-y-auto bg-canvas p-0"
-		headerClass="overflow-hidden rounded-t-xl bg-accent p-5 text-on-accent max-sm:rounded-none max-sm:pt-[max(1.25rem,env(safe-area-inset-top))] sm:p-6"
+		class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-2xl gap-0 overflow-y-auto rounded-none bg-canvas p-0"
+		headerClass="overflow-hidden rounded-none bg-accent p-5 text-on-accent max-sm:pt-[max(1.25rem,env(safe-area-inset-top))] sm:p-6"
 	>
 		{#snippet headerArtwork()}
 			<div
@@ -339,7 +356,7 @@
 			</div>
 		{/snippet}
 		{#key user.id}
-			<Composer {user} />
+			<Composer {user} onSuccess={() => { createOpen = false; }} />
 		{/key}
 	</ModalDialog>
 {/if}

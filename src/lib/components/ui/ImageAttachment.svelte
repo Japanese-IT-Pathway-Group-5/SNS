@@ -2,6 +2,7 @@
 	import Image from '@lucide/svelte/icons/image';
 	import X from '@lucide/svelte/icons/x';
 	import Upload from '@lucide/svelte/icons/upload';
+	import LoadingImage from './LoadingImage.svelte';
 
 	let {
 		file = $bindable(null),
@@ -89,11 +90,12 @@
 <div class="relative w-full">
 	{#if previewUrl}
 		<!-- Image Preview -->
-		<div class="relative overflow-hidden rounded-lg border border-control-border bg-surface-muted">
-			<img
+		<div class="relative mx-auto w-fit max-w-full overflow-hidden rounded-xl border border-line">
+			<LoadingImage
 				src={previewUrl}
+				loading="eager"
 				alt="Selected attachment preview"
-				class="max-h-[400px] w-full object-contain"
+				class="block max-h-[400px] w-auto max-w-full h-auto"
 			/>
 
 			<button

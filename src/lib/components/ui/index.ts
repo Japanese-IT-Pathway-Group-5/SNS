@@ -8,6 +8,8 @@ export { default as Badge } from './Badge.svelte';
 export { default as FormMessage } from './FormMessage.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
 export { default as LoadingState } from './LoadingState.svelte';
+export { default as Skeleton } from './Skeleton.svelte';
+export { default as LoadingImage } from './LoadingImage.svelte';
 export { default as ModalDialog } from './ModalDialog.svelte';
 export { default as ImageAttachment } from './ImageAttachment.svelte';
 export { default as Sidebar } from './Sidebar.svelte';

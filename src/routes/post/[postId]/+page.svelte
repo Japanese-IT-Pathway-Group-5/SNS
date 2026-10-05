@@ -4,7 +4,7 @@
 	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import { AppShell, Button, BackButton, Avatar, FormMessage } from '$lib/components/ui';
+	import { AppShell, Button, BackButton, Avatar, FormMessage, LoadingImage } from '$lib/components/ui';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -41,12 +41,14 @@
 			</div>
 			<p class="text-base leading-relaxed whitespace-pre-wrap text-ink">{post.body}</p>
 			{#if post.mediaId}
-				<img
-					src={`/api/media/${post.mediaId}`}
-					alt="Post attachment"
-					class="mt-4 max-h-[600px] w-full rounded-xl border border-line object-contain"
-					loading="lazy"
-				/>
+				<div class="mt-4 w-fit max-w-full overflow-hidden rounded-xl border border-line">
+					<LoadingImage
+						src={`/api/media/${post.mediaId}`}
+						alt="Post attachment"
+						class="block max-h-[600px] w-auto max-w-full h-auto"
+						loading="lazy"
+					/>
+				</div>
 			{/if}
 		</article>
 
