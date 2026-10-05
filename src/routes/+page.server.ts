@@ -8,7 +8,7 @@ import type { R2Storage } from '$lib/server/storage/r2';
 import { searchQuerySchema } from '$lib/validation/search';
 import { listTrendingJournals } from '$lib/server/posts/trending';
 
-export const load: PageServerLoad = async ({ platform, url, locals }) => {
+export const load: PageServerLoad = async ({ platform, url }) => {
 	const searchResult = searchQuerySchema.safeParse(url.searchParams.get('q') ?? '');
 	if (!searchResult.success) {
 		throw error(400, searchResult.error.issues[0].message);
@@ -16,17 +16,7 @@ export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const search = searchResult.data;
 	const d1 = platform?.env?.DB;
 
-	let hasMembership = false;
-	if (d1 && locals.user) {
-		try {
-			await requireMembership(d1, locals.user.id);
-			hasMembership = true;
-		} catch {
-			hasMembership = false;
-		}
-	}
-
-	if (!d1 || !hasMembership) {
+	if (!d1) {
 		return {
 			posts: [],
 			nextCursor: null,

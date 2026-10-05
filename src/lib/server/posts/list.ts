@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
-import { post, user } from '$lib/server/db/schema';
+import { post, reply, user } from '$lib/server/db/schema';
 import { encodeCursor, type PaginationCursor } from '$lib/server/http/pagination';
 import { searchQuerySchema } from '$lib/validation/search';
 
@@ -48,7 +48,8 @@ export async function listPosts({
 			submissionId: post.submissionId,
 			body: post.body,
 			mediaId: post.mediaId,
-			createdAt: post.createdAt
+			createdAt: post.createdAt,
+			replyCount: sql<number>`(select count(*) from ${reply} where ${reply.postId} = ${post.id} and ${reply.hiddenAt} is null)`.mapWith(Number)
 		})
 		.from(post)
 		.innerJoin(user, eq(user.id, post.authorId))
