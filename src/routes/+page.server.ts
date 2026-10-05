@@ -2,19 +2,31 @@ import { error, fail } from '@sveltejs/kit';
 import { parsePaginationParams, PaginationValidationError } from '$lib/server/http/pagination';
 import { createPost, PostValidationError } from '$lib/server/posts/create';
 import { listPosts } from '$lib/server/posts/list';
+import { requireMembership } from '$lib/server/auth/authorization';
 import type { PageServerLoad, Actions } from './$types';
 import type { R2Storage } from '$lib/server/storage/r2';
 import { searchQuerySchema } from '$lib/validation/search';
 import { listTrendingJournals } from '$lib/server/posts/trending';
 
-export const load: PageServerLoad = async ({ platform, url }) => {
+export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const searchResult = searchQuerySchema.safeParse(url.searchParams.get('q') ?? '');
 	if (!searchResult.success) {
 		throw error(400, searchResult.error.issues[0].message);
 	}
 	const search = searchResult.data;
 	const d1 = platform?.env?.DB;
-	if (!d1) {
+
+	let hasMembership = false;
+	if (d1 && locals.user) {
+		try {
+			await requireMembership(d1, locals.user.id);
+			hasMembership = true;
+		} catch {
+			hasMembership = false;
+		}
+	}
+
+	if (!d1 || !hasMembership) {
 		return {
 			posts: [],
 			nextCursor: null,
@@ -82,6 +94,12 @@ export const actions: Actions = {
 		const d1 = platform?.env?.DB;
 		if (!d1) {
 			return fail(503, { message: 'Database is not configured' });
+		}
+
+		try {
+			await requireMembership(d1, locals.user.id);
+		} catch {
+			throw error(403, 'Membership required');
 		}
 
 		const formData = await request.formData();
