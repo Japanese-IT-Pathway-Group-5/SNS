@@ -58,6 +58,8 @@ Target script contract after scaffolding: `pnpm dev`, `pnpm build`, `pnpm format
 
 ## Testing and performance
 
+The composer sends its attachment to `/api/uploads/photo` as multipart field `file`, matching `validatePhotoUpload`. The profile-photo action uses its separate `photo` field; do not interchange the two contracts. The upload endpoint returns a pending `mediaId`, which the composer includes in the create-post action.
+
 Feed and journal use the shared bordered `PostCard` container. `listPosts` includes `replyCount` as a correlated SQL count filtered to non-hidden replies on each visible post; it adds no schema, dependency or per-post request loop. Reply summaries now include the author's public image URL.
 
 `PostReplies.svelte` fetches the existing paginated GET replies endpoint only when a conversation is first expanded. Closing the thread hides rather than unmounts it, retaining an unfinished reply. Write a reply explicitly reveals and focuses the shared textarea. Submission uses the existing post-detail server form action (including its membership and parent-visibility checks), retains text on failures, updates the local count and reloads replies after a confirmed successful redirect. Native form submission remains available when enhancement is unavailable. Guest participation links to sign-in; it does not change read/write permissions. Post detail also hides its reply form until explicit writing intent. UI verification for this change remains deferred at the user's request.
