@@ -32,6 +32,26 @@ function makeRequest(fields: Record<string, string>) {
 const mockD1 = {} as D1Database;
 const mockUser = { id: 'mod-1' };
 
+function callHidePost(fields: Record<string, string>) {
+	return handleHidePost({
+		request: makeRequest(fields),
+		user: mockUser,
+		d1: mockD1,
+		redirectTo: '/'
+	});
+}
+
+async function callHidePostSilent(
+	fields: Record<string, string> = { postId: 'post-1', reason: 'Spam' }
+) {
+	const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+	try {
+		return await callHidePost(fields);
+	} finally {
+		consoleSpy.mockRestore();
+	}
+}
+
 describe('handleHidePost', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -60,12 +80,7 @@ describe('handleHidePost', () => {
 	});
 
 	it('returns 400 when postId is empty', async () => {
-		const result = await handleHidePost({
-			request: makeRequest({ postId: '', reason: 'Spam' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ postId: '', reason: 'Spam' });
 
 		expect(result).toMatchObject({ status: 400 });
 		const data = (result as { data: { hideError: string; postId: string } }).data;
@@ -73,12 +88,7 @@ describe('handleHidePost', () => {
 	});
 
 	it('returns 400 when postId is missing entirely', async () => {
-		const result = await handleHidePost({
-			request: makeRequest({ reason: 'Spam' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ reason: 'Spam' });
 
 		expect(result).toMatchObject({ status: 400 });
 	});
@@ -88,12 +98,7 @@ describe('handleHidePost', () => {
 			new ModerationValidationErrorClass('Moderation reason is required')
 		);
 
-		const result = await handleHidePost({
-			request: makeRequest({ postId: 'post-1', reason: '' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ postId: 'post-1', reason: '' });
 
 		expect(result).toMatchObject({ status: 400 });
 		const data = (result as { data: { hideError: string; postId: string } }).data;
@@ -104,12 +109,7 @@ describe('handleHidePost', () => {
 	it('returns 404 when the post does not exist', async () => {
 		moderatePostMock.mockRejectedValueOnce(new ModerationNotFoundErrorClass('Post not found'));
 
-		const result = await handleHidePost({
-			request: makeRequest({ postId: 'missing', reason: 'Spam' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ postId: 'missing', reason: 'Spam' });
 
 		expect(result).toMatchObject({ status: 404 });
 		const data = (result as { data: { hideError: string; postId: string } }).data;
@@ -122,12 +122,7 @@ describe('handleHidePost', () => {
 			new ModerationConflictErrorClass('Post is already hidden')
 		);
 
-		const result = await handleHidePost({
-			request: makeRequest({ postId: 'post-1', reason: 'Spam' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ postId: 'post-1', reason: 'Spam' });
 
 		expect(result).toMatchObject({ status: 409 });
 		const data = (result as { data: { hideError: string; postId: string } }).data;
@@ -138,12 +133,7 @@ describe('handleHidePost', () => {
 	it('returns 403 when the user is not a moderator', async () => {
 		moderatePostMock.mockRejectedValueOnce(new Error('Moderator permission required'));
 
-		const result = await handleHidePost({
-			request: makeRequest({ postId: 'post-1', reason: 'Spam' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ postId: 'post-1', reason: 'Spam' });
 
 		expect(result).toMatchObject({ status: 403 });
 		const data = (result as { data: { hideError: string; postId: string } }).data;
@@ -154,20 +144,9 @@ describe('handleHidePost', () => {
 	it('would break if the authorization error message changes', async () => {
 		moderatePostMock.mockRejectedValueOnce(new Error('Some other permission error'));
 
-		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-		try {
-			const result = await handleHidePost({
-				request: makeRequest({ postId: 'post-1', reason: 'Spam' }),
-				user: mockUser,
-				d1: mockD1,
-				redirectTo: '/'
-			});
-
-			// Falls through to the 500 catch-all, not the 403 branch.
-			expect(result).toMatchObject({ status: 500 });
-		} finally {
-			consoleSpy.mockRestore();
-		}
+		// Falls through to the 500 catch-all, not the 403 branch.
+		const result = await callHidePostSilent();
+		expect(result).toMatchObject({ status: 500 });
 	});
 
 	it('redirects on success', async () => {
@@ -177,14 +156,7 @@ describe('handleHidePost', () => {
 			hiddenAt: new Date()
 		});
 
-		await expect(
-			handleHidePost({
-				request: makeRequest({ postId: 'post-1', reason: 'Spam' }),
-				user: mockUser,
-				d1: mockD1,
-				redirectTo: '/'
-			})
-		).rejects.toMatchObject({
+		await expect(callHidePost({ postId: 'post-1', reason: 'Spam' })).rejects.toMatchObject({
 			status: 303,
 			location: '/'
 		});
@@ -222,12 +194,7 @@ describe('handleHidePost', () => {
 			new ModerationValidationErrorClass('Moderation reason is required')
 		);
 
-		const result = await handleHidePost({
-			request: makeRequest({ postId: 'post-42', reason: '' }),
-			user: mockUser,
-			d1: mockD1,
-			redirectTo: '/'
-		});
+		const result = await callHidePost({ postId: 'post-42', reason: '' });
 
 		const data = (result as { data: { postId: string } }).data;
 		expect(data.postId).toBe('post-42');
@@ -236,20 +203,9 @@ describe('handleHidePost', () => {
 	it('returns 500 for unexpected errors', async () => {
 		moderatePostMock.mockRejectedValueOnce(new Error('Database exploded'));
 
-		const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-		try {
-			const result = await handleHidePost({
-				request: makeRequest({ postId: 'post-1', reason: 'Spam' }),
-				user: mockUser,
-				d1: mockD1,
-				redirectTo: '/'
-			});
-
-			expect(result).toMatchObject({ status: 500 });
-			const data = (result as { data: { hideError: string; postId: string } }).data;
-			expect(data.postId).toBe('post-1');
-		} finally {
-			consoleSpy.mockRestore();
-		}
+		const result = await callHidePostSilent();
+		expect(result).toMatchObject({ status: 500 });
+		const data = (result as { data: { hideError: string; postId: string } }).data;
+		expect(data.postId).toBe('post-1');
 	});
 });
