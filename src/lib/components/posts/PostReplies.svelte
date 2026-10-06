@@ -4,13 +4,15 @@
 	import { resolve } from '$app/paths';
 	import { enhance, applyAction } from '$app/forms';
 	import type { User } from 'better-auth';
-	import { Avatar, Button, Textarea, FormMessage } from '$lib/components/ui';
+	import { Button, Textarea, FormMessage } from '$lib/components/ui';
 	import { unicodeCodePointLength } from '$lib/validation/posts';
+	import AuthorLink from '$lib/components/profile/AuthorLink.svelte';
 	import Skeleton from '$lib/components/ui/Skeleton.svelte';
 
 	interface Reply {
 		id: string;
 		authorName: string;
+		authorId: string;
 		authorImage?: string | null;
 		body: string;
 		createdAt: string;
@@ -96,10 +98,14 @@
 		<div class="space-y-4">
 			{#each replies as reply (reply.id)}
 				<article class="flex min-w-0 items-start gap-2.5">
-					<Avatar name={reply.authorName} src={reply.authorImage} size="sm" />
 					<div class="min-w-0 flex-1 rounded-lg bg-canvas px-3 py-2.5">
 						<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-							<p class="text-sm font-semibold break-words text-ink">{reply.authorName}</p>
+							<AuthorLink
+								id={reply.authorId}
+								name={reply.authorName}
+								image={reply.authorImage}
+								size="sm"
+							/>
 							<time class="text-xs text-muted" datetime={new Date(reply.createdAt).toISOString()}
 								>{new Date(reply.createdAt).toLocaleDateString(undefined, {
 									month: 'short',

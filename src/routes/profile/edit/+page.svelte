@@ -80,6 +80,9 @@
 				A little space to make your journal feel like you.
 			</p>
 		</header>
+		<p class="mb-4 text-sm text-muted">
+			Your name, photo, description and drawing banner are visible to everyone on your profile.
+		</p>
 		<form
 			method="POST"
 			enctype="multipart/form-data"

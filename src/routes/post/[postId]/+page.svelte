@@ -4,14 +4,8 @@
 	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import {
-		AppShell,
-		Button,
-		BackButton,
-		Avatar,
-		FormMessage,
-		LoadingImage
-	} from '$lib/components/ui';
+	import { AppShell, Button, BackButton, FormMessage, LoadingImage } from '$lib/components/ui';
+	import AuthorLink from '$lib/components/profile/AuthorLink.svelte';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
@@ -38,9 +32,8 @@
 
 		<article class="mt-4 border-b border-line pb-8">
 			<div class="mb-4 flex items-center gap-3">
-				<Avatar src={post.authorImage ?? null} name={post.authorName} size="md" />
 				<div>
-					<p class="font-semibold text-ink">{post.authorName}</p>
+					<AuthorLink id={post.authorId} name={post.authorName} image={post.authorImage} />
 					<time class="text-sm text-muted" datetime={new Date(post.createdAt).toISOString()}>
 						{new Date(post.createdAt).toLocaleString()}
 					</time>
@@ -48,8 +41,9 @@
 			</div>
 			<p class="text-base leading-relaxed whitespace-pre-wrap text-ink">{post.body}</p>
 			{#if post.mediaId}
-				<div class="mt-4 w-fit max-w-full overflow-hidden rounded-none border border-line">
+				<div class="mt-4 w-full max-w-full">
 					<LoadingImage
+						containerClass="border border-line"
 						src={`/api/media/${post.mediaId}`}
 						alt="Post attachment"
 						class="block h-auto max-h-[600px] w-auto max-w-full"
@@ -107,8 +101,12 @@
 				{#each data.replies as reply (reply.id)}
 					<article class="py-5 first:pt-0">
 						<div class="mb-2 flex items-center gap-2.5">
-							<Avatar name={reply.authorName} size="sm" />
-							<p class="font-semibold text-ink">{reply.authorName}</p>
+							<AuthorLink
+								id={reply.authorId}
+								name={reply.authorName}
+								image={reply.authorImage}
+								size="sm"
+							/>
 							<time class="text-xs text-muted" datetime={new Date(reply.createdAt).toISOString()}>
 								{new Date(reply.createdAt).toLocaleString()}
 							</time>

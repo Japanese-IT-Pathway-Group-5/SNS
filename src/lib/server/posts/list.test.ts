@@ -117,4 +117,16 @@ describe('listPosts', () => {
 		).rejects.toThrow();
 		expect(selectMock).not.toHaveBeenCalled();
 	});
+
+	it('keeps profile pagination scoped to the author and excludes hidden posts', async () => {
+		selectMock.mockResolvedValueOnce([]);
+		await listPosts({
+			d1: {} as D1Database,
+			options: { authorId: 'other-user', cursor: { createdAt: 1000, id: 'post-1' } }
+		});
+		const query = new SQLiteSyncDialect().sqlToQuery(whereMock.mock.calls[0][0]);
+		expect(query.sql).toContain('"post"."hidden_at" is null');
+		expect(query.sql).toContain('"post"."author_id" = ?');
+		expect(query.params).toEqual(['other-user', 1000, 1000, 'post-1']);
+	});
 });

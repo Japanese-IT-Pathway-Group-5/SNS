@@ -25,7 +25,11 @@
 </script>
 
 <div
-	class={cn('relative overflow-hidden rounded-none', pending && 'min-h-48 w-full', containerClass)}
+	class={cn(
+		'relative max-w-full overflow-hidden rounded-none',
+		pending ? 'min-h-48 w-full' : 'w-fit',
+		containerClass
+	)}
 	aria-busy={pending}
 >
 	{#key src}

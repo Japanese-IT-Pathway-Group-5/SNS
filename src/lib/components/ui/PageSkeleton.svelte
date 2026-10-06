@@ -1,7 +1,9 @@
 <script lang="ts">
 	import Skeleton from './Skeleton.svelte';
 	let { pathname }: { pathname: string } = $props();
-	let profile = $derived(pathname.endsWith('/journal'));
+	let profile = $derived(
+		pathname.endsWith('/journal') || /\/profile\/(?!edit(?:\/|$))[^/]+$/.test(pathname)
+	);
 	let form = $derived(pathname.endsWith('/settings') || pathname.endsWith('/profile/edit'));
 </script>
 

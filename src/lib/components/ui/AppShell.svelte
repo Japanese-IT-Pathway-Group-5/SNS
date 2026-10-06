@@ -6,7 +6,7 @@
 	import PageSkeleton from './PageSkeleton.svelte';
 	import Skeleton from './Skeleton.svelte';
 	import { getContext, onMount, type Snippet } from 'svelte';
-	import { SIDEBAR_CONTEXT, type SidebarState } from '$lib/navigation/sidebar';
+	import { SIDEBAR_CONTEXT, SIDEBAR_COOKIE, type SidebarState } from '$lib/navigation/sidebar';
 	import { Dialog, DropdownMenu } from 'bits-ui';
 	import Search from '@lucide/svelte/icons/search';
 	import SquarePen from '@lucide/svelte/icons/square-pen';
@@ -74,6 +74,8 @@
 				// Navigation still works when browser storage is unavailable.
 			}
 			sidebarState.restored = true;
+			// Migrate existing local preferences so the next document starts at the saved width.
+			saveSidebarPreference();
 		}
 		const desktop = window.matchMedia('(min-width: 768px)');
 		const closeDrawer = () => {
@@ -97,6 +99,12 @@
 			localStorage.setItem(sidebarWidthKey, String(sidebarState.width));
 		} catch {
 			// Resizing remains available without persistent browser storage.
+		}
+		try {
+			const value = `${sidebarState.collapsed ? 'collapsed' : 'expanded'}:${sidebarState.width}`;
+			document.cookie = `${SIDEBAR_COOKIE}=${value}; Path=${resolve('/')}; Max-Age=31536000; SameSite=Lax${location.protocol === 'https:' ? '; Secure' : ''}`;
+		} catch {
+			// Cookie restrictions must not prevent navigation or resizing.
 		}
 	}
 	function resizeSidebar(width: number) {
