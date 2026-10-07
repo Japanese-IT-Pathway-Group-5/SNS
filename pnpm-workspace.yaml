@@ -11,3 +11,7 @@ minimumReleaseAgeExclude:
   - '@cloudflare/workerd-linux-64@1.20260930.2'
   - '@cloudflare/workerd-linux-arm64@1.20260930.2'
   - '@cloudflare/workerd-windows-64@1.20260930.2'
+
+overrides:
+  source-map-js: ^1.2.2
+  sharp: ^0.35.5
