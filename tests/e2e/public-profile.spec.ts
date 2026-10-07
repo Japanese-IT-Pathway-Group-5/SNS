@@ -1,21 +1,5 @@
 import { test, expect } from '@playwright/test';
-function serialize(value: unknown): unknown[] {
-	const items: unknown[] = [];
-	function add(value: unknown): number {
-		const index = items.length;
-		items.push(null);
-		if (value instanceof Date) items[index] = ['Date', value.toISOString()];
-		else if (Array.isArray(value)) items[index] = value.map(add);
-		else if (value && typeof value === 'object') {
-			items[index] = Object.fromEntries(
-				Object.entries(value).map(([key, entry]) => [key, add(entry)])
-			);
-		} else items[index] = value;
-		return index;
-	}
-	add(value);
-	return items;
-}
+import { serialize } from './helpers';
 
 test('opens an author profile, paginates, handles failure and empty states on mobile', async ({
 	page

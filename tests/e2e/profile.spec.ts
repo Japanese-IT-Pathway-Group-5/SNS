@@ -1,23 +1,5 @@
 import { test, expect } from '@playwright/test';
-
-// Mock only browser data/action responses; the application has no test-auth bypass.
-function serialize(value: unknown): unknown[] {
-	const items: unknown[] = [];
-	function add(value: unknown): number {
-		const index = items.length;
-		items.push(null);
-		if (value instanceof Date) items[index] = ['Date', value.toISOString()];
-		else if (Array.isArray(value)) items[index] = value.map(add);
-		else if (value && typeof value === 'object') {
-			items[index] = Object.fromEntries(
-				Object.entries(value).map(([key, entry]) => [key, add(entry)])
-			);
-		} else items[index] = value;
-		return index;
-	}
-	add(value);
-	return items;
-}
+import { serialize } from './helpers';
 
 test('opens profile editing, preserves failed fields, previews/removes photos and saves back to the journal', async ({
 	page
