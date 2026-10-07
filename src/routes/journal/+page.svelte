@@ -175,6 +175,7 @@
 							{#each group.entries as post (post.id)}
 								<PostCard
 									id={post.id}
+									authorId={post.authorId}
 									authorName={post.authorName}
 									authorAvatar={post.authorImage ?? null}
 									createdAt={post.createdAt}

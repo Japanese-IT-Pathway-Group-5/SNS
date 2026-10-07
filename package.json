@@ -22,6 +22,7 @@
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "drizzle-kit migrate",
 		"db:migrate:local": "wrangler d1 migrations apply sns-db --local",
+		"db:migrate:remote": "wrangler d1 migrations apply sns-db --remote",
 		"db:seed:local": "wrangler d1 execute sns-db --local --file=scripts/seed-local.sql",
 		"db:studio": "drizzle-kit studio"
 	},

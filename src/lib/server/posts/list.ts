@@ -12,7 +12,7 @@ export interface ListPostsOptions {
 	cursor?: PostCursor;
 	limit?: number;
 	search?: string;
-	/** Only posts written by this user (personal journal). */
+	/** Only visible posts written by this user (own journal or public profile). */
 	authorId?: string;
 }
 

@@ -154,3 +154,13 @@ Keep primitive components in `src/lib/components/ui/`, layout in `layout/`, and 
 ## Acceptance before feature UI spreads
 
 Review the composer and two reference posts (one line of text, one longer entry with photo) at 375px and 1280px. Include the mint/cream surfaces, peach/lime accents, one pixel loading state and its still fallback in the showcase. Verify contrast, keyboard traversal, focus visibility, form errors, reduced motion, missing-asset behavior, and readable Japanese/emoji. Use those references for every feature PR. No large UI library, animation package, font download, or analytics client without a concrete need and documented tradeoff.
+
+## Viewing other profiles
+
+Author names and avatars in feed/journal cards, post detail and replies link to `/profile/[userId]`. Guests may read profiles under the existing public-read policy. The page shows only name, photo, description, drawing banner and visible entries, grouped by date with explicit Older entries pagination. Emails, roles and raw auth records are excluded; hidden posts remain filtered by the existing posts operation. Only the owner sees Edit profile. Missing profiles return 404; unavailable profile reads return a safe 503; entry failures offer retry separately from empty journals. Navigation uses the shared profile skeleton and existing shell alignment. No schema, dependency or token changes.
+
+## Refresh layout and photo placeholders
+
+The sidebar mirrors its non-sensitive collapsed state and expanded width into a validated `claymore_sidebar_v1` cookie. Root server loads seed the request-scoped context from it, so full refreshes render the saved layout before JavaScript. Existing device-local preferences migrate on the first mount; that initial migration may still adjust the default width once. Cookies or storage being unavailable never prevents resizing. Mobile drawer behavior is unchanged.
+
+Feed and detail attachment parents provide full available width while the shared LoadingImage is pending; the skeleton reserves at least 12rem of height. The border belongs to the image wrapper, which returns to natural photo width after load. Failure ends the skeleton and shows the existing photo error. No schema, dependency or color-token changes. Browser regressions are in `tests/e2e/layout.spec.ts`.

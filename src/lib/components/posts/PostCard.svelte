@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import AuthorLink from '$lib/components/profile/AuthorLink.svelte';
 	import LoadingImage from '$lib/components/ui/LoadingImage.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { resolve } from '$app/paths';
@@ -11,6 +11,7 @@
 	interface Props {
 		id: string;
 		authorName: string;
+		authorId?: string;
 		authorAvatar?: string | null;
 		createdAt: Date | string | number;
 		content: string;
@@ -22,6 +23,7 @@
 	let {
 		id,
 		authorName,
+		authorId,
 		authorAvatar,
 		createdAt,
 		content,
@@ -56,8 +58,7 @@
 	<!-- Header: Author & Time -->
 	<div class="flex items-start justify-between gap-4">
 		<div class="flex min-w-0 items-center gap-3">
-			<Avatar src={authorAvatar} name={authorName} size="md" />
-			<span class="min-w-0 font-semibold break-words text-ink">{authorName}</span>
+			<AuthorLink id={authorId} name={authorName} image={authorAvatar} />
 		</div>
 		<a
 			href={resolve('/post/[postId]', { postId: id })}
@@ -76,8 +77,9 @@
 
 	<!-- Optional Image -->
 	{#if imageUrl}
-		<div class="mt-1 w-fit max-w-full overflow-hidden rounded-none border border-line">
+		<div class="mt-1 w-full max-w-full">
 			<LoadingImage
+				containerClass="border border-line"
 				src={imageUrl}
 				alt="Post attachment"
 				class="block h-auto max-h-[500px] w-auto max-w-full"

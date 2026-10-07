@@ -190,3 +190,7 @@ Every issue is done when its acceptance criteria pass, another teammate reviews 
 - Exact rubric and Japanese UI/presentation requirements.
 
 Foundation specifications are recorded in the linked documents. App code, infrastructure, protection rules, scanners, and workflows are not configured yet. Product naming and visual direction can be refined centrally without changing the everyday-journal concept.
+
+## Viewing other profiles
+
+Author names and avatars in feed/journal cards, post detail and replies link to `/profile/[userId]`. Guests may read profiles under the existing public-read policy. The page shows only name, photo, description, drawing banner and visible entries, grouped by date with explicit Older entries pagination. Emails, roles and raw auth records are excluded; hidden posts remain filtered by the existing posts operation. Only the owner sees Edit profile. Missing profiles return 404; unavailable profile reads return a safe 503; entry failures offer retry separately from empty journals. Navigation uses the shared profile skeleton and existing shell alignment. No schema, dependency or token changes.
