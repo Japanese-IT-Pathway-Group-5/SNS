@@ -79,7 +79,7 @@
 							maxlength="500"
 							required
 							placeholder="Add to the conversation…"
-							class="w-full resize-y rounded-lg border border-control-border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+							class="w-full resize-y rounded-lg border border-control-border bg-surface px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 							>{form?.body ?? ''}</textarea
 						>
 						{#if form?.message}<FormMessage type="error" message={form.message} />{/if}

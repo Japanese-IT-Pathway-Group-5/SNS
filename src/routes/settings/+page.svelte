@@ -7,9 +7,39 @@
 	import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 	import { AppShell, Button, BackButton } from '$lib/components/ui';
 	import { clearUserDraft } from '$lib/drafts/persistence';
-	import type { PageData } from './$types';
+	import { enhance } from '$app/forms';
+	import type { SubmitFunction } from '@sveltejs/kit';
+	import Monitor from '@lucide/svelte/icons/monitor';
+	import Sun from '@lucide/svelte/icons/sun';
+	import Moon from '@lucide/svelte/icons/moon';
+	import { parseThemePreference } from '$lib/theme/theme';
+	import type { ActionData, PageData } from './$types';
 
-	let { data }: { data: PageData } = $props();
+	let { data, form }: { data: PageData; form: ActionData } = $props();
+	const themeOptions = [
+		{ value: 'system', label: 'System', icon: Monitor },
+		{ value: 'light', label: 'Light', icon: Sun },
+		{ value: 'dark', label: 'Dark', icon: Moon }
+	] as const;
+	let theme = $derived(data.theme);
+	let themeFailed = $state(false);
+
+	const submitTheme: SubmitFunction = ({ formData }) => {
+		const previous = theme;
+		theme = parseThemePreference(formData.get('theme'));
+		document.documentElement.dataset.theme = theme;
+		themeFailed = false;
+		return async ({ result, update }) => {
+			if (result.type !== 'success') {
+				theme = previous;
+				document.documentElement.dataset.theme = previous;
+				themeFailed = result.type !== 'redirect';
+			}
+			// An expired session redirects to sign-in; other failures keep the page and show the message.
+			if (result.type === 'success' || result.type === 'redirect') await update({ reset: false });
+		};
+	};
+
 	let reduceMotion = $state(false);
 	let preferencesReady = $state(false);
 	let storageUnavailable = $state(false);
@@ -83,6 +113,50 @@
 				class="rounded-xl border border-line bg-surface p-4 sm:p-6"
 			>
 				<h2 id="preferences-heading" class="text-base font-semibold text-ink">Preferences</h2>
+				<form
+					method="POST"
+					action={`${resolve('/settings')}?/setTheme`}
+					use:enhance={submitTheme}
+					class="mt-4 border-b border-line pb-4"
+				>
+					<fieldset class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+						<div class="min-w-0">
+							<legend class="float-left text-sm font-medium text-ink">Theme</legend>
+							<p id="theme-description" class="clear-both pt-1 text-sm leading-6 text-muted">
+								System follows your device setting.
+							</p>
+						</div>
+						<div
+							class="inline-flex shrink-0 gap-1 rounded-lg border border-control-border bg-surface p-1"
+						>
+							{#each themeOptions as option (option.value)}
+								<label
+									class="flex min-h-11 cursor-pointer items-center gap-2 rounded-md px-3 text-sm font-medium text-ink transition-colors hover:bg-surface-muted has-checked:bg-accent has-checked:text-on-accent has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-accent"
+								>
+									<input
+										type="radio"
+										name="theme"
+										value={option.value}
+										checked={theme === option.value}
+										aria-describedby="theme-description"
+										class="sr-only"
+										onchange={(event) => event.currentTarget.form?.requestSubmit()}
+									/>
+									<option.icon class="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+									{option.label}
+								</label>
+							{/each}
+						</div>
+					</fieldset>
+					<noscript>
+						<Button variant="secondary" size="sm" type="submit" class="mt-3">Save theme</Button>
+					</noscript>
+					{#if themeFailed || form?.themeError}
+						<p role="alert" class="mt-3 text-sm text-danger">
+							Your theme could not be saved. Please try again.
+						</p>
+					{/if}
+				</form>
 				<div class="mt-4 flex items-center justify-between gap-4">
 					<div class="min-w-0">
 						<label for="reduce-motion" class="text-sm font-medium text-ink">Reduce motion</label>

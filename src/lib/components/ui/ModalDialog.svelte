@@ -40,7 +40,7 @@
 
 	<Dialog.Portal>
 		<Dialog.Overlay
-			class="animate-in fade-in fixed inset-0 z-50 bg-ink/40 backdrop-blur-xs transition-opacity duration-150"
+			class="animate-in fade-in fixed inset-0 z-50 bg-overlay/40 backdrop-blur-xs transition-opacity duration-150"
 		/>
 		<Dialog.Content
 			class={cn(

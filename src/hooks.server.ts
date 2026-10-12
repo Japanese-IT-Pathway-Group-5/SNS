@@ -1,5 +1,6 @@
 import { getAuth } from '$lib/server/auth';
 import { addSecurityHeaders } from '$lib/server/security/headers';
+import { applyThemeToHtml, parseThemePreference, THEME_COOKIE } from '$lib/theme/theme';
 import { sanitizeRedirectUrl } from '$lib/utils';
 import { redirect, type Handle } from '@sveltejs/kit';
 
@@ -68,7 +69,11 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 	}
 
-	const response = await resolve(event);
+	const response = await resolve(event, {
+		// Read while rendering so a theme saved by this request's form action is already applied.
+		transformPageChunk: ({ html }) =>
+			applyThemeToHtml(html, parseThemePreference(event.cookies.get(THEME_COOKIE)))
+	});
 
 	return addSecurityHeaders(response);
 };

@@ -111,7 +111,7 @@
 		aria-describedby={describedBy}
 		class={cn(
 			'w-full resize-none rounded-lg border bg-surface px-3.5 py-2.5 text-base leading-relaxed text-ink transition-colors',
-			'placeholder:text-muted focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:outline-none',
+			'placeholder:text-muted focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 focus-visible:ring-offset-surface focus-visible:outline-none',
 			error || isOverLimit
 				? 'border-danger focus-visible:ring-danger'
 				: 'border-control-border hover:border-accent',

@@ -142,7 +142,7 @@
 				aria-label="Claymore home"
 				class="relative z-10 flex w-fit items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 			>
-				<img src="/logo.svg" alt="" class="size-16 brightness-0 invert" />
+				<span aria-hidden="true" class="logo-mark size-16"></span>
 				<span class="text-lg font-semibold tracking-tight">Claymore</span>
 			</a>
 
@@ -153,7 +153,7 @@
 					Your day doesn't have to be special to be worth sharing.
 				</h1>
 				<p
-					class="homey-subtitle mt-6 max-w-lg text-lg leading-8 text-white/85 sm:mt-7 sm:text-xl sm:leading-9"
+					class="homey-subtitle mt-6 max-w-lg text-lg leading-8 text-on-accent/85 sm:mt-7 sm:text-xl sm:leading-9"
 				>
 					Keep the little moments, thoughts, and photos that make up an ordinary day.
 				</p>
@@ -181,7 +181,7 @@
 						aria-label="Claymore home"
 						class="flex w-fit items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 					>
-						<img src="/logo.svg" alt="" class="size-14 shrink-0 brightness-0 invert" />
+						<span aria-hidden="true" class="logo-mark size-14 shrink-0"></span>
 						<span class="text-xl font-semibold tracking-tight">Claymore</span>
 					</a>
 					<a
@@ -445,7 +445,7 @@
 			padding-block: 0.5rem;
 		}
 
-		.mobile-brand a img {
+		.mobile-brand a .logo-mark {
 			width: 2.5rem;
 			height: 2.5rem;
 		}
