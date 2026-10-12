@@ -14,14 +14,14 @@ Text carries the interface; photos are optional. Keep reading surfaces quiet and
 - The create-post dialog follows the login styling: a compact teal header with the existing decorative artwork, a single mint body, cream fields that turn soft green with an offset teal outline on focus, and an outlined optional-photo control. Keep the author above the full-width writing field, retain public visibility and draft feedback, and allow the dialog to scroll on short screens.
 - At the user's request, Home includes a right-hand Trending journals panel. It shows up to five authors active in the past seven days, with their latest visible entry and no public activity totals. Entries link to the actual post. Keep the reading column narrow; the panel sits beside it on wide screens and below it on smaller screens. Give the panel independent empty/failure states.
 - Home: inline composer, newest-first posts, explicit "Load older posts", and "You're caught up" when there are no more results.
-- Post detail: complete entry and flat replies. Journal: a compact profile header with the signed-in user?s avatar, name and optional saved description, followed by the same post component grouped by date. An Edit profile link opens /profile/edit for name, profile photo and description editing, with a 200-character description limit, pending/error states and preserved fields on failed saves. The edit page includes the banner drawing editor; it does not accept banner-photo uploads. Settings: private account email, a profile-editor link, reduced-motion preference and sign-out. Account-removal support remains follow-up work until a real contact/process is assigned.
+- Post detail: complete entry and flat replies. Journal: a compact profile header with the signed-in user?s avatar, name and optional saved description, followed by the same post component grouped by date. An Edit profile link opens /profile/edit for name, profile photo and description editing, with a 200-character description limit, pending/error states and preserved fields on failed saves. The edit page includes the banner drawing editor; it does not accept banner-photo uploads. Settings: private account email, a profile-editor link, theme and reduced-motion preferences and sign-out. Account-removal support remains follow-up work until a real contact/process is assigned.
 - Feed entries use separate warm-cream journal containers with soft mint borders, rounded corners, comfortable text spacing and a quiet action divider. Keep them free of heavy shadows and popularity controls. The composer uses the same warm-cream surface.
 - Shared PostCard displays author, linked accessible time, full text and an optional uncropped photo. At the user's request, its reply button includes the number of visible replies and expands an inline reading thread. Opening replies does not show or focus a writing field; a separate Write a reply action reveals it. Reply counts describe the conversation; likes and popularity totals remain absent. Older replies use explicit pagination. The feed uses explicit Older entries navigation and shows its end message only when no next cursor exists; load failures have a retry state distinct from an empty journal.
 - Support 320px-wide layouts, 200% zoom, long words, emoji, and Japanese input without horizontal page scrolling. Do not truncate short entries to force detail-page visits.
 
 ## Styling stack
 
-Account & settings uses compact Account and Preferences sections: the private account email, a profile-editor link, a named Reduce motion switch, and a direct sign-out form with device-draft feedback. Omit the duplicated avatar/name hero, membership date, static language badge and extra sign-out confirmation. Profile editing remains on its dedicated page; do not add inactive controls for deferred account features.
+Account & settings uses compact Account and Preferences sections: the private account email, a profile-editor link, a System / Light / Dark theme control, a named Reduce motion switch, and a direct sign-out form with device-draft feedback. Omit the duplicated avatar/name hero, membership date, static language badge and extra sign-out confirmation. Profile editing remains on its dedicated page; do not add inactive controls for deferred account features.
 
 The eraser shows a contrasting footprint outline under the pointer or finger, sized in the same drawing coordinates as the stroke. It scales with artwork zoom and canvas height and follows keyboard drawing input; hide it when leaving the canvas or using the hand tool.
 
@@ -51,27 +51,56 @@ Put semantic theme tokens in `src/app.css` using Tailwind v4 `@theme`. Reset the
 
 ## Color tokens
 
-Light mode first. Dark mode is deferred until a full semantic palette can be tested together. These are reference-inspired UI values, not exact sampled colors. Pastel teal, peach and lime supply personality; darker functional colors preserve readability.
+Light and dark themes share one semantic palette. Each token is declared once in `src/app.css` as `light-dark(light, dark)`; components keep using the same semantic utilities and never use `dark:` variants or a second palette. These are reference-inspired UI values, not exact sampled colors. Pastel teal, peach and lime supply personality; darker functional colors preserve readability. The dark theme keeps the teal accent on deep teal-tinted surfaces rather than neutral black.
 
-| Token / utility suffix | Value   | Role                                               |
-| ---------------------- | ------- | -------------------------------------------------- |
-| canvas                 | #E8F8EF | Pale mint page background                          |
-| surface                | #FFFCF5 | Warm cream composer, menus, dialogs                |
-| surface-muted          | #DCEEE5 | Quiet hover and supporting areas                   |
-| ink                    | #233E3C | Deep teal primary text                             |
-| muted                  | #506965 | Metadata, helper text, placeholders                |
-| accent                 | #326B66 | Dark teal primary action, links, focus ring        |
-| accent-hover           | #275651 | Primary action hover                               |
-| on-accent              | #FFFFFF | Text on primary actions                            |
-| accent-soft            | #D3EAE3 | Subtle selected background with accent text        |
-| teal-soft              | #78B4AE | Decorative art and brand accents; use ink text     |
-| peach                  | #FFB78E | Gentle highlights and sprite details; use ink text |
-| lime                   | #CEDF91 | Sprouts and supporting art; use ink text           |
-| butter                 | #F3E5A5 | Small decorative highlights; use ink text          |
-| line                   | #C7DDD3 | Decorative dividers only                           |
-| control-border         | #6D8880 | Necessary input/control boundaries                 |
-| danger                 | #A52C36 | Error/destructive text and buttons                 |
-| on-danger              | #FFFFFF | Text on destructive buttons                        |
+| Token / utility suffix | Light   | Dark    | Role                                                                   |
+| ---------------------- | ------- | ------- | ---------------------------------------------------------------------- |
+| canvas                 | #E8F8EF | #121C1A | Page background                                                        |
+| surface                | #FFFCF5 | #1A2825 | Composer, cards, menus, dialogs, inputs                                |
+| surface-muted          | #DCEEE5 | #243432 | Quiet hover and supporting areas                                       |
+| ink                    | #233E3C | #E0EDE8 | Primary text                                                           |
+| muted                  | #506965 | #8FABA5 | Metadata, helper text, placeholders                                    |
+| accent                 | #326B66 | #5DB8B0 | Primary action, navbar, links, focus ring                              |
+| accent-hover           | #275651 | #4DA39C | Primary action hover                                                   |
+| on-accent              | #FFFFFF | #121C1A | Text, icons and logo on accent, peach-solid, lime-solid or muted fills |
+| accent-soft            | #D3EAE3 | #1E3633 | Subtle selected background with accent text                            |
+| teal-soft              | #78B4AE | #4A8A84 | Decorative art, scrollbar thumb                                        |
+| peach                  | #FFB78E | #E8A07A | Gentle highlights and sprite details                                   |
+| peach-solid            | #C55F3E | #D97A5A | Warning fill, drawing color                                            |
+| lime                   | #CEDF91 | #B3C87A | Sprouts and supporting art                                             |
+| lime-solid             | #4E7937 | #6A9C50 | Success fill, drawing color                                            |
+| butter                 | #F3E5A5 | #D4C88E | Small decorative highlights                                            |
+| line                   | #C7DDD3 | #2D3F3B | Decorative dividers only                                               |
+| control-border         | #6D8880 | #5A7F77 | Necessary input/control boundaries                                     |
+| danger                 | #A52C36 | #E86A76 | Error/destructive text and buttons                                     |
+| on-danger              | #FFFFFF | #121C1A | Text on destructive fills                                              |
+| overlay                | #233E3C | #000000 | Dialog and drawer backdrops, used at 40% (`bg-overlay/40`)             |
+
+Never write `text-white`, `bg-white` or a fixed-color logo on a token fill: in the dark theme the accent is light and its foreground is dark. Use the matching `on-*` token; the logo is the shared `.logo-mark` mask, painted in `on-accent`. Pastel tokens (teal-soft, peach, lime, butter) take ink text in the light theme only; in the dark theme keep them decorative and do not place text on a full-strength pastel fill. Focus rings use `ring-offset-surface` so the gap follows the theme.
+
+Computed WCAG 2 contrast ratios for the pairs in use:
+
+| Pair                                  | Light                       | Dark          | Target |
+| ------------------------------------- | --------------------------- | ------------- | ------ |
+| ink on canvas / surface               | 10.46 / 11.23               | 14.46 / 12.70 | 4.5    |
+| ink on surface-muted / accent-soft    | 9.53 / 9.12                 | 10.82 / 10.70 | 4.5    |
+| muted on canvas / surface             | 5.38 / 5.77                 | 7.07 / 6.21   | 4.5    |
+| muted on surface-muted / accent-soft  | 4.90 / 4.69                 | 5.29 / 5.23   | 4.5    |
+| accent on canvas / surface            | 5.57 / 5.97                 | 7.42 / 6.51   | 4.5    |
+| accent on surface-muted / accent-soft | 5.07 / 4.85                 | 5.55 / 5.49   | 4.5    |
+| on-accent on accent / accent-hover    | 6.12 / 8.28                 | 7.42 / 5.83   | 4.5    |
+| on-accent at 85% on accent            | 4.95                        | 5.70          | 4.5    |
+| danger on canvas / surface            | 6.34 / 6.80                 | 5.60 / 4.92   | 4.5    |
+| on-danger on danger                   | 6.97                        | 5.60          | 4.5    |
+| on-accent on lime-solid / muted       | 5.10 / 5.92                 | 5.37 / 7.07   | 4.5    |
+| on-accent on peach-solid              | 4.13 (known gap, follow-up) | 5.70          | 4.5    |
+| control-border on canvas / surface    | 3.48 / 3.74                 | 3.93 / 3.45   | 3      |
+
+### Theme preference
+
+The preference is `system`, `light` or `dark`, stored in the validated `claymore_theme` cookie (path `/`, SameSite=Lax, HttpOnly, one year); any other value means `system`. It is a device preference, so it survives sign-out. `hooks.server.ts` fills the `%claymore.theme%` placeholder in `src/app.html`, so `<html data-theme>` is correct in the first server-rendered byte: no flash, no inline script, and it works without JavaScript. `data-theme` only selects `color-scheme` (`light`, `dark`, or `light dark` for system), which decides the side of every `light-dark()` token and also themes native controls and scrollbars. The production build compiles `light-dark()` to a fallback for browsers without native support. Settings, Preferences has the System / Light / Dark control: a form action with progressive enhancement that applies immediately.
+
+Profile banner drawings store token names for palette colors, so palette strokes and the surface background follow the viewer theme; custom hex colors stay fixed.
 
 Do not use `line` for a control whose boundary is necessary to identify it. Text targets: at least 4.5:1 contrast; required control boundaries and focus indicators: at least 3:1 against adjacent colors. Test actual states and color pairs, not just these base swatches. Never rely on color alone. [WCAG text contrast](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html)
 

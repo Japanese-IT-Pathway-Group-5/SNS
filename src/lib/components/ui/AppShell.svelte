@@ -175,11 +175,9 @@
 						aria-label="Claymore home"
 						class="flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 					>
-						<img
-							src="/logo.svg"
-							alt=""
-							class="size-11 shrink-0 brightness-0 invert sm:size-12"
-						/><span class="text-lg font-semibold tracking-tight sm:text-xl">Claymore</span>
+						<span aria-hidden="true" class="logo-mark size-11 shrink-0 sm:size-12"></span><span
+							class="text-lg font-semibold tracking-tight sm:text-xl">Claymore</span
+						>
 					</a>
 				</div>
 				<form
@@ -284,7 +282,7 @@
 			</div>
 		</header>
 		<Dialog.Portal>
-			<Dialog.Overlay class="fixed inset-0 z-50 bg-ink/40" />
+			<Dialog.Overlay class="fixed inset-0 z-50 bg-overlay/40" />
 			<Dialog.Content
 				class="fixed inset-y-0 left-0 z-50 flex w-[min(18rem,calc(100vw-3rem))] flex-col bg-surface focus:outline-none"
 			>

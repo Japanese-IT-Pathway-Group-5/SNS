@@ -36,7 +36,7 @@
 	}: Props & { onclick?: any } = $props();
 
 	const baseStyles =
-		'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 select-none active:scale-[0.98] no-underline';
+		'inline-flex items-center justify-center font-medium rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface select-none active:scale-[0.98] no-underline';
 
 	const variants = {
 		primary: 'bg-accent text-on-accent hover:bg-accent-hover active:bg-accent-hover shadow-xs',
