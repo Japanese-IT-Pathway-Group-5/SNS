@@ -17,8 +17,10 @@
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 	import type { PageData } from './$types';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 
 	let { data }: { data: PageData } = $props();
+	const ui = getUiPreferences();
 	let createOpen = $state(false);
 	// The server renders in UTC; switch to the reader's own time zone once in the browser.
 	let timeZone = $state<string | undefined>('UTC');
@@ -41,7 +43,9 @@
 	});
 
 	const viewingOlder = $derived(page.url.searchParams.has('cursor'));
-	const groups = $derived(groupByDate(feedPosts, { timeZone }));
+	const groups = $derived(
+		groupByDate(feedPosts, { timeZone, locale: ui.language === 'ja' ? 'ja-JP' : 'en' })
+	);
 
 	async function loadMore() {
 		if (isLoadingMore || !nextCursor) return;
@@ -59,7 +63,7 @@
 			feedPosts = [...feedPosts, ...newItems];
 			nextCursor = result.nextCursor;
 		} catch {
-			loadMoreError = 'Could not load older entries. Please try again.';
+			loadMoreError = t(ui, 'common.olderLoadError');
 		} finally {
 			isLoadingMore = false;
 		}
@@ -84,7 +88,7 @@
 </script>
 
 <svelte:head>
-	<title>My journal — Claymore</title>
+	<title>{t(ui, 'journal.title')} — Claymore</title>
 </svelte:head>
 
 <AppShell user={data.user} bind:createOpen>
@@ -98,11 +102,11 @@
 						</div>
 					{:else}<div
 							role="img"
-							aria-label="Journal drawing banner placeholder. No drawing yet."
+							aria-label={t(ui, 'journal.bannerPlaceholder')}
 							class="flex h-full items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 text-accent"
 						>
 							<Palette class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-							<span class="text-xs">Your little canvas</span>
+							<span class="text-xs">{t(ui, 'journal.canvas')}</span>
 						</div>{/if}
 				</div>
 				<div
@@ -121,7 +125,7 @@
 						<div class="mt-1 min-h-6">
 							{#if data.profileError}
 								<p class="text-sm leading-6 text-muted">
-									Your description couldn't load. Please try again.
+									{t(ui, 'profile.loadError')}
 								</p>
 							{:else if data.description}
 								<p
@@ -136,7 +140,7 @@
 						<Button variant="secondary" size="sm" href={resolve('/profile/edit')}>
 							<span aria-hidden="true"
 								><FontAwesomeIcon icon={faPenToSquare} class="size-3.5" /></span
-							>Edit profile
+							>{t(ui, 'journal.editProfile')}
 						</Button>
 					</div>
 				</div>
@@ -146,20 +150,20 @@
 		<section aria-labelledby="journal-heading">
 			<div class="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
 				<h2 id="journal-heading" class="text-base font-semibold text-ink">
-					{viewingOlder ? 'Earlier entries' : 'Your entries'}
+					{viewingOlder ? t(ui, 'journal.earlier') : t(ui, 'journal.entries')}
 				</h2>
 				{#if viewingOlder}
-					<BackButton href={resolve('/journal')} label="Back to newest" />
+					<BackButton href={resolve('/journal')} label={t(ui, 'common.backNewest')} />
 				{:else}
-					<span class="text-xs text-muted">Newest first</span>
+					<span class="text-xs text-muted">{t(ui, 'journal.newest')}</span>
 				{/if}
 			</div>
 
 			{#if data.loadError}
 				<div class="py-8">
-					<FormMessage type="error" message="We couldn’t load your journal. Please try again." />
+					<FormMessage type="error" message={t(ui, 'journal.loadError')} />
 					<Button variant="ghost" href={page.url.pathname + page.url.search} class="mt-4"
-						>Try again</Button
+						>{t(ui, 'common.tryAgain')}</Button
 					>
 				</div>
 			{:else if groups.length > 0}
@@ -181,6 +185,7 @@
 									createdAt={post.createdAt}
 									content={post.body}
 									replyCount={post.replyCount}
+									isLiked={post.isLiked}
 									user={data.user}
 									imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
 								/>
@@ -193,13 +198,13 @@
 						<div bind:this={sentinelEl} class="space-y-3">
 							{#if loadMoreError}
 								<p class="text-sm text-danger">{loadMoreError}</p>
-								<Button variant="secondary" onclick={loadMore}>Try again</Button>
+								<Button variant="secondary" onclick={loadMore}>{t(ui, 'common.tryAgain')}</Button>
 							{:else if isLoadingMore}
 								<div class="flex items-center justify-center gap-2 py-3 text-sm text-muted">
 									<span
 										class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
 									></span>
-									<span>Loading older entries...</span>
+									<span>{t(ui, 'common.loadingOlder')}</span>
 								</div>
 							{:else}
 								<Button
@@ -211,31 +216,31 @@
 									href={`${resolve('/journal')}?cursor=${encodeURIComponent(nextCursor)}#journal-heading`}
 									loading={isLoadingMore}
 								>
-									Older entries
+									{t(ui, 'common.olderEntries')}
 								</Button>
 							{/if}
 						</div>
 					{:else}
-						<p class="text-sm font-medium text-muted">You’ve reached your very first entry.</p>
+						<p class="text-sm font-medium text-muted">{t(ui, 'journal.firstEntry')}</p>
 					{/if}
 				</div>
 			{:else}
 				<div class="py-8 sm:py-12">
 					<EmptyState
-						title={viewingOlder ? 'No earlier entries' : 'Your journal starts today'}
+						title={viewingOlder ? t(ui, 'common.noEarlier') : t(ui, 'journal.emptyTitle')}
 						description={viewingOlder
-							? 'You’ve reached the beginning of your journal.'
-							: 'Every moment you share will be kept here, grouped by day. It doesn’t have to be anything big.'}
+							? t(ui, 'common.beginning')
+							: t(ui, 'journal.emptyDescription')}
 					>
 						{#snippet action()}
 							{#if viewingOlder}
-								<BackButton href={resolve('/journal')} label="Back to newest" />
+								<BackButton href={resolve('/journal')} label={t(ui, 'common.backNewest')} />
 							{:else}
 								<Button
 									variant="primary"
 									onclick={() => {
 										createOpen = true;
-									}}>Write your first moment</Button
+									}}>{t(ui, 'journal.firstMoment')}</Button
 								>
 							{/if}
 						{/snippet}

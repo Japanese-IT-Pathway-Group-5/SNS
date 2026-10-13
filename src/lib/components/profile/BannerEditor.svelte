@@ -23,6 +23,23 @@
 		MAX_BANNER_STROKES,
 		type BannerStroke
 	} from '$lib/validation/banner';
+	import { getUiPreferences, t, type MessageKey } from '$lib/preferences/ui';
+	const ui = getUiPreferences();
+	const toolLabels: Record<BannerStroke['tool'], MessageKey> = {
+		pen: 'banner.tool.pen',
+		pencil: 'banner.tool.pencil',
+		marker: 'banner.tool.marker',
+		eraser: 'banner.tool.eraser'
+	};
+	const colorLabels: Record<(typeof bannerColors)[number], MessageKey> = {
+		ink: 'banner.color.ink',
+		accent: 'banner.color.accent',
+		'teal-soft': 'banner.color.teal',
+		'peach-solid': 'banner.color.peach',
+		'lime-solid': 'banner.color.lime',
+		butter: 'banner.color.butter',
+		surface: 'banner.color.surface'
+	};
 	let { value = $bindable(''), disabled = false }: { value?: string; disabled?: boolean } =
 		$props();
 	let open = $state(false);
@@ -73,7 +90,7 @@
 	}
 	function start(point: [number, number]) {
 		if (strokes.length >= MAX_BANNER_STROKES || pointCount >= MAX_BANNER_POINTS) {
-			message = 'This canvas is full. Undo a stroke or clear it to keep drawing.';
+			message = t(ui, 'banner.full');
 			return;
 		}
 		message = '';
@@ -146,7 +163,7 @@
 		}
 		if (!active || pointerId !== event.pointerId) return;
 		if (pointCount + active.points.length >= MAX_BANNER_POINTS) {
-			message = 'Canvas limit reached. Undo or clear to keep drawing.';
+			message = t(ui, 'banner.limit');
 			return;
 		}
 		const point = coordinates(event);
@@ -186,34 +203,31 @@
 
 <input type="hidden" name="banner" {value} />
 <div class="mt-4 h-28 overflow-hidden rounded-xl sm:h-32">
-	<BannerArtwork
-		{value}
-		label={value ? 'Your banner drawing preview' : 'Empty banner drawing preview'}
-	/>
+	<BannerArtwork {value} label={value ? t(ui, 'banner.preview') : t(ui, 'banner.emptyPreview')} />
 </div>
 <div class="mt-3 flex flex-wrap gap-2">
 	<Button size="sm" variant="secondary" onclick={beginEditing} {disabled}
 		><span aria-hidden="true"><FontAwesomeIcon icon={faPaintbrush} class="size-3.5" /></span>{value
-			? 'Edit drawing'
-			: 'Draw your banner'}</Button
+			? t(ui, 'banner.edit')
+			: t(ui, 'banner.draw')}</Button
 	>
 	{#if value}<Button size="sm" variant="ghost" onclick={() => (value = '')} {disabled}
-			>Remove banner</Button
+			>{t(ui, 'banner.remove')}</Button
 		>{/if}
 </div>
 <p class="mt-2 text-xs leading-5 text-muted">
-	Draw something that feels like you. Your banner is visible to everyone.
+	{t(ui, 'banner.description')}
 </p>
 
 <ModalDialog
 	bind:open
-	title="Draw your banner"
-	description="A little canvas for ordinary inspiration."
+	title={t(ui, 'banner.dialogTitle')}
+	description={t(ui, 'banner.dialogDescription')}
 	fullscreenOnMobile
 	class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-3xl overflow-x-hidden overflow-y-auto p-4 sm:p-6"
 >
 	<div class="w-full max-w-full min-w-0 space-y-3 sm:space-y-4">
-		<div class="grid grid-cols-4 gap-2" role="group" aria-label="Drawing tools">
+		<div class="grid grid-cols-4 gap-2" role="group" aria-label={t(ui, 'banner.tools')}>
 			{#each bannerTools as item (item)}<Button
 					size="sm"
 					variant={tool === item ? 'primary' : 'secondary'}
@@ -224,14 +238,14 @@
 						tool = item;
 					}}
 					><span aria-hidden="true"><FontAwesomeIcon icon={toolIcons[item]} class="size-5" /></span
-					>{item[0].toUpperCase() + item.slice(1)}</Button
+					>{t(ui, toolLabels[item])}</Button
 				>{/each}
 		</div>
 		<div class="flex flex-wrap items-center gap-3">
-			<div class="flex flex-wrap gap-1" role="group" aria-label="Drawing colors">
+			<div class="flex flex-wrap gap-1" role="group" aria-label={t(ui, 'banner.colors')}>
 				{#each bannerColors as item (item)}<button
 						type="button"
-						aria-label={`${item} color`}
+						aria-label={`${t(ui, colorLabels[item])} ${t(ui, 'banner.color')}`}
 						aria-pressed={color === item}
 						onclick={() => (color = item)}
 						class="flex size-9 items-center justify-center rounded-lg border border-control-border focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -244,7 +258,7 @@
 					>{/each}
 			</div>
 			<label class="flex items-center gap-2 text-sm text-ink"
-				>Custom color<input
+				>{t(ui, 'banner.customColor')}<input
 					type="color"
 					value={color.startsWith('#') ? color : '#326b66'}
 					oninput={(event) => (color = event.currentTarget.value)}
@@ -255,7 +269,8 @@
 		<div class="grid grid-cols-2 gap-4">
 			<label class="min-w-0 text-sm text-ink">
 				<span class="flex items-center justify-between gap-2"
-					>Size <span class="text-xs text-muted tabular-nums">{size} px</span></span
+					>{t(ui, 'banner.size')}
+					<span class="text-xs text-muted tabular-nums">{size} px</span></span
 				>
 				<input
 					type="range"
@@ -263,14 +278,15 @@
 					max="32"
 					step="1"
 					bind:value={size}
-					aria-label="Brush size"
+					aria-label={t(ui, 'banner.brushSize')}
 					aria-valuetext={`${size} pixels`}
 					class="block min-h-11 w-full cursor-pointer accent-accent"
 				/>
 			</label>
 			<label class="min-w-0 text-sm text-ink">
 				<span class="flex items-center justify-between gap-2"
-					>Opacity <span class="text-xs text-muted tabular-nums">{opacity}%</span></span
+					>{t(ui, 'banner.opacity')}
+					<span class="text-xs text-muted tabular-nums">{opacity}%</span></span
 				>
 				<input
 					type="range"
@@ -278,7 +294,7 @@
 					max="100"
 					step="1"
 					bind:value={opacity}
-					aria-label="Brush opacity"
+					aria-label={t(ui, 'banner.brushOpacity')}
 					aria-valuetext={`${opacity} percent`}
 					class="block min-h-11 w-full cursor-pointer accent-accent"
 				/>
@@ -289,8 +305,8 @@
 				size="sm"
 				variant={zoomed ? 'primary' : 'secondary'}
 				class="size-11 p-0"
-				aria-label={zoomed ? 'Restore canvas height' : 'Enlarge canvas height'}
-				title={zoomed ? 'Restore canvas height' : 'Enlarge canvas height'}
+				aria-label={zoomed ? t(ui, 'banner.restoreHeight') : t(ui, 'banner.enlargeHeight')}
+				title={zoomed ? t(ui, 'banner.restoreHeight') : t(ui, 'banner.enlargeHeight')}
 				aria-pressed={zoomed}
 				onclick={() => {
 					finish();
@@ -307,8 +323,8 @@
 				size="sm"
 				variant="secondary"
 				class="size-11 p-0"
-				aria-label="Zoom in drawing"
-				title="Zoom in drawing"
+				aria-label={t(ui, 'banner.zoomIn')}
+				title={t(ui, 'banner.zoomIn')}
 				disabled={zoom >= 3}
 				onclick={() => changeZoom(0.5)}
 				><span aria-hidden="true"
@@ -319,8 +335,8 @@
 				size="sm"
 				variant="secondary"
 				class="size-11 p-0"
-				aria-label="Zoom out drawing"
-				title="Zoom out drawing"
+				aria-label={t(ui, 'banner.zoomOut')}
+				title={t(ui, 'banner.zoomOut')}
 				disabled={zoom <= 1}
 				onclick={() => changeZoom(-0.5)}
 				><span aria-hidden="true"
@@ -331,8 +347,8 @@
 				size="sm"
 				variant={movingCanvas ? 'primary' : 'secondary'}
 				class="size-11 p-0"
-				aria-label="Move canvas"
-				title="Move canvas"
+				aria-label={t(ui, 'banner.moveCanvas')}
+				title={t(ui, 'banner.moveCanvas')}
 				disabled={zoom <= 1}
 				aria-pressed={movingCanvas}
 				onclick={() => {
@@ -350,7 +366,7 @@
 			<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 			<div
 				role="application"
-				aria-label="Banner drawing canvas"
+				aria-label={t(ui, 'banner.canvas')}
 				aria-describedby="drawing-keyboard-help"
 				tabindex="0"
 				class="drawing-surface absolute inset-0 touch-none overflow-hidden bg-surface outline-none"
@@ -384,7 +400,7 @@
 					class="absolute inset-0 origin-top-left"
 					style:transform={`translate(${panX}px, ${panY}px) scale(${zoom})`}
 				>
-					<BannerArtwork {drawing} stretch={zoomed} label="Drawing in progress" />
+					<BannerArtwork {drawing} stretch={zoomed} label={t(ui, 'banner.inProgress')} />
 					{#if tool === 'eraser' && cursorVisible && !movingCanvas}
 						<svg
 							class="pointer-events-none absolute inset-0 h-full w-full"
@@ -424,13 +440,10 @@
 			</div>
 		</div>
 		<p id="drawing-keyboard-help" class="sr-only text-xs leading-5 text-muted sm:not-sr-only">
-			Draw with a mouse, touch or stylus. Keyboard: arrows move the cursor; Space starts or finishes
-			a stroke. On mobile, use Move canvas to drag to another area, then turn it off to draw.
+			{t(ui, 'banner.keyboardHelp')}
 		</p>
 		<p class="text-xs leading-5 text-muted sm:hidden">
-			{zoom > 1
-				? 'Use the hand to move within the drawing. Switch it off to draw.'
-				: 'Arrows make the canvas taller. Magnifiers zoom into the drawing.'}
+			{zoom > 1 ? t(ui, 'banner.handHelp') : t(ui, 'banner.zoomHelp')}
 		</p>
 		<div class="flex flex-wrap gap-2">
 			<Button
@@ -442,7 +455,7 @@
 					strokes = undo.at(-1)!;
 					undo = undo.slice(0, -1);
 					message = '';
-				}}>Undo</Button
+				}}>{t(ui, 'banner.undo')}</Button
 			>
 			<Button
 				size="sm"
@@ -453,7 +466,7 @@
 					strokes = redo.at(-1)!;
 					redo = redo.slice(0, -1);
 					message = '';
-				}}>Redo</Button
+				}}>{t(ui, 'banner.redo')}</Button
 			>
 			<Button
 				size="sm"
@@ -464,19 +477,19 @@
 					checkpoint();
 					strokes = [];
 					message = '';
-				}}>Clear canvas</Button
+				}}>{t(ui, 'banner.clear')}</Button
 			>
 		</div>
 		{#if message}<FormMessage type="error" {message} />{/if}
 	</div>
 	{#snippet actions()}
-		<Button variant="ghost" onclick={() => (open = false)}>Cancel</Button>
+		<Button variant="ghost" onclick={() => (open = false)}>{t(ui, 'profileEdit.cancel')}</Button>
 		<Button
 			onclick={() => {
 				finish();
 				value = strokes.length ? JSON.stringify({ version: 1, strokes }) : '';
 				open = false;
-			}}>Use drawing</Button
+			}}>{t(ui, 'banner.use')}</Button
 		>
 	{/snippet}
 </ModalDialog>

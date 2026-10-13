@@ -43,6 +43,13 @@
       "when": 1791190000000,
       "tag": "0005_profile_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791270000000,
+      "tag": "0006_add_private_post_likes",
+      "breakpoints": true
     }
   ]
 }

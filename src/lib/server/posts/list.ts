@@ -1,6 +1,6 @@
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
-import { post, reply, user } from '$lib/server/db/schema';
+import { post, postLike, reply, user } from '$lib/server/db/schema';
 import { encodeCursor, type PaginationCursor } from '$lib/server/http/pagination';
 import { searchQuerySchema } from '$lib/validation/search';
 
@@ -14,6 +14,8 @@ export interface ListPostsOptions {
 	search?: string;
 	/** Only visible posts written by this user (own journal or public profile). */
 	authorId?: string;
+	/** Include whether the current user privately liked each visible post. */
+	userId?: string;
 }
 
 export async function listPosts({
@@ -52,7 +54,12 @@ export async function listPosts({
 			replyCount:
 				sql<number>`(select count(*) from ${reply} where ${reply.postId} = ${post.id} and ${reply.hiddenAt} is null)`.mapWith(
 					Number
-				)
+				),
+			isLiked: options.userId
+				? sql<boolean>`exists (select 1 from ${postLike} where ${postLike.postId} = ${post.id} and ${postLike.userId} = ${options.userId})`.mapWith(
+						Boolean
+					)
+				: sql<boolean>`0`.mapWith(Boolean)
 		})
 		.from(post)
 		.innerJoin(user, eq(user.id, post.authorId))

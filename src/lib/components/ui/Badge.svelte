@@ -11,11 +11,11 @@
 	let { variant = 'accent', class: className, children, ...restProps }: Props = $props();
 
 	const variants = {
-		accent: 'bg-accent text-white border-transparent',
-		peach: 'bg-peach-solid text-white border-transparent',
-		lime: 'bg-lime-solid text-white border-transparent',
-		muted: 'bg-muted text-white border-transparent',
-		danger: 'bg-danger text-white border-transparent'
+		accent: 'bg-accent text-on-accent border-transparent',
+		peach: 'bg-peach-solid text-on-peach border-transparent',
+		lime: 'bg-lime-solid text-on-lime border-transparent',
+		muted: 'bg-muted text-canvas border-transparent',
+		danger: 'bg-danger text-on-danger border-transparent'
 	};
 </script>
 

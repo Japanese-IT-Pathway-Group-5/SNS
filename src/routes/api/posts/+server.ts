@@ -50,7 +50,12 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	try {
 		const result = await listPosts({
 			d1: env.DB,
-			options: { ...pagination, ...(search ? { search } : {}), ...(authorId ? { authorId } : {}) }
+			options: {
+				...pagination,
+				...(search ? { search } : {}),
+				...(authorId ? { authorId } : {}),
+				...(locals.user ? { userId: locals.user.id } : {})
+			}
 		});
 
 		return json(result);

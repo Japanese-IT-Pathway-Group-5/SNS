@@ -26,6 +26,15 @@ describe('groupByDate', () => {
 		]);
 	});
 
+	it('localizes today and yesterday labels for Japanese readers', () => {
+		const groups = groupByDate(
+			[{ createdAt: '2026-10-03T09:00:00Z' }, { createdAt: '2026-10-02T23:00:00Z' }],
+			{ ...options, locale: 'ja-JP' }
+		);
+
+		expect(groups.map((group) => group.label)).toEqual(['今日', '昨日']);
+	});
+
 	it('adds the year for entries from another year', () => {
 		const [group] = groupByDate([{ createdAt: '2025-12-31T10:00:00Z' }], options);
 

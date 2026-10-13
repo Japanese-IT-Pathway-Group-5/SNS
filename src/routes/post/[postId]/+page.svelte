@@ -15,8 +15,11 @@
 	import AuthorLink from '$lib/components/profile/AuthorLink.svelte';
 	import { MAX_REPLY_LENGTH, unicodeCodePointLength } from '$lib/validation/posts';
 	import type { ActionData, PageData } from './$types';
+	import PostActions from '$lib/components/posts/PostActions.svelte';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
+	const ui = getUiPreferences();
 	const post = $derived(data.post);
 	let writing = $state(false);
 	let replyBody = $state('');
@@ -38,14 +41,14 @@
 
 <AppShell user={data.user}>
 	<main class="w-full min-w-0">
-		<BackButton href={resolve('/')} label="Back to home" class="mb-6" />
+		<BackButton href={resolve('/')} label={t(ui, 'common.backHome')} class="mb-6" />
 
 		<article class="mt-4 border-b border-line pb-8">
 			<div class="mb-4 flex items-center gap-3">
 				<div>
 					<AuthorLink id={post.authorId} name={post.authorName} image={post.authorImage} />
 					<time class="text-sm text-muted" datetime={new Date(post.createdAt).toISOString()}>
-						{new Date(post.createdAt).toLocaleString()}
+						{new Date(post.createdAt).toLocaleString(ui.language === 'ja' ? 'ja-JP' : 'en')}
 					</time>
 				</div>
 			</div>
@@ -55,23 +58,24 @@
 					<LoadingImage
 						containerClass="border border-line"
 						src={`/api/media/${post.mediaId}`}
-						alt="Post attachment"
+						alt={t(ui, 'common.attachment')}
 						class="block h-auto max-h-[600px] w-auto max-w-full"
 						loading="lazy"
 					/>
 				</div>
 			{/if}
+			<PostActions postId={post.id} user={data.user} initiallyLiked={post.isLiked} />
 		</article>
 
 		<section class="mt-8" aria-labelledby="replies-heading">
 			<h2 id="replies-heading" class="text-base font-semibold text-ink">
-				Replies ({data.replies.length})
+				{t(ui, 'reply.heading')} ({data.replies.length})
 			</h2>
 
 			{#if data.user}
 				{#if !writing}
 					<Button variant="secondary" size="sm" class="mt-4" onclick={startWriting}
-						>Write a reply</Button
+						>{t(ui, 'reply.write')}</Button
 					>
 				{:else}
 					<form
@@ -81,32 +85,36 @@
 					>
 						<Textarea
 							id="reply-body"
-							label="Write a reply"
+							label={t(ui, 'reply.write')}
 							name="body"
 							bind:value={replyBody}
 							rows={3}
 							required
 							maxCount={MAX_REPLY_LENGTH}
 							showCount
-							placeholder="Add to the conversation…"
-							class="resize-y bg-white px-3.5 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+							placeholder={t(ui, 'reply.placeholder')}
+							class="resize-y bg-surface px-3.5 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 						/>
 						{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
 						<div class="flex justify-end gap-2">
-							<Button variant="ghost" type="button" onclick={() => (writing = false)}>Cancel</Button
+							<Button variant="ghost" type="button" onclick={() => (writing = false)}
+								>{t(ui, 'reply.cancel')}</Button
 							>
 							<Button
 								variant="primary"
 								type="submit"
-								disabled={unicodeCodePointLength(replyBody) > MAX_REPLY_LENGTH}>Reply</Button
+								disabled={unicodeCodePointLength(replyBody) > MAX_REPLY_LENGTH}
+								>{t(ui, 'reply.submit')}</Button
 							>
 						</div>
 					</form>
 				{/if}
 			{:else}
 				<div class="mt-5 rounded-xl border border-line bg-surface p-4 sm:p-5">
-					<p class="text-sm text-muted">Sign in to reply and create your profile.</p>
-					<Button variant="primary" size="sm" href="/login" class="mt-3">Sign in to reply</Button>
+					<p class="text-sm text-muted">{t(ui, 'reply.signIn')}</p>
+					<Button variant="primary" size="sm" href="/login" class="mt-3"
+						>{t(ui, 'reply.signIn')}</Button
+					>
 				</div>
 			{/if}
 
@@ -131,9 +139,9 @@
 										variant="ghost"
 										size="sm"
 										type="submit"
-										aria-label="Delete reply"
-										title="Delete reply"
-										class="text-muted hover:bg-red-50 hover:text-red-600"
+										aria-label={t(ui, 'reply.delete')}
+										title={t(ui, 'reply.delete')}
+										class="text-muted hover:bg-danger hover:text-on-danger"
 									>
 										<FontAwesomeIcon icon={faTrashCan} class="size-4" />
 									</Button>
@@ -143,7 +151,7 @@
 						<p class="leading-relaxed whitespace-pre-wrap text-ink">{reply.body}</p>
 					</article>
 				{:else}
-					<p class="py-6 text-sm text-muted">No replies yet. Start the conversation.</p>
+					<p class="py-6 text-sm text-muted">{t(ui, 'reply.empty')}</p>
 				{/each}
 			</div>
 		</section>

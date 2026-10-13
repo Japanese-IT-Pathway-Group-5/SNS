@@ -15,20 +15,27 @@
 	import Palette from '@lucide/svelte/icons/palette';
 	import { groupByDate } from '$lib/journal/group-by-date';
 	import type { PageData } from './$types';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 	let { data }: { data: PageData } = $props();
+	const ui = getUiPreferences();
 	let timeZone = $state<string | undefined>('UTC');
 	onMount(() => {
 		timeZone = undefined;
 	});
-	const groups = $derived(groupByDate(data.posts, { timeZone }));
+	const groups = $derived(
+		groupByDate(data.posts, {
+			timeZone,
+			locale: ui.language === 'ja' ? 'ja-JP' : 'en'
+		})
+	);
 	const profileUrl = $derived(resolve('/profile/[userId]', { userId: data.profile.id }));
 	const viewingOlder = $derived(page.url.searchParams.has('cursor'));
 </script>
 
-<svelte:head><title>{data.profile.name}'s journal - Claymore</title></svelte:head>
+<svelte:head><title>{data.profile.name} - {t(ui, 'journal.title')} - Claymore</title></svelte:head>
 <AppShell user={data.user}>
 	<main class="w-full min-w-0">
-		<BackButton href={resolve('/')} label="Back to home" class="mb-6" />
+		<BackButton href={resolve('/')} label={t(ui, 'common.backHome')} class="mb-6" />
 		<header class="mb-6 sm:mb-8">
 			<div class="h-32 overflow-hidden rounded-xl border border-line sm:h-40">
 				{#if data.profile.banner}
@@ -37,11 +44,11 @@
 					</div>
 				{:else}<div
 						role="img"
-						aria-label="Journal drawing banner placeholder. No drawing yet."
+						aria-label={t(ui, 'journal.bannerPlaceholder')}
 						class="flex h-full items-center justify-center gap-2 rounded-xl bg-accent-soft px-4 text-accent"
 					>
 						<Palette class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-						<span class="text-xs">A little canvas</span>
+						<span class="text-xs">{t(ui, 'journal.canvas')}</span>
 					</div>{/if}
 			</div>
 			<div
@@ -69,7 +76,7 @@
 						class="col-start-2 row-start-1 flex justify-end pt-10 sm:col-start-3 sm:pt-12"
 					>
 						<Button variant="secondary" size="sm" href={resolve('/profile/edit')}>
-							Edit profile
+							{t(ui, 'journal.editProfile')}
 						</Button>
 					</div>{/if}
 			</div>
@@ -77,15 +84,19 @@
 		<section aria-labelledby="profile-entries">
 			<div class="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
 				<h2 id="profile-entries" class="text-base font-semibold text-ink">
-					{viewingOlder ? 'Earlier entries' : 'Journal entries'}
+					{viewingOlder ? t(ui, 'journal.earlier') : t(ui, 'profile.entries')}
 				</h2>
-				<span class="text-xs text-muted">Visible to everyone. Newest first.</span>
+				<span class="text-xs text-muted">{t(ui, 'profile.publicNewest')}</span>
 			</div>
-			{#if viewingOlder}<BackButton href={profileUrl} label="Back to newest" class="mb-4" />{/if}
+			{#if viewingOlder}<BackButton
+					href={profileUrl}
+					label={t(ui, 'common.backNewest')}
+					class="mb-4"
+				/>{/if}
 			{#if data.loadError}
-				<FormMessage type="error" message="This journal could not load. Please try again." />
+				<FormMessage type="error" message={t(ui, 'profile.loadError')} />
 				<Button variant="secondary" href={page.url.pathname + page.url.search} class="mt-4"
-					>Try again</Button
+					>{t(ui, 'common.tryAgain')}</Button
 				>
 			{:else if groups.length}
 				<div class="space-y-6">
@@ -102,6 +113,7 @@
 										createdAt={post.createdAt}
 										content={post.body}
 										replyCount={post.replyCount}
+										isLiked={post.isLiked}
 										user={data.user}
 										imageUrl={post.mediaId ? '/api/media/' + post.mediaId : null}
 									/>
@@ -117,15 +129,15 @@
 						href={profileUrl +
 							'?cursor=' +
 							encodeURIComponent(data.nextCursor) +
-							'#profile-entries'}>Older entries</Button
+							'#profile-entries'}>{t(ui, 'common.olderEntries')}</Button
 					>
 				{:else}<p class="mt-6 text-sm text-muted">
 						You've reached the beginning of this journal.
 					</p>{/if}
 			{:else}
 				<EmptyState
-					title={viewingOlder ? 'No earlier entries' : 'No entries yet'}
-					description="There are no visible journal entries here yet."
+					title={viewingOlder ? t(ui, 'common.noEarlier') : t(ui, 'profile.emptyTitle')}
+					description={t(ui, 'profile.emptyDescription')}
 				/>
 			{/if}
 		</section>

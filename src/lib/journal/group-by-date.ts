@@ -37,6 +37,7 @@ export function groupByDate<T extends DatedEntry>(
 	const today = dayKey(now, timeZone);
 	const yesterday = dayKey(new Date(now.getTime() - 24 * 60 * 60 * 1000), timeZone);
 	const currentYear = today.slice(0, 4);
+	const isJapanese = locale?.startsWith('ja');
 	const groups: DateGroup<T>[] = [];
 
 	for (const entry of entries) {
@@ -47,9 +48,13 @@ export function groupByDate<T extends DatedEntry>(
 		if (!group || group.key !== key) {
 			const label =
 				key === today
-					? 'Today'
+					? isJapanese
+						? '今日'
+						: 'Today'
 					: key === yesterday
-						? 'Yesterday'
+						? isJapanese
+							? '昨日'
+							: 'Yesterday'
 						: new Intl.DateTimeFormat(locale, {
 								timeZone,
 								weekday: 'long',

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ModalDialog, Button, FormMessage } from '$lib/components/ui';
 	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
+	const ui = getUiPreferences();
 	let {
 		file,
 		open = $bindable(false),
@@ -65,7 +67,7 @@
 			onUse(new File([blob], 'profile-photo.png', { type: 'image/png' }));
 			open = false;
 		} catch {
-			error = 'This photo could not be adjusted. Please choose another image.';
+			error = t(ui, 'crop.error');
 		} finally {
 			saving = false;
 		}
@@ -74,8 +76,8 @@
 
 <ModalDialog
 	bind:open
-	title="Adjust profile photo"
-	description="Drag to position your photo, then zoom to find the right fit."
+	title={t(ui, 'crop.title')}
+	description={t(ui, 'crop.description')}
 	class="w-[calc(100%-2rem)] p-4 sm:p-6"
 >
 	<div class="space-y-4">
@@ -83,7 +85,7 @@
 		<!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
 		<div
 			role="application"
-			aria-label="Profile photo crop"
+			aria-label={t(ui, 'crop.application')}
 			aria-describedby="crop-help"
 			tabindex="0"
 			class="relative mx-auto size-56 touch-none overflow-hidden rounded-full border border-control-border bg-canvas outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -116,16 +118,16 @@
 			{#if url && !width && !error}<div
 					class="absolute inset-0"
 					role="status"
-					aria-label="Loading photo preview"
+					aria-label={t(ui, 'crop.loading')}
 				>
 					<Skeleton class="size-full rounded-full" /><span class="sr-only"
-						>Loading photo preview...</span
+						>{t(ui, 'crop.loading')}</span
 					>
 				</div>{/if}
 			{#if url}<img
 					bind:this={image}
 					src={url}
-					alt="Avatar adjustment"
+					alt={t(ui, 'crop.alt')}
 					draggable="false"
 					class="pointer-events-none absolute top-1/2 left-1/2 max-w-none select-none"
 					style:width={`${width * scale}px`}
@@ -136,12 +138,12 @@
 						width = img.naturalWidth;
 						height = img.naturalHeight;
 					}}
-					onerror={() =>
-						(error = 'This image could not be opened. Choose a JPEG, PNG or WebP photo.')}
+					onerror={() => (error = t(ui, 'crop.imageError'))}
 				/>{/if}
 		</div>
 		<label class="block text-sm font-medium text-ink"
-			>Zoom <span class="float-right text-xs text-muted">{zoom.toFixed(1)}x</span><input
+			>{t(ui, 'crop.zoom')}
+			<span class="float-right text-xs text-muted">{zoom.toFixed(1)}x</span><input
 				type="range"
 				min="1"
 				max="3"
@@ -156,14 +158,16 @@
 			/></label
 		>
 		<p id="crop-help" class="text-xs leading-5 text-muted">
-			The circle previews your avatar. You can also use arrow keys to position it.
+			{t(ui, 'crop.help')}
 		</p>
 		{#if error}<FormMessage type="error" message={error} />{/if}
 	</div>
 	{#snippet actions()}
-		<Button variant="ghost" disabled={saving} onclick={() => (open = false)}>Cancel</Button>
+		<Button variant="ghost" disabled={saving} onclick={() => (open = false)}
+			>{t(ui, 'profileEdit.cancel')}</Button
+		>
 		<Button loading={saving} disabled={saving || !width || Boolean(error)} onclick={usePhoto}
-			>Use photo</Button
+			>{t(ui, 'crop.use')}</Button
 		>
 	{/snippet}
 </ModalDialog>

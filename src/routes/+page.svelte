@@ -13,8 +13,10 @@
 	import { PostCard } from '$lib/components/posts';
 	import NotebookPen from '@lucide/svelte/icons/notebook-pen';
 	import type { PageData } from './$types';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 
 	let { data }: { data: PageData } = $props();
+	const ui = getUiPreferences();
 	let createOpen = $state(false);
 	const viewingOlder = $derived(page.url.searchParams.has('cursor'));
 	const searchUrl = $derived(
@@ -53,7 +55,7 @@
 			feedPosts = [...feedPosts, ...newItems];
 			nextCursor = result.nextCursor;
 		} catch {
-			loadMoreError = 'Could not load older entries. Please try again.';
+			loadMoreError = t(ui, 'common.olderLoadError');
 		} finally {
 			isLoadingMore = false;
 		}
@@ -89,12 +91,12 @@
 	<main id="feed" class="w-full min-w-0">
 		<div class="mb-6 sm:mb-8">
 			<h1 class="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
-				{data.search ? 'Find a little moment.' : 'Little moments, shared.'}
+				{data.search ? t(ui, 'home.searchTitle') : t(ui, 'home.title')}
 			</h1>
 			<p class="mt-2 text-sm leading-6 text-muted sm:text-base">
 				{data.search
-					? `Posts containing “${data.search}”`
-					: 'An ordinary day is worth a few words.'}
+					? `${t(ui, 'home.searchDescription')} “${data.search}”`
+					: t(ui, 'home.subtitle')}
 			</p>
 		</div>
 
@@ -107,7 +109,7 @@
 				class="flex min-h-20 w-full items-center gap-4 rounded-xl border border-line bg-surface p-4 text-left hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:p-5"
 			>
 				<Avatar name={data.user.name} src={data.user.image} size="md" />
-				<span class="text-base text-muted">Anything from today? Share a moment.</span>
+				<span class="text-base text-muted">{t(ui, 'home.composer')}</span>
 			</button>
 		{:else}
 			<section
@@ -115,15 +117,15 @@
 				class="rounded-xl border border-line bg-surface p-5 sm:p-6"
 			>
 				<h2 id="join-heading" class="text-lg font-semibold text-ink">
-					A little space for your day.
+					{t(ui, 'home.guestTitle')}
 				</h2>
 				<p class="mt-2 max-w-md text-sm leading-6 text-muted">
-					Read along, or make yourself at home. Create an account to share a moment and join the
-					conversation.
+					{t(ui, 'home.guestDescription')}
 				</p>
 				<div class="mt-4 flex flex-wrap items-center justify-between gap-3">
-					<p class="text-xs text-muted">Everyone can read what’s shared here.</p>
-					<Button variant="primary" size="sm" href={resolve('/login')}>Join the conversation</Button
+					<p class="text-xs text-muted">{t(ui, 'common.everyoneCanRead')}</p>
+					<Button variant="primary" size="sm" href={resolve('/login')}
+						>{t(ui, 'common.join')}</Button
 					>
 				</div>
 			</section>
@@ -132,22 +134,26 @@
 		<section class="mt-8 sm:mt-10" aria-labelledby="feed-heading">
 			<div class="mb-2 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-4">
 				<h2 id="feed-heading" class="text-base font-semibold text-ink">
-					{data.search ? 'Search results' : viewingOlder ? 'Earlier moments' : 'Recent moments'}
+					{data.search
+						? t(ui, 'home.searchResults')
+						: viewingOlder
+							? t(ui, 'home.earlier')
+							: t(ui, 'home.recent')}
 				</h2>
 				{#if viewingOlder}
 					<BackButton
 						href={resolve(data.search ? `/?q=${encodeURIComponent(data.search)}` : '/')}
-						label="Back to newest"
+						label={t(ui, 'common.backNewest')}
 					/>
 				{:else}
-					<span class="text-xs text-muted">Newest first</span>
+					<span class="text-xs text-muted">{t(ui, 'home.newest')}</span>
 				{/if}
 			</div>
 			{#if data.loadError}
 				<div class="py-8">
-					<FormMessage type="error" message="We couldn’t load the feed. Please try again." />
+					<FormMessage type="error" message={t(ui, 'common.loadFeedError')} />
 					<Button variant="ghost" href={page.url.pathname + page.url.search} class="mt-4"
-						>Try again</Button
+						>{t(ui, 'common.tryAgain')}</Button
 					>
 				</div>
 			{:else if feedPosts.length > 0}
@@ -161,6 +167,7 @@
 							createdAt={post.createdAt}
 							content={post.body}
 							replyCount={post.replyCount}
+							isLiked={post.isLiked}
 							user={data.user}
 							imageUrl={post.mediaId ? `/api/media/${post.mediaId}` : null}
 						/>
@@ -171,13 +178,13 @@
 						<div bind:this={sentinelEl} class="space-y-3">
 							{#if loadMoreError}
 								<p class="text-sm text-danger">{loadMoreError}</p>
-								<Button variant="secondary" onclick={loadMore}>Try again</Button>
+								<Button variant="secondary" onclick={loadMore}>{t(ui, 'common.tryAgain')}</Button>
 							{:else if isLoadingMore}
 								<div class="flex items-center justify-center gap-2 py-3 text-sm text-muted">
 									<span
 										class="size-4 animate-spin rounded-full border-2 border-accent border-t-transparent"
 									></span>
-									<span>Loading older entries...</span>
+									<span>{t(ui, 'common.loadingOlder')}</span>
 								</div>
 							{:else}
 								<Button
@@ -189,18 +196,16 @@
 									href={`${searchUrl}${data.search ? '&' : '?'}cursor=${encodeURIComponent(nextCursor)}#feed-heading`}
 									loading={isLoadingMore}
 								>
-									Older entries
+									{t(ui, 'common.olderEntries')}
 								</Button>
 							{/if}
 						</div>
 					{:else}
 						<p class="text-sm font-medium text-muted">
-							{data.search ? 'That’s all the matches.' : 'You’re caught up.'}
+							{data.search ? t(ui, 'home.searchAllMatches') : t(ui, 'common.caughtUp')}
 						</p>
 						<p class="mt-1 text-xs text-muted">
-							{data.search
-								? 'Try another word to find a different moment.'
-								: 'Come back when there’s another little moment to share.'}
+							{data.search ? t(ui, 'home.searchNoMore') : t(ui, 'common.comeBack')}
 						</p>
 					{/if}
 				</div>
@@ -208,15 +213,15 @@
 				<div class="py-8 sm:py-12">
 					<EmptyState
 						title={data.search
-							? 'No matching moments yet'
+							? t(ui, 'common.noMatches')
 							: viewingOlder
-								? 'No earlier moments'
-								: 'The first moment starts here'}
+								? t(ui, 'common.noEarlier')
+								: t(ui, 'home.emptyTitle')}
 						description={data.search
-							? 'Try a different word or phrase, or clear the search to return to the feed.'
+							? t(ui, 'home.noMatchesDescription')
 							: viewingOlder
-								? 'You’ve reached the beginning of the journal.'
-								: 'A thought, a small discovery, or a photo from today. It doesn’t have to be anything big.'}
+								? t(ui, 'common.beginning')
+								: t(ui, 'home.emptyDescription')}
 					/>
 				</div>
 			{/if}
@@ -232,13 +237,15 @@
 					><NotebookPen class="size-5" strokeWidth={1.75} aria-hidden="true" /></span
 				>
 				<div>
-					<h2 id="trending-heading" class="text-base font-semibold text-ink">Trending journals</h2>
-					<p class="mt-1 text-xs text-muted">Active this week</p>
+					<h2 id="trending-heading" class="text-base font-semibold text-ink">
+						{t(ui, 'common.trending')}
+					</h2>
+					<p class="mt-1 text-xs text-muted">{t(ui, 'home.activeThisWeek')}</p>
 				</div>
 			</div>
 			{#if data.trendingError}
 				<p class="mt-5 text-sm leading-6 text-muted">
-					We couldn’t load journals right now. Try again in a little while.
+					{t(ui, 'home.trendingError')}
 				</p>
 			{:else if data.trendingJournals.length > 0}
 				<ul class="mt-4 divide-y divide-line">
@@ -246,14 +253,14 @@
 						<li>
 							<a
 								href={resolve('/post/[postId]', { postId: journal.id })}
-								title="Read their latest entry"
+								title={t(ui, 'home.readLatest')}
 								class="flex gap-3 rounded-lg py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 							>
 								<Avatar name={journal.authorName} src={journal.authorImage} size="sm" />
 								<div class="min-w-0">
 									<p class="truncate text-sm font-semibold text-ink">{journal.authorName}</p>
 									<p class="mt-1 line-clamp-2 text-sm leading-5 break-words text-muted">
-										{journal.body || 'A photo from their day.'}
+										{journal.body || t(ui, 'home.journalPhoto')}
 									</p>
 								</div>
 							</a>
@@ -262,9 +269,9 @@
 				</ul>
 			{:else}
 				<div class="mt-5 border-t border-line pt-5">
-					<p class="text-sm font-medium text-ink">A quiet week so far.</p>
+					<p class="text-sm font-medium text-ink">{t(ui, 'home.quietWeek')}</p>
 					<p class="mt-2 text-sm leading-6 text-muted">
-						Journals will appear here as people share their everyday moments.
+						{t(ui, 'home.journalsAppear')}
 					</p>
 				</div>
 			{/if}

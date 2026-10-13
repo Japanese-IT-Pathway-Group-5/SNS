@@ -7,6 +7,7 @@
 
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faAnglesLeft, faAnglesRight } from '@fortawesome/free-solid-svg-icons';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 	import type { User } from 'better-auth';
 
 	let {
@@ -22,6 +23,7 @@
 		onToggle?: () => void;
 		onNavigate?: () => void;
 	} = $props();
+	const ui = getUiPreferences();
 	const homeActive = $derived(page.url.pathname === '/');
 </script>
 
@@ -29,15 +31,15 @@
 	class:mobile
 	class:collapsed={collapsed && !mobile}
 	class="sidebar flex h-full flex-col overflow-hidden border-r border-line bg-surface"
-	aria-label="Sidebar"
+	aria-label={t(ui, 'nav.sidebar')}
 >
 	{#if !mobile}
 		<div class="flex items-center justify-end border-b border-line p-2">
 			<button
 				type="button"
 				onclick={onToggle}
-				aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-				title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+				aria-label={collapsed ? t(ui, 'nav.expandSidebar') : t(ui, 'nav.collapseSidebar')}
+				title={collapsed ? t(ui, 'nav.expandSidebar') : t(ui, 'nav.collapseSidebar')}
 				aria-expanded={!collapsed}
 				aria-controls="desktop-sidebar-navigation"
 				class="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-accent-soft hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -50,47 +52,47 @@
 	{/if}
 	<nav
 		id={mobile ? undefined : 'desktop-sidebar-navigation'}
-		aria-label="Sidebar navigation"
+		aria-label={t(ui, 'nav.sidebarNavigation')}
 		class="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-2"
 	>
 		<a
 			href={resolve('/')}
 			onclick={onNavigate}
-			aria-label="Home"
-			title={collapsed && !mobile ? 'Home' : undefined}
+			aria-label={t(ui, 'common.home')}
+			title={collapsed && !mobile ? t(ui, 'common.home') : undefined}
 			aria-current={homeActive ? 'page' : undefined}
 			class:active={homeActive}
 			class="nav-item"
 		>
 			<House class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" /><span class="nav-label"
-				>Home</span
+				>{t(ui, 'common.home')}</span
 			>
 		</a>
 		<a
 			href={user ? resolve('/journal') : resolve('/login?redirectTo=%2Fjournal')}
 			onclick={onNavigate}
-			aria-label="My journal"
-			title={collapsed && !mobile ? 'My journal' : undefined}
+			aria-label={t(ui, 'common.journal')}
+			title={collapsed && !mobile ? t(ui, 'common.journal') : undefined}
 			aria-current={page.url.pathname === '/journal' ? 'page' : undefined}
 			class:active={page.url.pathname === '/journal'}
 			class="nav-item"
 		>
 			<NotebookPen class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" /><span
-				class="nav-label">My journal</span
+				class="nav-label">{t(ui, 'common.journal')}</span
 			>
 		</a>
 		<div class="my-3 h-px bg-line" aria-hidden="true"></div>
 		<a
 			href={user ? resolve('/settings') : resolve('/login?redirectTo=%2Fsettings')}
 			onclick={onNavigate}
-			aria-label="Account and settings"
-			title={collapsed && !mobile ? 'Account and settings' : undefined}
+			aria-label={t(ui, 'nav.account')}
+			title={collapsed && !mobile ? t(ui, 'nav.account') : undefined}
 			aria-current={page.url.pathname === '/settings' ? 'page' : undefined}
 			class:active={page.url.pathname === '/settings'}
 			class="nav-item"
 		>
 			<Settings class="size-5 shrink-0" strokeWidth={1.75} aria-hidden="true" /><span
-				class="nav-label">Account &amp; settings</span
+				class="nav-label">{t(ui, 'nav.account')}</span
 			>
 		</a>
 	</nav>

@@ -1,10 +1,19 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import { getDb } from '$lib/server/db';
-import { post, user } from '$lib/server/db/schema';
+import { post, postLike, user } from '$lib/server/db/schema';
+import { sql } from 'drizzle-orm';
 
 export class PostNotFoundError extends Error {}
 
-export async function getPost({ d1, postId }: { d1: D1Database; postId: string }) {
+export async function getPost({
+	d1,
+	postId,
+	userId
+}: {
+	d1: D1Database;
+	postId: string;
+	userId?: string;
+}) {
 	const db = getDb(d1);
 
 	const rows = await db
@@ -16,7 +25,12 @@ export async function getPost({ d1, postId }: { d1: D1Database; postId: string }
 			submissionId: post.submissionId,
 			body: post.body,
 			mediaId: post.mediaId,
-			createdAt: post.createdAt
+			createdAt: post.createdAt,
+			isLiked: userId
+				? sql<boolean>`exists (select 1 from ${postLike} where ${postLike.postId} = ${post.id} and ${postLike.userId} = ${userId})`.mapWith(
+						Boolean
+					)
+				: sql<boolean>`0`.mapWith(Boolean)
 		})
 		.from(post)
 		.innerJoin(user, eq(user.id, post.authorId))
