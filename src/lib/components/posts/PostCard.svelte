@@ -111,6 +111,11 @@
 		</Button>
 	</div>
 	{#if opened}<div hidden={!expanded}>
-			<PostReplies postId={id} {user} onAdded={() => (extraReplies += 1)} />
+			<PostReplies
+				postId={id}
+				{user}
+				onAdded={() => (extraReplies += 1)}
+				onDeleted={() => (extraReplies -= 1)}
+			/>
 		</div>{/if}
 </article>
