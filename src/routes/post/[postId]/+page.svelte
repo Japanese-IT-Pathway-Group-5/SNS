@@ -4,15 +4,25 @@
 	import { tick } from 'svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
-	import { AppShell, Button, BackButton, FormMessage, LoadingImage } from '$lib/components/ui';
+	import {
+		AppShell,
+		Button,
+		BackButton,
+		FormMessage,
+		LoadingImage,
+		Textarea
+	} from '$lib/components/ui';
 	import AuthorLink from '$lib/components/profile/AuthorLink.svelte';
+	import { MAX_REPLY_LENGTH, unicodeCodePointLength } from '$lib/validation/posts';
 	import type { ActionData, PageData } from './$types';
 
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const post = $derived(data.post);
 	let writing = $state(false);
+	let replyBody = $state('');
 	$effect(() => {
 		if (page.url.searchParams.get('reply') === '1' || (form && 'body' in form)) writing = true;
+		if (form && 'body' in form) replyBody = form.body ?? '';
 	});
 	async function startWriting() {
 		writing = true;
@@ -69,24 +79,27 @@
 						action="?/reply"
 						class="mt-5 space-y-3 rounded-xl border border-line bg-surface p-4 sm:p-5"
 					>
-						<label for="reply-body" class="block text-sm font-semibold text-ink"
-							>Write a reply</label
-						>
-						<textarea
+						<Textarea
 							id="reply-body"
+							label="Write a reply"
 							name="body"
-							rows="3"
-							maxlength="500"
+							bind:value={replyBody}
+							rows={3}
 							required
+							maxCount={MAX_REPLY_LENGTH}
+							showCount
 							placeholder="Add to the conversation…"
-							class="w-full resize-y rounded-lg border border-control-border bg-white px-3.5 py-3 text-base text-ink placeholder:text-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-							>{form?.body ?? ''}</textarea
-						>
+							class="resize-y bg-white px-3.5 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+						/>
 						{#if form?.message}<FormMessage type="error" message={form.message} />{/if}
 						<div class="flex justify-end gap-2">
 							<Button variant="ghost" type="button" onclick={() => (writing = false)}>Cancel</Button
 							>
-							<Button variant="primary" type="submit">Reply</Button>
+							<Button
+								variant="primary"
+								type="submit"
+								disabled={unicodeCodePointLength(replyBody) > MAX_REPLY_LENGTH}>Reply</Button
+							>
 						</div>
 					</form>
 				{/if}

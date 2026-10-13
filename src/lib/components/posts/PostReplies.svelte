@@ -8,6 +8,8 @@
 	import { unicodeCodePointLength } from '$lib/validation/posts';
 	import AuthorLink from '$lib/components/profile/AuthorLink.svelte';
 	import Skeleton from '$lib/components/ui/Skeleton.svelte';
+	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
+	import { faTrashCan } from '@fortawesome/free-solid-svg-icons';
 
 	interface Reply {
 		id: string;
@@ -20,8 +22,14 @@
 	let {
 		postId,
 		user = null,
-		onAdded = () => {}
-	}: { postId: string; user?: User | null; onAdded?: () => void } = $props();
+		onAdded = () => {},
+		onDeleted = () => {}
+	}: {
+		postId: string;
+		user?: User | null;
+		onAdded?: () => void;
+		onDeleted?: () => void;
+	} = $props();
 	let replies = $state<Reply[]>([]);
 	let nextCursor = $state<{ createdAt: number; id: string } | null>(null);
 	let loaded = $state(false);
@@ -31,6 +39,8 @@
 	let body = $state('');
 	let saving = $state(false);
 	let saveError = $state('');
+	let deleteError = $state('');
+	let deletingReplyId = $state<string | null>(null);
 	let notice = $state('');
 	let controller: AbortController | undefined;
 	let requestVersion = 0;
@@ -99,7 +109,7 @@
 			{#each replies as reply (reply.id)}
 				<article class="flex min-w-0 items-start gap-2.5">
 					<div class="min-w-0 flex-1 rounded-lg bg-canvas px-3 py-2.5">
-						<div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+						<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
 							<AuthorLink
 								id={reply.authorId}
 								name={reply.authorName}
@@ -112,6 +122,50 @@
 									day: 'numeric'
 								})}</time
 							>
+							{#if user?.id === reply.authorId}
+								<form
+									method="POST"
+									action={`${postUrl}?/deleteReply`}
+									class="ml-auto"
+									use:enhance={() => {
+										deletingReplyId = reply.id;
+										deleteError = '';
+										notice = '';
+										return async ({ result }) => {
+											try {
+												if (result.type === 'redirect' && result.location === postUrl) {
+													replies = replies.filter((item) => item.id !== reply.id);
+													onDeleted();
+													notice = 'Reply deleted.';
+												} else if (result.type === 'redirect') await applyAction(result);
+												else if (result.type === 'failure')
+													deleteError = String(
+														result.data?.message ?? 'Could not delete your reply. Please try again.'
+													);
+												else deleteError = 'Could not delete your reply. Please try again.';
+											} finally {
+												deletingReplyId = null;
+											}
+										};
+									}}
+								>
+									<input type="hidden" name="replyId" value={reply.id} />
+									<Button
+										variant="ghost"
+										size="md"
+										type="submit"
+										loading={deletingReplyId === reply.id}
+										disabled={deletingReplyId !== null}
+										aria-label="Delete reply"
+										title="Delete reply"
+										class="text-muted hover:bg-red-50 hover:text-red-600"
+									>
+										{#if deletingReplyId !== reply.id}
+											<FontAwesomeIcon icon={faTrashCan} class="size-4" />
+										{/if}
+									</Button>
+								</form>
+							{/if}
 						</div>
 						<p class="mt-1 text-sm leading-6 break-words whitespace-pre-wrap text-ink">
 							{reply.body}
@@ -137,6 +191,7 @@
 			onclick={() => loadReplies()}>Show older replies</Button
 		>{/if}
 	{#if notice}<p role="status" class="mt-3 text-sm text-accent">{notice}</p>{/if}
+	{#if deleteError}<div class="mt-3"><FormMessage type="error" message={deleteError} /></div>{/if}
 
 	{#if !writing}
 		<div class="mt-4">
