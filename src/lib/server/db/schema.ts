@@ -1,5 +1,12 @@
 import { relations, sql } from 'drizzle-orm';
-import { index, integer, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import {
+	index,
+	integer,
+	primaryKey,
+	sqliteTable,
+	text,
+	uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 
 export const task = sqliteTable('task', {
 	id: text('id')
@@ -204,6 +211,25 @@ export const reply = sqliteTable(
 	]
 );
 
+export const postLike = sqliteTable(
+	'post_like',
+	{
+		userId: text('user_id')
+			.notNull()
+			.references(() => user.id, { onDelete: 'cascade' }),
+		postId: text('post_id')
+			.notNull()
+			.references(() => post.id, { onDelete: 'cascade' }),
+		createdAt: integer('created_at', { mode: 'timestamp_ms' })
+			.default(sql`(cast(unixepoch('subsecond') * 1000 as integer))`)
+			.notNull()
+	},
+	(table) => [
+		primaryKey({ columns: [table.userId, table.postId] }),
+		index('post_like_postId_idx').on(table.postId)
+	]
+);
+
 // Audit log of moderator actions; exactly one of postId / replyId is set.
 export const moderationEvent = sqliteTable(
 	'moderation_event',
@@ -231,6 +257,7 @@ export const userRelations = relations(user, ({ many, one }) => ({
 	accounts: many(account),
 	posts: many(post),
 	replies: many(reply),
+	postLikes: many(postLike),
 	media: many(media),
 	membership: one(membership, {
 		fields: [user.id],
@@ -257,11 +284,23 @@ export const postRelations = relations(post, ({ one, many }) => ({
 		references: [user.id]
 	}),
 	replies: many(reply),
+	likes: many(postLike),
 	media: one(media, {
 		fields: [post.mediaId],
 		references: [media.id]
 	}),
 	moderationEvents: many(moderationEvent)
+}));
+
+export const postLikeRelations = relations(postLike, ({ one }) => ({
+	user: one(user, {
+		fields: [postLike.userId],
+		references: [user.id]
+	}),
+	post: one(post, {
+		fields: [postLike.postId],
+		references: [post.id]
+	})
 }));
 
 export const replyRelations = relations(reply, ({ one, many }) => ({

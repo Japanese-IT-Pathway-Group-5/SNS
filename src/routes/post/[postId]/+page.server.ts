@@ -5,17 +5,17 @@ import { deleteReply, ReplyForbiddenError } from '$lib/server/replies/delete';
 import { listReplies } from '$lib/server/replies/list';
 import type { Actions, PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, platform }) => {
+export const load: PageServerLoad = async ({ params, platform, locals }) => {
 	const d1 = platform?.env?.DB;
 	if (!d1) error(503, 'Database is not configured');
 
 	try {
 		const [post, replyPage] = await Promise.all([
-			getPost({ d1, postId: params.postId }),
+			getPost({ d1, postId: params.postId, ...(locals.user ? { userId: locals.user.id } : {}) }),
 			listReplies({ d1, postId: params.postId })
 		]);
 
-		return { post, replies: replyPage.items };
+		return { post, replies: replyPage.items, user: locals.user };
 	} catch (cause) {
 		if (cause instanceof PostNotFoundError) error(404, 'Post not found');
 		console.error('Failed to load post detail:', cause);

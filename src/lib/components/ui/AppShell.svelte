@@ -22,6 +22,7 @@
 	import Sidebar from './Sidebar.svelte';
 	import ModalDialog from './ModalDialog.svelte';
 	import Composer from '../posts/Composer.svelte';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 
 	let {
 		user = null,
@@ -34,6 +35,7 @@
 		rightRail?: Snippet;
 		children: Snippet;
 	} = $props();
+	const ui = getUiPreferences();
 	let mobileOpen = $state(false);
 	let loadingPage = $derived(
 		Boolean(
@@ -166,13 +168,13 @@
 			<div class="navbar relative grid items-center gap-x-4 gap-y-3 px-4 py-4 sm:px-6 lg:px-8">
 				<div class="flex min-w-0 items-center gap-2">
 					<Dialog.Trigger
-						aria-label="Open navigation"
+						aria-label={t(ui, 'nav.open')}
 						class="flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-on-accent/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-accent md:hidden"
 						><Menu class="size-5" strokeWidth={1.75} aria-hidden="true" /></Dialog.Trigger
 					>
 					<a
 						href={resolve('/')}
-						aria-label="Claymore home"
+						aria-label={t(ui, 'nav.brandHome')}
 						class="flex items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 					>
 						<img
@@ -184,7 +186,7 @@
 				</div>
 				<form
 					role="search"
-					aria-label="Search public posts"
+					aria-label={t(ui, 'nav.searchPublic')}
 					method="GET"
 					action={resolve('/')}
 					class="navbar-search relative w-full"
@@ -196,32 +198,35 @@
 						type="search"
 						maxlength={MAX_SEARCH_LENGTH}
 						autocomplete="off"
-						placeholder="Search moments…"
-						aria-label="Search moments"
+						placeholder={`${t(ui, 'nav.search')}…`}
+						aria-label={t(ui, 'nav.search')}
 						class="min-h-11 w-full rounded-lg border border-on-accent/40 bg-surface py-2.5 pr-12 pl-4 text-sm text-ink placeholder:text-muted focus:bg-accent-soft focus:outline-2 focus:outline-offset-2 focus:outline-on-accent"
 					/>
 					<button
 						type="submit"
-						aria-label="Search"
+						aria-label={t(ui, 'nav.searchButton')}
 						class="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-lg text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 						><Search class="size-5" strokeWidth={1.75} aria-hidden="true" /></button
 					>
 				</form>
-				<nav aria-label="Account and posting" class="flex items-center justify-end gap-2 sm:gap-3">
+				<nav
+					aria-label={t(ui, 'nav.accountPosting')}
+					class="flex items-center justify-end gap-2 sm:gap-3"
+				>
 					<button
 						type="button"
-						aria-label="Create a post"
-						title="Create a post"
+						aria-label={t(ui, 'nav.createPost')}
+						title={t(ui, 'nav.createPost')}
 						onclick={createPost}
 						class="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-lg border border-on-accent/40 px-3 hover:outline-2 hover:outline-offset-2 hover:outline-on-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-accent"
 						><SquarePen class="size-5" strokeWidth={1.75} aria-hidden="true" /><span
-							class="hidden text-sm font-semibold xl:inline">Create post</span
+							class="hidden text-sm font-semibold xl:inline">{t(ui, 'nav.create')}</span
 						></button
 					>
 					{#if user}
 						<DropdownMenu.Root>
 							<DropdownMenu.Trigger
-								aria-label="User menu"
+								aria-label={t(ui, 'nav.userMenu')}
 								class="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 								><Avatar name={user.name} src={user.image} size="md" /><span
 									class="hidden items-center gap-1 lg:inline-flex"
@@ -246,7 +251,7 @@
 											class="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ink outline-none data-[highlighted]:bg-accent-soft data-[highlighted]:text-accent"
 										>
 											<Settings class="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-											<span>Account &amp; settings</span>
+											<span>{t(ui, 'nav.account')}</span>
 										</a>
 									{/snippet}
 								</DropdownMenu.Item>
@@ -256,7 +261,7 @@
 									onSelect={() => logoutForm?.requestSubmit()}
 								>
 									<LogOut class="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-									<span>Sign out</span>
+									<span>{t(ui, 'nav.signOut')}</span>
 								</DropdownMenu.Item>
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
@@ -276,8 +281,8 @@
 							href={resolve('/login')}
 							class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm font-semibold hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-accent"
 							><UserRound class="size-5" strokeWidth={1.75} aria-hidden="true" /><span
-								class="hidden sm:inline">Sign in</span
-							><span class="sr-only sm:hidden">Sign in</span></a
+								class="hidden sm:inline">{t(ui, 'nav.signIn')}</span
+							><span class="sr-only sm:hidden">{t(ui, 'nav.signIn')}</span></a
 						>
 					{/if}
 				</nav>
@@ -290,14 +295,12 @@
 			>
 				<div class="flex items-center justify-between border-b border-line p-4">
 					<Dialog.Title class="text-lg font-semibold text-ink">Claymore</Dialog.Title><Dialog.Close
-						aria-label="Close navigation"
+						aria-label={t(ui, 'nav.close')}
 						class="flex size-11 items-center justify-center rounded-lg text-muted hover:bg-accent-soft focus-visible:outline-2 focus-visible:outline-accent"
 						><X class="size-5" strokeWidth={1.75} aria-hidden="true" /></Dialog.Close
 					>
 				</div>
-				<Dialog.Description class="sr-only"
-					>Browse the feed, find moments, or manage your account.</Dialog.Description
-				>
+				<Dialog.Description class="sr-only">{t(ui, 'nav.description')}</Dialog.Description>
 				<Sidebar
 					{user}
 					mobile
@@ -315,14 +318,16 @@
 		<div
 			role="separator"
 			tabindex="0"
-			aria-label="Resize sidebar"
+			aria-label={t(ui, 'nav.resize')}
 			aria-orientation="vertical"
 			aria-valuemin={collapsedSidebarWidth}
 			aria-valuemax={maxSidebarWidth}
 			aria-valuenow={sidebarState.collapsed ? collapsedSidebarWidth : sidebarState.width}
-			aria-valuetext={sidebarState.collapsed ? 'Collapsed' : `${sidebarState.width} pixels wide`}
+			aria-valuetext={sidebarState.collapsed
+				? t(ui, 'nav.collapsed')
+				: `${sidebarState.width} ${t(ui, 'nav.sidebarPixels')}`}
 			aria-controls="desktop-sidebar-navigation"
-			title="Drag to resize. Use arrow keys when focused."
+			title={t(ui, 'nav.dragResize')}
 			class="sidebar-resize-handle"
 			onpointerdown={startSidebarResize}
 			onpointermove={moveSidebarResize}
@@ -362,8 +367,8 @@
 {#if user}
 	<ModalDialog
 		bind:open={createOpen}
-		title="Share a moment"
-		description="A few words, one photo, or a little of both."
+		title={t(ui, 'compose.title')}
+		description={t(ui, 'compose.description')}
 		fullscreenOnMobile
 		class="max-h-[calc(100svh-2rem)] w-[calc(100%-2rem)] max-w-2xl gap-0 overflow-y-auto rounded-none bg-canvas p-0"
 		headerClass="overflow-hidden rounded-none bg-accent p-5 text-on-accent max-sm:pt-[max(1.25rem,env(safe-area-inset-top))] sm:p-6"

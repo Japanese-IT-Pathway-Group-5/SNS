@@ -42,7 +42,7 @@ export const load: PageServerLoad = async ({ locals, platform, url }) => {
 		// Identity comes from the session only; there is no user id in the URL.
 		const { items, nextCursor } = await listPosts({
 			d1,
-			options: { cursor: pagination.cursor, authorId: locals.user.id }
+			options: { cursor: pagination.cursor, authorId: locals.user.id, userId: locals.user.id }
 		});
 
 		return { posts: items, nextCursor, loadError: false, ...(await profile) };

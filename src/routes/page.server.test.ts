@@ -40,7 +40,7 @@ describe('home feed load', () => {
 		const result = await load(createEvent());
 
 		expect(listPostsMock).toHaveBeenCalledWith(
-			expect.objectContaining({ options: { cursor: undefined } })
+			expect.objectContaining({ options: { cursor: undefined, userId: 'user-123' } })
 		);
 		expect(result).toEqual({
 			posts: [{ id: 'post-1' }],
@@ -106,7 +106,7 @@ describe('home feed load', () => {
 		listPostsMock.mockResolvedValueOnce({ items: [], nextCursor: 'next-token' });
 		const result = await load(createEvent(`?q=%20coffee%20&cursor=${encodeCursor(cursor)}`));
 		expect(listPostsMock).toHaveBeenCalledWith(
-			expect.objectContaining({ options: { cursor, search: 'coffee' } })
+			expect.objectContaining({ options: { cursor, search: 'coffee', userId: 'user-123' } })
 		);
 		expect(result).toMatchObject({ search: 'coffee', nextCursor: 'next-token' });
 	});
@@ -122,7 +122,9 @@ describe('home feed load', () => {
 
 		const result = await load(createEvent(`?cursor=${encodeCursor(cursor)}`));
 
-		expect(listPostsMock).toHaveBeenCalledWith(expect.objectContaining({ options: { cursor } }));
+		expect(listPostsMock).toHaveBeenCalledWith(
+			expect.objectContaining({ options: { cursor, userId: 'user-123' } })
+		);
 		expect(result).toMatchObject({ nextCursor: null });
 	});
 

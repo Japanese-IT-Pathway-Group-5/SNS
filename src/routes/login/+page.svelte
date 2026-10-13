@@ -4,9 +4,11 @@
 	import { signIn, signInWithGoogle, signUp } from '$lib/auth-client';
 	import { FormMessage } from '$lib/components/ui';
 	import { sanitizeRedirectUrl } from '$lib/utils';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faSpinner } from '@fortawesome/free-solid-svg-icons';
 
+	const ui = getUiPreferences();
 	let isSigningIn = $state(false);
 	let isSubmittingEmail = $state(false);
 	let errorMessage = $state<string | null>(null);
@@ -48,8 +50,8 @@
 			if (result.error) {
 				console.error('Email authentication failed:', result.error);
 				errorMessage = isSigningUp
-					? 'Could not create your account. Check your details and try again.'
-					: 'Email or password was not accepted. Check your details and try again.';
+					? t(ui, 'auth.emailSignUpError')
+					: t(ui, 'auth.emailSignInError');
 				isSubmittingEmail = false;
 				return;
 			}
@@ -57,7 +59,7 @@
 			window.location.assign(callbackURL);
 		} catch (err) {
 			console.error('Email authentication exception:', err);
-			errorMessage = 'Could not connect. Please try again.';
+			errorMessage = t(ui, 'auth.connectionError');
 			isSubmittingEmail = false;
 		}
 	}
@@ -70,23 +72,20 @@
 			const { error } = await signInWithGoogle(getCompletionUrl());
 			if (error) {
 				console.error('Sign in failed:', error);
-				errorMessage = error.message || 'Could not start Google sign in. Please try again.';
+				errorMessage = t(ui, 'auth.googleStartError');
 				isSigningIn = false;
 			}
 		} catch (err) {
 			console.error('Sign in exception:', err);
-			errorMessage = 'Something went wrong. Please try again.';
+			errorMessage = t(ui, 'auth.genericError');
 			isSigningIn = false;
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Sign in — Claymore</title>
-	<meta
-		name="description"
-		content="Sign in to Claymore, a small shared journal for the everyday moments worth remembering."
-	/>
+	<title>{t(ui, 'auth.title')} — Claymore</title>
+	<meta name="description" content={t(ui, 'auth.description')} />
 </svelte:head>
 
 {#snippet passwordEye(visible: boolean)}
@@ -139,7 +138,7 @@
 			</div>
 			<a
 				href={resolve('/')}
-				aria-label="Claymore home"
+				aria-label={t(ui, 'auth.home')}
 				class="relative z-10 flex w-fit items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 			>
 				<img src="/logo.svg" alt="" class="size-16 brightness-0 invert" />
@@ -150,12 +149,12 @@
 				<h1
 					class="max-w-xl text-4xl leading-[1.08] font-semibold tracking-[-0.04em] sm:text-5xl xl:text-6xl"
 				>
-					Your day doesn't have to be special to be worth sharing.
+					{t(ui, 'auth.promise')}
 				</h1>
 				<p
 					class="homey-subtitle mt-6 max-w-lg text-lg leading-8 text-white/85 sm:mt-7 sm:text-xl sm:leading-9"
 				>
-					Keep the little moments, thoughts, and photos that make up an ordinary day.
+					{t(ui, 'auth.promiseDescription')}
 				</p>
 			</div>
 		</section>
@@ -178,7 +177,7 @@
 				<div class="relative z-10 mx-auto flex w-full max-w-md items-center justify-between gap-4">
 					<a
 						href={resolve('/')}
-						aria-label="Claymore home"
+						aria-label={t(ui, 'auth.home')}
 						class="flex w-fit items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
 					>
 						<img src="/logo.svg" alt="" class="size-14 shrink-0 brightness-0 invert" />
@@ -187,19 +186,17 @@
 					<a
 						href={resolve('/')}
 						class="inline-flex min-h-11 items-center rounded-sm text-sm text-on-accent underline underline-offset-4 hover:no-underline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-on-accent"
-						>Browse</a
+						>{t(ui, 'auth.browse')}</a
 					>
 				</div>
 			</header>
 			<div class="auth-content mx-auto my-auto w-full max-w-lg lg:my-0">
 				<div class="mb-5 sm:mb-6">
 					<h2 class="text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-						{isSigningUp ? 'Create your account.' : 'Pick up where life is.'}
+						{isSigningUp ? t(ui, 'auth.headlineSignUp') : t(ui, 'auth.headlineSignIn')}
 					</h2>
 					<p class="mt-2 text-sm leading-6 text-muted sm:mt-3 sm:text-base sm:leading-7">
-						{isSigningUp
-							? 'Create a profile to share moments and join the conversation.'
-							: 'Sign in to share moments and join the conversation.'}
+						{isSigningUp ? t(ui, 'auth.introSignUp') : t(ui, 'auth.introSignIn')}
 					</p>
 				</div>
 
@@ -210,10 +207,12 @@
 				<form class="space-y-4" onsubmit={handleEmailAuth}>
 					{#if isSigningUp}
 						<div class="space-y-1.5">
-							<label for="auth-name" class="text-sm font-semibold text-ink">Your name</label>
+							<label for="auth-name" class="text-sm font-semibold text-ink"
+								>{t(ui, 'auth.name')}</label
+							>
 							<input
 								id="auth-name"
-								placeholder="What should we call you?"
+								placeholder={t(ui, 'auth.namePlaceholder')}
 								bind:value={name}
 								autocomplete="name"
 								maxlength="80"
@@ -223,7 +222,9 @@
 						</div>
 					{/if}
 					<div class="space-y-1.5">
-						<label for="auth-email" class="text-sm font-semibold text-ink">Email</label>
+						<label for="auth-email" class="text-sm font-semibold text-ink"
+							>{t(ui, 'auth.email')}</label
+						>
 						<input
 							id="auth-email"
 							placeholder="you@example.com"
@@ -237,11 +238,15 @@
 					</div>
 					<div class={isSigningUp ? 'grid gap-4 sm:grid-cols-2' : ''}>
 						<div class="space-y-1.5">
-							<label for="auth-password" class="text-sm font-semibold text-ink">Password</label>
+							<label for="auth-password" class="text-sm font-semibold text-ink"
+								>{t(ui, 'auth.password')}</label
+							>
 							<div class="relative">
 								<input
 									id="auth-password"
-									placeholder={isSigningUp ? 'At least 8 characters' : 'Enter your password'}
+									placeholder={isSigningUp
+										? t(ui, 'auth.passwordNew')
+										: t(ui, 'auth.passwordExisting')}
 									bind:value={password}
 									type={showPassword ? 'text' : 'password'}
 									oninput={() => {
@@ -255,7 +260,9 @@
 								/>
 								<button
 									type="button"
-									aria-label={showPassword ? 'Hide password' : 'Show password'}
+									aria-label={showPassword
+										? t(ui, 'auth.hidePassword')
+										: t(ui, 'auth.showPassword')}
 									aria-controls="auth-password"
 									aria-pressed={showPassword}
 									onclick={() => {
@@ -270,7 +277,7 @@
 						{#if isSigningUp}
 							<div class="space-y-1.5">
 								<label for="auth-confirm-password" class="text-sm font-semibold text-ink"
-									>Confirm password</label
+									>{t(ui, 'auth.passwordConfirm')}</label
 								>
 								<div class="relative">
 									<input
@@ -279,7 +286,7 @@
 										bind:value={confirmPassword}
 										type={showConfirmPassword ? 'text' : 'password'}
 										autocomplete="new-password"
-										placeholder="Re-enter your password"
+										placeholder={t(ui, 'auth.passwordReenter')}
 										minlength="8"
 										maxlength="128"
 										required
@@ -293,8 +300,8 @@
 									<button
 										type="button"
 										aria-label={showConfirmPassword
-											? 'Hide confirm password'
-											: 'Show confirm password'}
+											? t(ui, 'auth.hideConfirmPassword')
+											: t(ui, 'auth.showConfirmPassword')}
 										aria-controls="auth-confirm-password"
 										aria-pressed={showConfirmPassword}
 										onclick={() => {
@@ -310,7 +317,7 @@
 										role="alert"
 										class="text-sm text-danger"
 									>
-										Passwords don't match. Please try again.
+										{t(ui, 'auth.passwordMismatch')}
 									</p>{/if}
 							</div>
 						{/if}
@@ -323,15 +330,19 @@
 					>
 						{#if isSubmittingEmail}
 							<FontAwesomeIcon icon={faSpinner} class="size-4 animate-spin" />
-							<span>{isSigningUp ? 'Creating account…' : 'Signing in…'}</span>
+							<span
+								>{isSigningUp
+									? t(ui, 'auth.submittingSignUp')
+									: t(ui, 'auth.submittingSignIn')}</span
+							>
 						{:else}
-							{isSigningUp ? 'Create account' : 'Sign in with email'}
+							{isSigningUp ? t(ui, 'auth.submitSignUp') : t(ui, 'auth.submitSignIn')}
 						{/if}
 					</button>
 				</form>
 
 				<p class="mt-3 text-center text-sm text-muted">
-					{isSigningUp ? 'Already have an account?' : 'New to Claymore?'}
+					{isSigningUp ? t(ui, 'auth.existingAccount') : t(ui, 'auth.newAccount')}
 					<button
 						type="button"
 						class="font-semibold text-accent underline underline-offset-2"
@@ -344,13 +355,13 @@
 							showConfirmPassword = false;
 						}}
 					>
-						{isSigningUp ? 'Sign in' : 'Create an account'}
+						{isSigningUp ? t(ui, 'auth.switchSignIn') : t(ui, 'auth.switchSignUp')}
 					</button>
 				</p>
 
 				<div class="my-5 flex items-center gap-4" aria-hidden="true">
 					<div class="h-px flex-1 bg-line"></div>
-					<span class="text-sm text-muted">or</span>
+					<span class="text-sm text-muted">{t(ui, 'auth.or')}</span>
 					<div class="h-px flex-1 bg-line"></div>
 				</div>
 
@@ -363,7 +374,7 @@
 				>
 					{#if isSigningIn}
 						<FontAwesomeIcon icon={faSpinner} class="size-4 animate-spin text-accent" />
-						<span>Connecting to Google…</span>
+						<span>{t(ui, 'auth.googleConnecting')}</span>
 					{:else}
 						<svg class="size-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
 							<path
@@ -383,19 +394,18 @@
 								d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z"
 							/>
 						</svg>
-						<span>Continue with Google</span>
+						<span>{t(ui, 'auth.googleContinue')}</span>
 					{/if}
 				</button>
 
 				<p class="mt-5 text-center text-xs leading-5 text-muted sm:mt-5">
-					By continuing, you agree to use this space with care and respect for everyone’s everyday
-					moments.
+					{t(ui, 'auth.respect')}
 				</p>
 				<div class="mt-3 hidden text-center lg:block">
 					<a
 						href={resolve('/')}
 						class="inline-flex min-h-11 items-center rounded-sm text-sm text-muted underline underline-offset-4 transition-colors hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
-						>Browse the feed</a
+						>{t(ui, 'auth.browseFeed')}</a
 					>
 				</div>
 			</div>

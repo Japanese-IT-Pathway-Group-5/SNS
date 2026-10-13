@@ -4,7 +4,7 @@ import { listPosts } from '$lib/server/posts/list';
 import { parsePaginationParams, PaginationValidationError } from '$lib/server/http/pagination';
 import type { PageServerLoad } from './$types';
 
-export const load: PageServerLoad = async ({ params, platform, url, setHeaders }) => {
+export const load: PageServerLoad = async ({ params, platform, url, setHeaders, locals }) => {
 	setHeaders({ 'cache-control': 'no-store' });
 	let pagination;
 	try {
@@ -25,7 +25,11 @@ export const load: PageServerLoad = async ({ params, platform, url, setHeaders }
 	try {
 		const { items, nextCursor } = await listPosts({
 			d1,
-			options: { authorId: profile.id, cursor: pagination.cursor }
+			options: {
+				authorId: profile.id,
+				cursor: pagination.cursor,
+				...(locals.user ? { userId: locals.user.id } : {})
+			}
 		});
 		return { profile, posts: items, nextCursor, loadError: false };
 	} catch {

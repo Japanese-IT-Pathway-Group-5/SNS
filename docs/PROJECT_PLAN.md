@@ -23,10 +23,13 @@ Required for the first release:
 - Add and delete own replies; moderators may hide replies. Reply access follows the parent post, and hidden/deleted posts must not expose replies.
 - Four primary destinations: home/feed, post with replies, personal journal, and settings. Draft text survives submission errors; browser-local draft recovery is user-scoped and cleared on logout, successful publication, or explicit discard. Do not persist images or credentials in local storage.
 - Basic moderator ability to hide inappropriate posts, with a recorded reason.
-- Responsive, keyboard-accessible UI with loading, empty, validation, and failure states. Verify Japanese text input and rendering; confirm whether Japanese UI copy is required by the class.
+- Responsive, keyboard-accessible English/Japanese UI with loading, empty, validation, and failure states. Verify Japanese text input and rendering.
 - Tested access control, safe upload handling, CI/CD, operating instructions, and a repeatable demo.
 
 Basic public-post text search is included at the user's request. Advanced/semantic search remains deferred. After the deadline: follows, private entries/audience controls, notifications, multiple images, richer profiles, and account self-service. Defer video, chat, algorithmic feeds, and microservices. If the rubric requires any of these, revise scope before implementation.
+
+- Device-local English/Japanese UI selection and a system-aware light/dark theme with a manual override are in scope. These preferences are not account-synced.
+- Members may privately like a visible post; the liked state is visible only to that member, with no public like totals. Posts can be shared through their stable detail-page URL, using native sharing when available and a copy-link fallback. Sharing does not create reposts.
 
 Data science direction: evaluate opt-in semantic search over a member's own memories, comparing keyword retrieval with multilingual embeddings on a permissioned, held-out dataset. ML is a post-MVP experiment, not a release dependency. Do not send journal content to model providers or train on it without an explicit data-use decision and consent. Deletions and access restrictions must propagate to any future search index.
 

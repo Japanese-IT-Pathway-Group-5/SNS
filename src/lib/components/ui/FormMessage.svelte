@@ -18,9 +18,9 @@
 	let { type = 'error', message, class: className, children }: Props = $props();
 
 	const variantStyles = {
-		error: 'bg-danger text-white border-transparent',
-		warning: 'bg-peach-solid text-white border-transparent',
-		success: 'bg-lime-solid text-white border-transparent'
+		error: 'bg-danger text-on-danger border-transparent',
+		warning: 'bg-peach-solid text-on-peach border-transparent',
+		success: 'bg-lime-solid text-on-lime border-transparent'
 	};
 
 	let isAlert = $derived(type === 'error' || type === 'warning');
@@ -37,11 +37,11 @@
 		)}
 	>
 		{#if type === 'error'}
-			<FontAwesomeIcon icon={faCircleExclamation} class="size-4 shrink-0 text-white" />
+			<FontAwesomeIcon icon={faCircleExclamation} class="size-4 shrink-0" />
 		{:else if type === 'warning'}
-			<FontAwesomeIcon icon={faTriangleExclamation} class="size-4 shrink-0 text-white" />
+			<FontAwesomeIcon icon={faTriangleExclamation} class="size-4 shrink-0" />
 		{:else}
-			<FontAwesomeIcon icon={faCircleCheck} class="size-4 shrink-0 text-white" />
+			<FontAwesomeIcon icon={faCircleCheck} class="size-4 shrink-0" />
 		{/if}
 
 		<div>

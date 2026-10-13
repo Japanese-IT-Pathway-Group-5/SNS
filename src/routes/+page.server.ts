@@ -7,7 +7,7 @@ import type { R2Storage } from '$lib/server/storage/r2';
 import { searchQuerySchema } from '$lib/validation/search';
 import { listTrendingJournals } from '$lib/server/posts/trending';
 
-export const load: PageServerLoad = async ({ platform, url }) => {
+export const load: PageServerLoad = async ({ platform, url, locals }) => {
 	const searchResult = searchQuerySchema.safeParse(url.searchParams.get('q') ?? '');
 	if (!searchResult.success) {
 		throw error(400, searchResult.error.issues[0].message);
@@ -47,7 +47,11 @@ export const load: PageServerLoad = async ({ platform, url }) => {
 		const [{ items, nextCursor }, trending] = await Promise.all([
 			listPosts({
 				d1,
-				options: { cursor: pagination.cursor, ...(search ? { search } : {}) }
+				options: {
+					cursor: pagination.cursor,
+					...(search ? { search } : {}),
+					...(locals.user ? { userId: locals.user.id } : {})
+				}
 			}),
 			trendingResult
 		]);

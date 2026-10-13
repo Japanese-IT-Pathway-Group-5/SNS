@@ -26,10 +26,12 @@ Use `+page.server.ts` loads for protected reads and named form actions for page 
 ## Data and behavior contracts
 
 - Posts: author, body, optional media reference, UTC created/updated timestamps, moderation state. Replies: parent post, author, body, timestamps and moderation state. Use generated IDs and foreign keys.
+- Private post likes use a user/post join table with a composite unique key and cascading foreign keys. Like mutations are authenticated, idempotent, and reject hidden posts. Read DTOs may include only the requesting user's liked state; never return a public like count or another user's like data.
 - Post body: up to 2,000 Unicode code points. Reply: 1-500 code points after whitespace validation. An image-only post is valid. Plain text only; preserve line breaks; never render user input with raw HTML.
 - Paginate feeds/journals by stable `(createdAt, id)` cursors, initially 20 entries per page. Bound all reads and reply pagination. Use deterministic ordering with equal timestamps.
 - Server create operations use a user-scoped submission identifier to avoid duplicate posts on retries; enforce uniqueness in D1. Never trust client state as proof a write succeeded.
 - Update/delete queries constrain ownership; moderation requires the moderator role. Posts, replies, and media are publicly readable. Hidden posts disappear from all readers, detail routes, journals, replies and media delivery.
+- English/Japanese language and system/light/dark theme selections are device-local preferences, not server or account state. Share links target the existing post detail route; sharing never creates a duplicate post.
 - Media is validated and tracked through pending/ready/cleanup states as described in the plan. Keep R2 keys server-controlled. Do not cache protected responses in a shared public cache.
 - Empty, loading, failed, unauthorized and success states are part of each feature contract, not cleanup work for the last day.
 

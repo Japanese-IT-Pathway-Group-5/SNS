@@ -3,6 +3,7 @@
 	import { Dialog } from 'bits-ui';
 	import X from '@lucide/svelte/icons/x';
 	import { cn } from '$lib/utils';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 
 	interface Props {
 		open?: boolean;
@@ -29,6 +30,7 @@
 		fullscreenOnMobile = false,
 		class: className
 	}: Props = $props();
+	const ui = getUiPreferences();
 </script>
 
 <Dialog.Root bind:open>
@@ -79,7 +81,7 @@
 
 				<Dialog.Close
 					class="relative z-10 flex size-11 shrink-0 items-center justify-center rounded-lg text-current transition-colors hover:outline-2 hover:outline-offset-2 hover:outline-current focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-current"
-					aria-label="Close dialog"
+					aria-label={t(ui, 'common.closeDialog')}
 				>
 					<X class="size-5" strokeWidth={1.75} aria-hidden="true" />
 				</Dialog.Close>

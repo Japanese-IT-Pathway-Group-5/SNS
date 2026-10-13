@@ -5,8 +5,10 @@
 	import { resolve } from '$app/paths';
 	import type { User } from 'better-auth';
 	import PostReplies from './PostReplies.svelte';
+	import PostActions from './PostActions.svelte';
 	import { FontAwesomeIcon } from '@fortawesome/svelte-fontawesome';
 	import { faMessage } from '@fortawesome/free-regular-svg-icons';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 
 	interface Props {
 		id: string;
@@ -17,6 +19,7 @@
 		content: string;
 		imageUrl?: string | null;
 		replyCount?: number;
+		isLiked?: boolean;
 		user?: User | null;
 	}
 
@@ -29,8 +32,10 @@
 		content,
 		imageUrl,
 		replyCount = 0,
+		isLiked = false,
 		user = null
 	}: Props = $props();
+	const ui = getUiPreferences();
 	let extraReplies = $state(0);
 	let count = $derived(replyCount + extraReplies);
 	let expanded = $state(false);
@@ -42,13 +47,16 @@
 		const diffMs = now.getTime() - date.getTime();
 		const diffMins = Math.floor(diffMs / 60000);
 
-		if (diffMins < 1) return 'just now';
-		if (diffMins < 60) return `${diffMins}m`;
+		if (diffMins < 1) return t(ui, 'common.justNow');
+		if (diffMins < 60) return ui.language === 'ja' ? `${diffMins}分前` : `${diffMins}m`;
 		const diffHours = Math.floor(diffMins / 60);
-		if (diffHours < 24) return `${diffHours}h`;
+		if (diffHours < 24) return ui.language === 'ja' ? `${diffHours}時間前` : `${diffHours}h`;
 		const diffDays = Math.floor(diffHours / 24);
-		if (diffDays < 7) return `${diffDays}d`;
-		return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+		if (diffDays < 7) return ui.language === 'ja' ? `${diffDays}日前` : `${diffDays}d`;
+		return date.toLocaleDateString(ui.language === 'ja' ? 'ja-JP' : 'en', {
+			month: 'short',
+			day: 'numeric'
+		});
 	}
 
 	let timeAgo = $derived(getRelativeTime(createdAt));
@@ -63,11 +71,12 @@
 		<a
 			href={resolve('/post/[postId]', { postId: id })}
 			class="shrink-0 rounded text-muted hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-			aria-label="Open this journal entry"
+			aria-label={t(ui, 'post.open')}
 			><time
 				class="shrink-0 pt-2 text-xs text-muted"
 				datetime={new Date(createdAt).toISOString()}
-				title={new Date(createdAt).toLocaleString()}>{timeAgo}</time
+				title={new Date(createdAt).toLocaleString(ui.language === 'ja' ? 'ja-JP' : 'en')}
+				>{timeAgo}</time
 			></a
 		>
 	</div>
@@ -81,7 +90,7 @@
 			<LoadingImage
 				containerClass="border border-line"
 				src={imageUrl}
-				alt="Post attachment"
+				alt={t(ui, 'common.attachment')}
 				class="block h-auto max-h-[500px] w-auto max-w-full"
 				loading="lazy"
 			/>
@@ -89,7 +98,8 @@
 	{/if}
 
 	<!-- Actions -->
-	<div class="flex items-center border-t border-line pt-2">
+	<div class="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-2">
+		<PostActions postId={id} {user} initiallyLiked={isLiked} />
 		<Button
 			variant="ghost"
 			size="sm"
@@ -107,7 +117,10 @@
 					class="size-4 transition-transform group-active:scale-95"
 				/></span
 			>
-			<span class="font-medium">{count} {count === 1 ? 'reply' : 'replies'}</span>
+			<span class="font-medium"
+				>{count}
+				{count === 1 ? t(ui, 'common.replyCountSingular') : t(ui, 'common.replyCount')}</span
+			>
 		</Button>
 	</div>
 	{#if opened}<div hidden={!expanded}>

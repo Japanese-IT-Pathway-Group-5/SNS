@@ -15,8 +15,10 @@
 	import ProfilePhotoCropper from '$lib/components/profile/ProfilePhotoCropper.svelte';
 	import { MAX_PROFILE_DESCRIPTION_LENGTH } from '$lib/validation/profile';
 	import { MAX_PHOTO_BYTES } from '$lib/validation/photo-upload';
+	import { getUiPreferences, t } from '$lib/preferences/ui';
 	import type { ActionData, PageData } from './$types';
 
+	const ui = getUiPreferences();
 	let { data, form }: { data: PageData; form: ActionData } = $props();
 	const initial = untrack(() => {
 		const submitted =
@@ -56,10 +58,10 @@
 	});
 	function choosePhoto(event: Event) {
 		const file = (event.currentTarget as HTMLInputElement).files?.[0] ?? null;
-		photoError = file && file.size > MAX_PHOTO_BYTES ? 'Choose a photo smaller than 5 MiB.' : '';
+		photoError = file && file.size > MAX_PHOTO_BYTES ? t(ui, 'profileEdit.photoTooLarge') : '';
 		if (file && !photoError) {
 			if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-				photoError = 'Choose a JPEG, PNG or WebP photo.';
+				photoError = t(ui, 'profileEdit.photoType');
 			} else {
 				cropFile = file;
 				cropOpen = true;
@@ -69,19 +71,21 @@
 	}
 </script>
 
-<svelte:head><title>Edit profile — Claymore</title></svelte:head>
+<svelte:head><title>{t(ui, 'profileEdit.title')} — Claymore</title></svelte:head>
 
 <AppShell user={data.user}>
 	<main class="w-full min-w-0">
 		<header class="mb-6 sm:mb-8">
 			<BackButton href={resolve('/journal')} class="mb-2 -ml-2" />
-			<h1 class="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Edit profile</h1>
+			<h1 class="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+				{t(ui, 'profileEdit.title')}
+			</h1>
 			<p class="mt-2 text-sm leading-6 text-muted">
-				A little space to make your journal feel like you.
+				{t(ui, 'profileEdit.intro')}
 			</p>
 		</header>
 		<p class="mb-4 text-sm text-muted">
-			Your name, photo, description and drawing banner are visible to everyone on your profile.
+			{t(ui, 'profileEdit.visibility')}
 		</p>
 		<form
 			method="POST"
@@ -95,10 +99,8 @@
 					try {
 						if (result.type === 'redirect') await update();
 						else if (result.type === 'failure')
-							message = String(
-								result.data?.message ?? 'Could not save your profile. Please try again.'
-							);
-						else message = 'Could not save your profile. Please try again.';
+							message = String(result.data?.message ?? t(ui, 'profileEdit.saveError'));
+						else message = t(ui, 'profileEdit.saveError');
 					} finally {
 						saving = false;
 					}
@@ -109,13 +111,17 @@
 				aria-labelledby="photo-heading"
 				class="rounded-xl border border-line bg-surface p-4 sm:p-6"
 			>
-				<h2 id="photo-heading" class="text-base font-semibold text-ink">Profile photo</h2>
+				<h2 id="photo-heading" class="text-base font-semibold text-ink">
+					{t(ui, 'profileEdit.photo')}
+				</h2>
 				<div class="mt-4 flex items-center gap-4">
 					<Avatar {name} src={removePhoto ? null : (preview ?? data.profile.image)} size="lg" />
-					<p class="text-sm leading-6 text-muted">Shown beside your entries and replies.</p>
+					<p class="text-sm leading-6 text-muted">
+						{t(ui, 'profileEdit.photoDescription')}
+					</p>
 				</div>
 				<label for="profile-photo" class="mt-4 block text-sm font-semibold text-ink"
-					>Choose a photo</label
+					>{t(ui, 'profileEdit.choosePhoto')}</label
 				>
 				<input
 					id="profile-photo"
@@ -130,7 +136,7 @@
 					class="mt-2 min-h-11 w-full min-w-0 rounded-lg border border-control-border bg-surface p-2 text-sm text-ink file:mr-3 file:rounded-md file:border-0 file:bg-accent-soft file:px-3 file:py-2 file:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
 				/>
 				<p id="photo-help" class="mt-2 text-xs text-muted">
-					JPEG, PNG or WebP, up to 5 MiB. Your profile photo is visible to everyone.
+					{t(ui, 'profileEdit.photoHelp')}
 				</p>
 				{#if photoError}<div class="mt-3">
 						<FormMessage type="error" message={photoError} />
@@ -150,7 +156,7 @@
 								}
 							}}
 							class="size-4 accent-accent"
-						/>Remove profile photo
+						/>{t(ui, 'profileEdit.removePhoto')}
 					</label>
 				{/if}
 			</section>
@@ -158,10 +164,12 @@
 				aria-labelledby="details-heading"
 				class="space-y-4 rounded-xl border border-line bg-surface p-4 sm:p-6"
 			>
-				<h2 id="details-heading" class="text-base font-semibold text-ink">About you</h2>
+				<h2 id="details-heading" class="text-base font-semibold text-ink">
+					{t(ui, 'profileEdit.about')}
+				</h2>
 				<Input
 					id="profile-name"
-					label="Name"
+					label={t(ui, 'profileEdit.name')}
 					name="name"
 					bind:value={name}
 					required
@@ -171,29 +179,33 @@
 				/>
 				<Textarea
 					id="profile-description"
-					label="Description"
+					label={t(ui, 'profileEdit.description')}
 					name="description"
 					bind:value={description}
 					rows={3}
 					maxCount={MAX_PROFILE_DESCRIPTION_LENGTH}
 					showCount
 					disabled={saving}
-					description="A few words about you. Leave blank if you prefer."
+					description={t(ui, 'profileEdit.descriptionHint')}
 				/>
 			</section>
 			<section
 				aria-labelledby="banner-heading"
 				class="rounded-xl border border-line bg-surface p-4 sm:p-6"
 			>
-				<h2 id="banner-heading" class="text-base font-semibold text-ink">Journal banner</h2>
+				<h2 id="banner-heading" class="text-base font-semibold text-ink">
+					{t(ui, 'profileEdit.banner')}
+				</h2>
 				<BannerEditor bind:value={banner} disabled={saving} />
 			</section>
 			{#if message}<FormMessage type="error" {message} />{/if}
 			<div class="flex flex-wrap gap-3">
 				<Button type="submit" loading={saving} disabled={saving || Boolean(photoError)}
-					>Save profile</Button
+					>{t(ui, 'profileEdit.save')}</Button
 				>
-				{#if !saving}<Button variant="ghost" href={resolve('/journal')}>Cancel</Button>{/if}
+				{#if !saving}<Button variant="ghost" href={resolve('/journal')}
+						>{t(ui, 'profileEdit.cancel')}</Button
+					>{/if}
 			</div>
 		</form>
 	</main>

@@ -44,7 +44,9 @@ describe('journal load', () => {
 		const result = await load(createEvent());
 
 		expect(listPostsMock).toHaveBeenCalledWith(
-			expect.objectContaining({ options: { cursor: undefined, authorId: 'user-123' } })
+			expect.objectContaining({
+				options: { cursor: undefined, authorId: 'user-123', userId: 'user-123' }
+			})
 		);
 		expect(result).toEqual({
 			posts: [{ id: 'post-1' }],
@@ -63,7 +65,7 @@ describe('journal load', () => {
 		await load(createEvent(`?cursor=${encodeCursor(cursor)}&authorId=someone-else`));
 
 		expect(listPostsMock).toHaveBeenCalledWith(
-			expect.objectContaining({ options: { cursor, authorId: 'user-123' } })
+			expect.objectContaining({ options: { cursor, authorId: 'user-123', userId: 'user-123' } })
 		);
 	});
 
